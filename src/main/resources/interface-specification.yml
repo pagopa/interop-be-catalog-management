@@ -1,0 +1,79 @@
+openapi: 3.0.3
+info:
+  title: Agreement Management Micro Service
+  description: 'This is a sample server'
+  version: 0.0.1
+  contact:
+    name: API Support
+    url: http://www.example.com/support
+    email: support@example.com
+  termsOfService: 'http://swagger.io/terms/'
+  x-api-id: an x-api-id
+  x-summary: an x-summary
+servers:
+  - url: https://gateway.interop.pdnd.dev/pdnd-interop-uservice-agreement-management/0.0.1
+    description: This service is eservice manager
+#security:
+#  - bearerAuth: [ ]
+tags:
+  - name: e_service
+    description: Everything about your E-service
+    externalDocs:
+      description: Find out more
+      url: http://swagger.io
+paths:
+  /eservice:
+    post:
+      tags:
+        - e_service
+      summary: Add a new e-service
+      operationId: addEService
+      requestBody:
+        description: A E-Service seed
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EService'
+        required: true
+      responses:
+        "200":
+          description: EService created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EService'
+        "405":
+          description: Invalid input
+          content: { }
+components:
+  schemas:
+    EService:
+      type: object
+      required:
+        - name
+        - version
+        - description
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+          maxLength: 64
+          minLength: 6
+        version:
+          type: string
+        docs:
+          type: array
+          items:
+            type: string
+        description:
+          type: string
+        scopes:
+          type: array
+          items:
+            type: string
+        proposal:
+          type: array
+          items:
+            type: string

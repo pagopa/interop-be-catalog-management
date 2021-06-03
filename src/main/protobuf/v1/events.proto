@@ -1,0 +1,12 @@
+syntax = "proto2";
+
+import "scalapb/scalapb.proto";
+import "v1/e-service.proto";
+
+option (scalapb.options) = {
+  package_name: "it.pagopa.pdnd.uservice.resttemplate.model.persistence.serializer.v1"
+};
+
+message EServiceAddedV1 {
+  required EServiceV1 eService = 1;
+}
