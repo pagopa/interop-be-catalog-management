@@ -1,6 +1,6 @@
-package it.pagopa.pdnd.uservice.resttemplate.model.persistence
+package it.pagopa.pdnd.interop.uservice.catalogmanagement.model.persistence
 
-import it.pagopa.pdnd.interopuservice.agreementmanagement.model.EService
+import it.pagopa.pdnd.interop.uservice.catalogmanagement.model.EService
 
 final case class State(eServices: Map[String, EService]) extends Persistable {
 

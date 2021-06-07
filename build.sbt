@@ -19,8 +19,11 @@ lazy val generateCode = taskKey[Unit]("A task for generating the code starting f
 generateCode := {
   import sys.process._
 
-  val packagePrefix =
-    name.value.replaceFirst("pdnd-", "pdnd.").replaceFirst("uservice-", "uservice.").replaceAll("-", "")
+  val packagePrefix = name.value
+    .replaceFirst("pdnd-", "pdnd.")
+    .replaceFirst("interop-", "interop.")
+    .replaceFirst("uservice-", "uservice.")
+    .replaceAll("-", "")
 
   Process(s"""openapi-generator-cli generate -t template/scala-akka-http-server
              |                               -i src/main/resources/interface-specification.yml
@@ -52,14 +55,12 @@ cleanFiles += baseDirectory.value / "client" / "src"
 
 lazy val generated = project
   .in(file("generated"))
-  .settings(
-    scalacOptions := Seq()
-  )
+  .settings(scalacOptions := Seq())
 
 lazy val client = project
   .in(file("client"))
   .settings(
-    name := "pdnd-interop-uservice-agreement-management",
+    name := "pdnd-interop-uservice-catalog-management",
     scalacOptions := Seq(),
     libraryDependencies := Dependencies.Jars.client.map(m =>
       if (scalaVersion.value.startsWith("3.0"))
@@ -81,7 +82,7 @@ lazy val client = project
 
 lazy val root = (project in file("."))
   .settings(
-    name := "pdnd-interop-uservice-agreement-management",
+    name := "pdnd-interop-uservice-catalog-management",
     Test / parallelExecution := false,
     dockerBuildOptions ++= Seq("--network=host"),
     dockerRepository := Some(System.getenv("DOCKER_REPO")),

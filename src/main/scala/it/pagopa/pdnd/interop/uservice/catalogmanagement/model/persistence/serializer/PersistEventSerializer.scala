@@ -1,4 +1,4 @@
-package it.pagopa.pdnd.uservice.resttemplate.model.persistence.serializer
+package it.pagopa.pdnd.interop.uservice.catalogmanagement.model.persistence.serializer
 
 trait PersistEventSerializer[A, B] {
   def to(a: A): Either[Throwable, B]

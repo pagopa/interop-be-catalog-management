@@ -1,4 +1,4 @@
-package it.pagopa.pdnd.uservice.resttemplate.server.impl
+package it.pagopa.pdnd.interop.uservice.catalogmanagement.server.impl
 
 import akka.actor.typed.ActorSystem
 import akka.actor.typed.scaladsl.Behaviors
@@ -14,18 +14,14 @@ import akka.management.scaladsl.AkkaManagement
 import akka.persistence.typed.PersistenceId
 import akka.projection.ProjectionBehavior
 import akka.{actor => classic}
-import it.pagopa.pdnd.interopuservice.agreementmanagement.api.EServiceApi
-import it.pagopa.pdnd.interopuservice.agreementmanagement.server.Controller
-import it.pagopa.pdnd.uservice.resttemplate.api.impl.{EServiceApiMarshallerImpl, EServiceApiServiceImpl}
-import it.pagopa.pdnd.uservice.resttemplate.common.system.Authenticator
-import it.pagopa.pdnd.uservice.resttemplate.model.persistence.{
-  Command,
-  EServicePersistentBehavior,
-  EServicePersistentProjection
-}
+import it.pagopa.pdnd.interop.uservice.catalogmanagement.api.EServiceApi
+import it.pagopa.pdnd.interop.uservice.catalogmanagement.api.impl.{EServiceApiMarshallerImpl, EServiceApiServiceImpl}
+import it.pagopa.pdnd.interop.uservice.catalogmanagement.common.system.Authenticator
+import it.pagopa.pdnd.interop.uservice.catalogmanagement.model.persistence.{Command, EServicePersistentBehavior, EServicePersistentProjection}
+import it.pagopa.pdnd.interop.uservice.catalogmanagement.server.Controller
 import kamon.Kamon
 
-import scala.jdk.CollectionConverters._
+import scala.jdk.CollectionConverters.CollectionHasAsScala
 
 @SuppressWarnings(Array("org.wartremover.warts.StringPlusAny", "org.wartremover.warts.Nothing"))
 object Main extends App {
@@ -62,13 +58,13 @@ object Main extends App {
         val petPersistentProjection = new EServicePersistentProjection(context.system, petPersistentEntity)
 
         ShardedDaemonProcess(context.system).init[ProjectionBehavior.Command](
-          name = "pet-projections",
+          name = "e-services-projections",
           numberOfInstances = settings.numberOfShards,
           behaviorFactory = (i: Int) => ProjectionBehavior(petPersistentProjection.projections(i)),
           stopMessage = ProjectionBehavior.Stop
         )
 
-        val petApi = new EServiceApi(
+        val eServiceApi = new EServiceApi(
           new EServiceApiServiceImpl(context.system, sharding, petPersistentEntity),
           new EServiceApiMarshallerImpl(),
           SecurityDirectives.authenticateBasic("SecurityRealm", Authenticator)
@@ -77,7 +73,7 @@ object Main extends App {
         val _ = AkkaManagement.get(classicSystem).start()
 
         val controller = new Controller(
-          petApi,
+          eServiceApi,
           validationExceptionToRoute = Some(e => {
             val results = e.results()
             results.crumbs().asScala.foreach { crumb =>
@@ -111,7 +107,7 @@ object Main extends App {
         ClusterBootstrap.get(classicSystem).start()
         Behaviors.empty
       },
-      "pdnd-uservice-rest-template"
+      "pdnd-interop-uservice-catalog-management"
     )
   }
 }

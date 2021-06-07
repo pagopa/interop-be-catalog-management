@@ -1,10 +1,10 @@
-package it.pagopa.pdnd.uservice.resttemplate.model.persistence.serializer
+package it.pagopa.pdnd.interop.uservice.catalogmanagement.model.persistence.serializer
 
-import it.pagopa.pdnd.interopuservice.agreementmanagement.model.EService
-import it.pagopa.pdnd.uservice.resttemplate.model.persistence.serializer.v1.e_service.EServiceV1
-import it.pagopa.pdnd.uservice.resttemplate.model.persistence.serializer.v1.events.EServiceAddedV1
-import it.pagopa.pdnd.uservice.resttemplate.model.persistence.serializer.v1.state.{EServicesV1, StateV1}
-import it.pagopa.pdnd.uservice.resttemplate.model.persistence.{EServiceAdded, State}
+import it.pagopa.pdnd.interop.uservice.catalogmanagement.model.EService
+import it.pagopa.pdnd.interop.uservice.catalogmanagement.model.persistence.serializer.v1.e_service.EServiceV1
+import it.pagopa.pdnd.interop.uservice.catalogmanagement.model.persistence.serializer.v1.events.EServiceAddedV1
+import it.pagopa.pdnd.interop.uservice.catalogmanagement.model.persistence.serializer.v1.state.{EServicesV1, StateV1}
+import it.pagopa.pdnd.interop.uservice.catalogmanagement.model.persistence.{EServiceAdded, State}
 
 import java.util.UUID
 
@@ -24,7 +24,8 @@ package object v1 {
               docs = Some(eServicesV1.value.docs),
               description = eServicesV1.value.description,
               scopes = Some(eServicesV1.value.scopes),
-              proposal = Some(eServicesV1.value.proposal)
+              proposal = Some(eServicesV1.value.proposal),
+              status = Some(eServicesV1.value.status)
             )
           )
         )
@@ -46,7 +47,8 @@ package object v1 {
             docs = eService.docs.get,
             description = eService.description,
             scopes = eService.scopes.get,
-            proposal = eService.proposal.get
+            proposal = eService.proposal.get,
+            status = eService.status.get
           )
         )
       }.toSeq
@@ -64,7 +66,8 @@ package object v1 {
             docs = Some(event.eService.docs),
             description = event.eService.description,
             scopes = Some(event.eService.scopes),
-            proposal = Some(event.eService.proposal)
+            proposal = Some(event.eService.proposal),
+            status = Some(event.eService.status)
           )
         )
       )
@@ -76,6 +79,7 @@ package object v1 {
         docs     <- event.eService.docs
         scopes   <- event.eService.scopes
         proposal <- event.eService.proposal
+        status   <- event.eService.status
       } yield EServiceAddedV1
         .of(
           EServiceV1(
@@ -85,7 +89,8 @@ package object v1 {
             docs = docs,
             description = event.eService.description,
             scopes = scopes,
-            proposal = proposal
+            proposal = proposal,
+            status = status
           )
         )
     }.toRight(new RuntimeException("Deserialization from protobuf failed"))

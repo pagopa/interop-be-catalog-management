@@ -1,4 +1,4 @@
-package it.pagopa.pdnd.uservice.resttemplate.server.impl
+package it.pagopa.pdnd.interop.uservice.catalogmanagement.server.impl
 
 import org.slf4j.LoggerFactory
 

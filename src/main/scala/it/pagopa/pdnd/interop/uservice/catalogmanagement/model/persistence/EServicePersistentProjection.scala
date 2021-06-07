@@ -1,4 +1,4 @@
-package it.pagopa.pdnd.uservice.resttemplate.model.persistence
+package it.pagopa.pdnd.interop.uservice.catalogmanagement.model.persistence
 
 import akka.{Done, NotUsed}
 import akka.actor.typed.ActorSystem
@@ -46,7 +46,7 @@ class EServicePersistentProjection(system: ActorSystem[_], entity: Entity[Comman
 
   val projections: Seq[AtLeastOnceFlowProjection[Offset, EventEnvelope[Event]]] =
     (0 until settings.numberOfShards).map(i =>
-      projection(s"pdnd-interop-uservice-agreement-management-persistence-eservice|$i")
+      projection(s"pdnd-interop-uservice-catalog-management-persistence-eservice|$i")
     )
 
 }

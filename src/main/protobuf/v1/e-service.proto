@@ -3,7 +3,7 @@ syntax = "proto2";
 import "scalapb/scalapb.proto";
 
 option (scalapb.options) = {
-  package_name: "it.pagopa.pdnd.uservice.resttemplate.model.persistence.serializer.v1"
+  package_name: "it.pagopa.pdnd.interop.uservice.catalogmanagement.model.persistence.serializer.v1"
 };
 
 message EServiceV1 {
@@ -14,4 +14,5 @@ message EServiceV1 {
   required string description = 5;
   repeated string scopes = 6;
   repeated string proposal = 7;
+  required string status = 8;
 }

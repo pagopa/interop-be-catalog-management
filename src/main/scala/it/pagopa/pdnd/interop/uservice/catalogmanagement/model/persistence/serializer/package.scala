@@ -1,4 +1,4 @@
-package it.pagopa.pdnd.uservice.resttemplate.model.persistence
+package it.pagopa.pdnd.interop.uservice.catalogmanagement.model.persistence
 
 import scalapb.{GeneratedMessage, GeneratedMessageCompanion}
 
