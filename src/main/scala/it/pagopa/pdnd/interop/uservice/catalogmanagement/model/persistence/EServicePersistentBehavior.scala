@@ -48,7 +48,7 @@ object EServicePersistentBehavior {
         Effect.none[Event, State]
 
       case ListServices(from, to, _, _, status, replyTo) =>
-        val eServices = LazyList.from(state.eServices.iterator.filter(_._2.status == status).slice(from, to).map(_._2))
+        val eServices = state.eServices.filter(_._2.status == status).values.toSeq.slice(from, to)
         replyTo ! eServices
         Effect.none[Event, State]
 

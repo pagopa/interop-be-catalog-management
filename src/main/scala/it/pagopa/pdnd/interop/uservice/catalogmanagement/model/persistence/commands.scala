@@ -15,5 +15,5 @@ final case class ListServices(
   producerId: Option[String],
   consumerId: Option[String],
   status: Option[String],
-  replyTo: ActorRef[LazyList[EService]]
+  replyTo: ActorRef[Seq[EService]]
 ) extends Command

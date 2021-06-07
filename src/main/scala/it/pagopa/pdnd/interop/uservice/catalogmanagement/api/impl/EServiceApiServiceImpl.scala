@@ -17,6 +17,7 @@ import it.pagopa.pdnd.interop.uservice.catalogmanagement.model.persistence.{
 }
 import it.pagopa.pdnd.interop.uservice.catalogmanagement.model.{EService, Problem}
 import it.pagopa.pdnd.interop.uservice.catalogmanagement.common.system._
+
 import java.util.UUID
 import scala.concurrent.duration.Duration
 import scala.concurrent.{Await, Future}
@@ -52,7 +53,7 @@ class EServiceApiServiceImpl(
     val id                                  = UUID.randomUUID()
     val newEService: EService               = eService.copy(id = Some(id), status = Some("active"))
     val commander: EntityRef[Command]       = sharding.entityRefFor(EServicePersistentBehavior.TypeKey, getShard(id.toString))
-    val result: Future[StatusReply[String]] = commander.ask(ref => AddEService(eService, ref))
+    val result: Future[StatusReply[String]] = commander.ask(ref => AddEService(newEService, ref))
     onSuccess(result) {
       case statusReply if statusReply.isSuccess => addEService200(newEService)
       case statusReply if statusReply.isError =>
@@ -81,6 +82,35 @@ class EServiceApiServiceImpl(
 
   /** Code: 200, Message: A list of EService, DataType: Seq[EService]
     */
+//  override def getEServices(
+//    producerId: Option[String],
+//    consumerId: Option[String],
+//    status: Option[String],
+//    from: Option[Int],
+//    to: Option[Int]
+//  )(implicit toEntityMarshallerEServicearray: ToEntityMarshaller[Seq[EService]]): Route = {
+//    val sliceSize = to.getOrElse(100)
+//
+//    @annotation.tailrec
+//    def getSlice(commander: EntityRef[Command], from: Int, to: Int, acc: LazyList[EService]): LazyList[EService] = {
+//      val slice: Seq[EService] = Await
+//        .result(commander.ask(ref => ListServices(from, to, producerId, consumerId, status, ref)), Duration.Inf)
+//
+//      if (slice.isEmpty)
+//        LazyList.empty[EService]
+//      else
+//        getSlice(commander, to, to + sliceSize, acc #::: slice.to(LazyList))
+//    }
+//
+//    val commanders: Seq[EntityRef[Command]] = (0 until settings.numberOfShards).map(shard =>
+//      sharding.entityRefFor(EServicePersistentBehavior.TypeKey, shard.toString)
+//    )
+//
+//    val eServices: Seq[EService] =
+//      commanders.flatMap(ref => getSlice(ref, 0, sliceSize, LazyList.empty))
+//    getEServices200(eServices)
+//
+//  }
   override def getEServices(
     producerId: Option[String],
     consumerId: Option[String],
@@ -88,25 +118,20 @@ class EServiceApiServiceImpl(
     from: Option[Int],
     to: Option[Int]
   )(implicit toEntityMarshallerEServicearray: ToEntityMarshaller[Seq[EService]]): Route = {
-    val sliceSize = to.getOrElse(100)
-
-    @annotation.tailrec
-    def getSlice(commander: EntityRef[Command], from: Int, to: Int, acc: LazyList[EService]): LazyList[EService] = {
-      val slice: LazyList[EService] = Await
+    val sliceSize = 100
+    def getSlice(commander: EntityRef[Command], from: Int, to: Int): LazyList[EService] = {
+      val slice: Seq[EService] = Await
         .result(commander.ask(ref => ListServices(from, to, producerId, consumerId, status, ref)), Duration.Inf)
 
       if (slice.isEmpty)
         LazyList.empty[EService]
       else
-        getSlice(commander, to, to + sliceSize, acc #::: slice)
+        getSlice(commander, to, to + sliceSize) #::: slice.to(LazyList)
     }
-
     val commanders: Seq[EntityRef[Command]] = (0 until settings.numberOfShards).map(shard =>
-      sharding.entityRefFor(EServicePersistentBehavior.TypeKey, shard.toString)
+      sharding.entityRefFor(EServicePersistentBehavior.TypeKey, getShard(shard.toString))
     )
-
-    val eServices: Seq[EService] =
-      commanders.flatMap(ref => getSlice(ref, from.getOrElse(0), sliceSize, LazyList.empty))
+    val eServices = commanders.flatMap(ref => getSlice(ref, 0, sliceSize))
     getEServices200(eServices)
 
   }
