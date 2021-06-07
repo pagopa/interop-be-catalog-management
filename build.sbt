@@ -60,7 +60,7 @@ lazy val generated = project
 lazy val client = project
   .in(file("client"))
   .settings(
-    name := "pdnd-interop-uservice-catalog-management",
+    name := "pdnd-interop-uservice-catalog-management-client",
     scalacOptions := Seq(),
     libraryDependencies := Dependencies.Jars.client.map(m =>
       if (scalaVersion.value.startsWith("3.0"))
@@ -98,8 +98,8 @@ lazy val root = (project in file("."))
     }".toLowerCase,
     Docker / packageName := s"services/${name.value}",
     Docker / dockerExposedPorts := Seq(8080),
-    wartremoverErrors ++= Warts.all,
-    wartremoverExcluded += sourceManaged.value
+//    wartremoverErrors ++= Warts.all,
+//    wartremoverExcluded += sourceManaged.value
   )
   .aggregate(client)
   .dependsOn(generated)

@@ -69,7 +69,7 @@ object EServicePersistentBehavior {
 
   def apply(shard: ActorRef[ClusterSharding.ShardCommand], persistenceId: PersistenceId): Behavior[Command] = {
     Behaviors.setup { context =>
-      context.log.error(s"Starting Pet Shard ${persistenceId.id}")
+      context.log.error(s"Starting EService Shard ${persistenceId.id}")
       val numberOfEvents =
         context.system.settings.config
           .getInt("pdnd-interop-uservice-catalog-management.number-of-events-before-snapshot")

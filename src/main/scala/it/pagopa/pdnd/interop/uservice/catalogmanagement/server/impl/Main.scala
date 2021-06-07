@@ -17,13 +17,19 @@ import akka.{actor => classic}
 import it.pagopa.pdnd.interop.uservice.catalogmanagement.api.EServiceApi
 import it.pagopa.pdnd.interop.uservice.catalogmanagement.api.impl.{EServiceApiMarshallerImpl, EServiceApiServiceImpl}
 import it.pagopa.pdnd.interop.uservice.catalogmanagement.common.system.Authenticator
-import it.pagopa.pdnd.interop.uservice.catalogmanagement.model.persistence.{Command, EServicePersistentBehavior, EServicePersistentProjection}
+import it.pagopa.pdnd.interop.uservice.catalogmanagement.model.persistence.{
+  Command,
+  EServicePersistentBehavior,
+  EServicePersistentProjection
+}
 import it.pagopa.pdnd.interop.uservice.catalogmanagement.server.Controller
 import kamon.Kamon
 
-import scala.jdk.CollectionConverters.CollectionHasAsScala
+import scala.jdk.CollectionConverters._
 
-@SuppressWarnings(Array("org.wartremover.warts.StringPlusAny", "org.wartremover.warts.Nothing"))
+@SuppressWarnings(
+  Array("org.wartremover.warts.StringPlusAny", "org.wartremover.warts.Nothing", "org.wartremover.warts.Throw")
+)
 object Main extends App {
 
   Kamon.init()
@@ -40,7 +46,7 @@ object Main extends App {
 
         val sharding: ClusterSharding = ClusterSharding(context.system)
 
-        val petPersistentEntity: Entity[Command, ShardingEnvelope[Command]] =
+        val eServicePersistentEntity: Entity[Command, ShardingEnvelope[Command]] =
           Entity(typeKey = EServicePersistentBehavior.TypeKey) { entityContext =>
             EServicePersistentBehavior(
               entityContext.shard,
@@ -48,24 +54,24 @@ object Main extends App {
             )
           }
 
-        val _ = sharding.init(petPersistentEntity)
+        val _ = sharding.init(eServicePersistentEntity)
 
-        val settings: ClusterShardingSettings = petPersistentEntity.settings match {
+        val settings: ClusterShardingSettings = eServicePersistentEntity.settings match {
           case None    => ClusterShardingSettings(context.system)
           case Some(s) => s
         }
 
-        val petPersistentProjection = new EServicePersistentProjection(context.system, petPersistentEntity)
+        val eServicePersistentProjection = new EServicePersistentProjection(context.system, eServicePersistentEntity)
 
         ShardedDaemonProcess(context.system).init[ProjectionBehavior.Command](
-          name = "e-services-projections",
+          name = "eservice-projections",
           numberOfInstances = settings.numberOfShards,
-          behaviorFactory = (i: Int) => ProjectionBehavior(petPersistentProjection.projections(i)),
+          behaviorFactory = (i: Int) => ProjectionBehavior(eServicePersistentProjection.projections(i)),
           stopMessage = ProjectionBehavior.Stop
         )
 
         val eServiceApi = new EServiceApi(
-          new EServiceApiServiceImpl(context.system, sharding, petPersistentEntity),
+          new EServiceApiServiceImpl(context.system, sharding, eServicePersistentEntity),
           new EServiceApiMarshallerImpl(),
           SecurityDirectives.authenticateBasic("SecurityRealm", Authenticator)
         )
@@ -101,7 +107,7 @@ object Main extends App {
           "listener"
         )
 
-        Cluster(context.system).subscriptions ! Subscribe(listener, classOf[ClusterEvent.MemberEvent])
+        cluster.subscriptions ! Subscribe(listener, classOf[ClusterEvent.MemberEvent])
 
         val _ = AkkaManagement(classicSystem).start()
         ClusterBootstrap.get(classicSystem).start()
@@ -109,5 +115,6 @@ object Main extends App {
       },
       "pdnd-interop-uservice-catalog-management"
     )
+
   }
 }
