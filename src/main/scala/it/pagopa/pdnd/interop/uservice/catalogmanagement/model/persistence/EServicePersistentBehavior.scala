@@ -47,8 +47,15 @@ object EServicePersistentBehavior {
         replyTo ! StatusReply.Success[Option[EService]](eService)
         Effect.none[Event, State]
 
-      case ListServices(from, to, _, _, status, replyTo) =>
-        val eServices = state.eServices.filter(_._2.status == status).values.toSeq.slice(from, to)
+      case ListServices(from, to, producerId, _, status, replyTo) =>
+        val eServices: Seq[EService] = state.eServices
+          .filter { case (_, v) =>
+            (if (producerId.isDefined) v.producer.map(_.toString) == producerId else true) &&
+              (if (status.isDefined) v.status == status else true)
+          }
+          .values
+          .toSeq
+          .slice(from, to)
         replyTo ! eServices
         Effect.none[Event, State]
 

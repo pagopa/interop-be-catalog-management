@@ -1,7 +1,10 @@
 package it.pagopa.pdnd.interop.uservice.catalogmanagement.model.persistence.serializer
 
-import it.pagopa.pdnd.interop.uservice.catalogmanagement.model.EService
-import it.pagopa.pdnd.interop.uservice.catalogmanagement.model.persistence.serializer.v1.e_service.EServiceV1
+import it.pagopa.pdnd.interop.uservice.catalogmanagement.model.{EService, EServiceVersion}
+import it.pagopa.pdnd.interop.uservice.catalogmanagement.model.persistence.serializer.v1.e_service.{
+  EServiceV1,
+  EServiceVersionV1
+}
 import it.pagopa.pdnd.interop.uservice.catalogmanagement.model.persistence.serializer.v1.events.EServiceAddedV1
 import it.pagopa.pdnd.interop.uservice.catalogmanagement.model.persistence.serializer.v1.state.{EServicesV1, StateV1}
 import it.pagopa.pdnd.interop.uservice.catalogmanagement.model.persistence.{EServiceAdded, State}
@@ -19,12 +22,20 @@ package object v1 {
             eServicesV1.key,
             EService(
               id = Some(UUID.fromString(eServicesV1.value.id)),
+              producer = Some(UUID.fromString(eServicesV1.value.producer)),
               name = eServicesV1.value.name,
-              version = eServicesV1.value.version,
-              docs = Some(eServicesV1.value.docs),
               description = eServicesV1.value.description,
               scopes = Some(eServicesV1.value.scopes),
-              proposal = Some(eServicesV1.value.proposal),
+              versions = Some(
+                eServicesV1.value.versions.map(ver1 =>
+                  EServiceVersion(
+                    id = Some(UUID.fromString(ver1.id)),
+                    version = ver1.version,
+                    docs = ver1.docs,
+                    proposal = Some(ver1.proposal)
+                  )
+                )
+              ),
               status = Some(eServicesV1.value.status)
             )
           )
@@ -42,12 +53,18 @@ package object v1 {
           key,
           EServiceV1(
             id = eService.id.get.toString,
+            producer = eService.producer.get.toString,
             name = eService.name,
-            version = eService.version,
-            docs = eService.docs.get,
             description = eService.description,
             scopes = eService.scopes.get,
-            proposal = eService.proposal.get,
+            versions = eService.versions.get.map(ver =>
+              EServiceVersionV1(
+                id = ver.id.get.toString,
+                version = ver.version,
+                docs = ver.docs,
+                proposal = ver.proposal.get
+              )
+            ),
             status = eService.status.get
           )
         )
@@ -61,12 +78,20 @@ package object v1 {
         EServiceAdded(eService =
           EService(
             id = Some(UUID.fromString(event.eService.id)),
+            producer = Some(UUID.fromString(event.eService.producer)),
             name = event.eService.name,
-            version = event.eService.version,
-            docs = Some(event.eService.docs),
             description = event.eService.description,
             scopes = Some(event.eService.scopes),
-            proposal = Some(event.eService.proposal),
+            versions = Some(
+              event.eService.versions.map(ver1 =>
+                EServiceVersion(
+                  id = Some(UUID.fromString(ver1.id)),
+                  version = ver1.version,
+                  docs = ver1.docs,
+                  proposal = Some(ver1.proposal)
+                )
+              )
+            ),
             status = Some(event.eService.status)
           )
         )
@@ -76,20 +101,25 @@ package object v1 {
     {
       for {
         id       <- event.eService.id
-        docs     <- event.eService.docs
-        scopes   <- event.eService.scopes
-        proposal <- event.eService.proposal
+        producer <- event.eService.producer
+        versions <- event.eService.versions
         status   <- event.eService.status
       } yield EServiceAddedV1
         .of(
           EServiceV1(
             id = id.toString,
+            producer = producer.toString,
             name = event.eService.name,
-            version = event.eService.version,
-            docs = docs,
             description = event.eService.description,
-            scopes = scopes,
-            proposal = proposal,
+            scopes = event.eService.scopes.get,
+            versions = versions.map(ver =>
+              EServiceVersionV1(
+                id = ver.id.get.toString,
+                version = ver.version,
+                docs = ver.docs,
+                proposal = ver.proposal.get
+              )
+            ),
             status = status
           )
         )

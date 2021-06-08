@@ -11,7 +11,7 @@ info:
   x-api-id: an x-api-id
   x-summary: an x-summary
 servers:
-#  - url: https://gateway.interop.pdnd.dev/pdnd-interop-uservice-catalog-management/0.0.1
+  #  - url: https://gateway.interop.pdnd.dev/pdnd-interop-uservice-catalog-management/0.0.1
   - url: /pdnd-interop-uservice-catalog-management/0.0.1
     description: This service is eservice manager
 #security:
@@ -67,7 +67,7 @@ paths:
           name: status
           schema:
             type: string
-            enum: [draft, active, suspended]
+            enum: [ draft, active, suspended ]
         - in: query
           name: from
           schema:
@@ -123,25 +123,46 @@ components:
       type: object
       required:
         - name
-        - version
+        - versions
         - description
       properties:
         id:
+          type: string
+          format: uuid
+        producer:
           type: string
           format: uuid
         name:
           type: string
           maxLength: 64
           minLength: 6
-        version:
+        description:
           type: string
-        docs:
+          maxLength: 64
+          minLength: 6
+        scopes:
           type: array
           items:
             type: string
-        description:
+        versions:
+          type: array
+          items:
+            $ref: '#/components/schemas/EServiceVersion'
+        status:
           type: string
-        scopes:
+          enum: [ 'active' ]
+    EServiceVersion:
+      type: object
+      required:
+        - version
+        - docs
+      properties:
+        id:
+          type: string
+          format: uuid
+        version:
+          type: string
+        docs:
           type: array
           items:
             type: string
@@ -149,9 +170,6 @@ components:
           type: array
           items:
             type: string
-        status:
-          type: string
-          enum: ['active']
     EServices:
       type: array
       items:

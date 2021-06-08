@@ -50,8 +50,12 @@ class EServiceApiServiceImpl(
     toEntityMarshallerProblem: ToEntityMarshaller[Problem],
     toEntityMarshallerEService: ToEntityMarshaller[EService]
   ): Route = {
-    val id                                  = UUID.randomUUID()
-    val newEService: EService               = eService.copy(id = Some(id), status = Some("active"))
+    val id = UUID.randomUUID()
+    val newEService: EService = eService.copy(
+      id = Some(id),
+      status = Some("active"),
+      versions = eService.versions.map(_.map(_.copy(id = Some(UUID.randomUUID()))))
+    )
     val commander: EntityRef[Command]       = sharding.entityRefFor(EServicePersistentBehavior.TypeKey, getShard(id.toString))
     val result: Future[StatusReply[String]] = commander.ask(ref => AddEService(newEService, ref))
     onSuccess(result) {
