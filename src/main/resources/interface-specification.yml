@@ -14,8 +14,8 @@ servers:
   #  - url: https://gateway.interop.pdnd.dev/pdnd-interop-uservice-catalog-management/0.0.1
   - url: /pdnd-interop-uservice-catalog-management/0.0.1
     description: This service is eservice manager
-#security:
-#  - bearerAuth: [ ]
+security:
+  - bearerAuth: [ ]
 tags:
   - name: e_service
     description: Everything about your E-service
@@ -25,6 +25,8 @@ tags:
 paths:
   /eservice:
     post:
+      security:
+        - bearerAuth: [ ]
       tags:
         - e_service
       summary: Add a new e-service
@@ -50,6 +52,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/Problem'
     get:
+      security:
+        - bearerAuth: [ ]
       tags:
         - e_service
       summary: Retrieve a list of e-service
@@ -68,16 +72,6 @@ paths:
           schema:
             type: string
             enum: [ draft, active, suspended ]
-        - in: query
-          name: from
-          schema:
-            type: integer
-            format: int32
-        - in: query
-          name: to
-          schema:
-            type: integer
-            format: int32
       responses:
         "200":
           description: A list of EService
@@ -85,14 +79,16 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/EServices'
-  /eservice/{eservice_id}:
+  /eservice/{e_service_id}:
     get:
+      security:
+        - bearerAuth: [ ]
       tags:
         - e_service
       summary: Get a e-service
       operationId: getEService
       parameters:
-        - name: eservice_id
+        - name: e_service_id
           in: path
           description: the eservice id
           required: true
@@ -204,3 +200,8 @@ components:
       required:
         - status
         - title
+  securitySchemes:
+    bearerAuth: # arbitrary name for the security scheme
+      type: http
+      scheme: bearer
+      bearerFormat: JWT

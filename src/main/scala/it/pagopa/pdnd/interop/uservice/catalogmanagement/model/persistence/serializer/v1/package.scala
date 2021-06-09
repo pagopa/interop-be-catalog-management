@@ -26,14 +26,12 @@ package object v1 {
               name = eServicesV1.value.name,
               description = eServicesV1.value.description,
               scopes = Some(eServicesV1.value.scopes),
-              versions = Some(
-                eServicesV1.value.versions.map(ver1 =>
-                  EServiceVersion(
-                    id = Some(UUID.fromString(ver1.id)),
-                    version = ver1.version,
-                    docs = ver1.docs,
-                    proposal = Some(ver1.proposal)
-                  )
+              versions = eServicesV1.value.versions.map(ver1 =>
+                EServiceVersion(
+                  id = Some(UUID.fromString(ver1.id)),
+                  version = ver1.version,
+                  docs = ver1.docs,
+                  proposal = Some(ver1.proposal)
                 )
               ),
               status = Some(eServicesV1.value.status)
@@ -57,7 +55,7 @@ package object v1 {
             name = eService.name,
             description = eService.description,
             scopes = eService.scopes.get,
-            versions = eService.versions.get.map(ver =>
+            versions = eService.versions.map(ver =>
               EServiceVersionV1(
                 id = ver.id.get.toString,
                 version = ver.version,
@@ -82,14 +80,12 @@ package object v1 {
             name = event.eService.name,
             description = event.eService.description,
             scopes = Some(event.eService.scopes),
-            versions = Some(
-              event.eService.versions.map(ver1 =>
-                EServiceVersion(
-                  id = Some(UUID.fromString(ver1.id)),
-                  version = ver1.version,
-                  docs = ver1.docs,
-                  proposal = Some(ver1.proposal)
-                )
+            versions = event.eService.versions.map(ver1 =>
+              EServiceVersion(
+                id = Some(UUID.fromString(ver1.id)),
+                version = ver1.version,
+                docs = ver1.docs,
+                proposal = Some(ver1.proposal)
               )
             ),
             status = Some(event.eService.status)
@@ -102,8 +98,8 @@ package object v1 {
       for {
         id       <- event.eService.id
         producer <- event.eService.producer
-        versions <- event.eService.versions
         status   <- event.eService.status
+        scopes   <- event.eService.scopes
       } yield EServiceAddedV1
         .of(
           EServiceV1(
@@ -111,14 +107,12 @@ package object v1 {
             producer = producer.toString,
             name = event.eService.name,
             description = event.eService.description,
-            scopes = event.eService.scopes.get,
-            versions = versions.map(ver =>
-              EServiceVersionV1(
-                id = ver.id.get.toString,
-                version = ver.version,
-                docs = ver.docs,
-                proposal = ver.proposal.get
-              )
+            scopes = scopes,
+            versions = event.eService.versions.flatMap(ver =>
+              for {
+                id       <- ver.id
+                proposal <- ver.proposal
+              } yield EServiceVersionV1(id = id.toString, version = ver.version, docs = ver.docs, proposal = proposal)
             ),
             status = status
           )

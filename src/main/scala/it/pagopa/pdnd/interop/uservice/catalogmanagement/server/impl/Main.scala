@@ -73,7 +73,7 @@ object Main extends App {
         val eServiceApi = new EServiceApi(
           new EServiceApiServiceImpl(context.system, sharding, eServicePersistentEntity),
           new EServiceApiMarshallerImpl(),
-          SecurityDirectives.authenticateBasic("SecurityRealm", Authenticator)
+          SecurityDirectives.authenticateOAuth2("SecurityRealm", Authenticator)
         )
 
         val _ = AkkaManagement.get(classicSystem).start()

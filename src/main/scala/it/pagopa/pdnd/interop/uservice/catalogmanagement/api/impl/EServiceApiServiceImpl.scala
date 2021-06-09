@@ -48,13 +48,14 @@ class EServiceApiServiceImpl(
     */
   override def addEService(eService: EService)(implicit
     toEntityMarshallerProblem: ToEntityMarshaller[Problem],
-    toEntityMarshallerEService: ToEntityMarshaller[EService]
+    toEntityMarshallerEService: ToEntityMarshaller[EService],
+    contexts: Map[String, String]
   ): Route = {
     val id = UUID.randomUUID()
     val newEService: EService = eService.copy(
       id = Some(id),
       status = Some("active"),
-      versions = eService.versions.map(_.map(_.copy(id = Some(UUID.randomUUID()))))
+      versions = eService.versions.map(_.copy(id = Some(UUID.randomUUID())))
     )
     val commander: EntityRef[Command]       = sharding.entityRefFor(EServicePersistentBehavior.TypeKey, getShard(id.toString))
     val result: Future[StatusReply[String]] = commander.ask(ref => AddEService(newEService, ref))
@@ -67,10 +68,12 @@ class EServiceApiServiceImpl(
 
   /** Code: 200, Message: EService retrieved, DataType: EService
     * Code: 404, Message: EService not found, DataType: Problem
+    * Code: 400, Message: Bad request, DataType: Problem
     */
   override def getEService(eServiceId: String)(implicit
     toEntityMarshallerProblem: ToEntityMarshaller[Problem],
-    toEntityMarshallerEService: ToEntityMarshaller[EService]
+    toEntityMarshallerEService: ToEntityMarshaller[EService],
+    contexts: Map[String, String]
   ): Route = {
     val commander: EntityRef[Command]                 = sharding.entityRefFor(EServicePersistentBehavior.TypeKey, getShard(eServiceId))
     val result: Future[StatusReply[Option[EService]]] = commander.ask(ref => GetEService(eServiceId, ref))
@@ -115,13 +118,12 @@ class EServiceApiServiceImpl(
 //    getEServices200(eServices)
 //
 //  }
-  override def getEServices(
-    producerId: Option[String],
-    consumerId: Option[String],
-    status: Option[String],
-    from: Option[Int],
-    to: Option[Int]
-  )(implicit toEntityMarshallerEServicearray: ToEntityMarshaller[Seq[EService]]): Route = {
+  /** Code: 200, Message: A list of EService, DataType: Seq[EService]
+    */
+  override def getEServices(producerId: Option[String], consumerId: Option[String], status: Option[String])(implicit
+    toEntityMarshallerEServicearray: ToEntityMarshaller[Seq[EService]],
+    contexts: Map[String, String]
+  ): Route = {
     val sliceSize = 100
     def getSlice(commander: EntityRef[Command], from: Int, to: Int): LazyList[EService] = {
       val slice: Seq[EService] = Await
