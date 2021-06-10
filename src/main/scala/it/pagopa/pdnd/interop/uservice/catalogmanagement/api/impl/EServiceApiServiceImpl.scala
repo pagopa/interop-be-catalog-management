@@ -6,6 +6,7 @@ import akka.cluster.sharding.typed.{ClusterShardingSettings, ShardingEnvelope}
 import akka.http.scaladsl.marshalling.ToEntityMarshaller
 import akka.http.scaladsl.server.Directives.onSuccess
 import akka.http.scaladsl.server.Route
+import akka.http.scaladsl.server.directives.FileInfo
 import akka.pattern.StatusReply
 import it.pagopa.pdnd.interop.uservice.catalogmanagement.api.EServiceApiService
 import it.pagopa.pdnd.interop.uservice.catalogmanagement.model.persistence.{
@@ -15,9 +16,10 @@ import it.pagopa.pdnd.interop.uservice.catalogmanagement.model.persistence.{
   GetEService,
   ListServices
 }
-import it.pagopa.pdnd.interop.uservice.catalogmanagement.model.{EService, Problem}
+import it.pagopa.pdnd.interop.uservice.catalogmanagement.model.{EService, EServiceVersion, Problem}
 import it.pagopa.pdnd.interop.uservice.catalogmanagement.common.system._
 
+import java.io.File
 import java.util.UUID
 import scala.concurrent.duration.Duration
 import scala.concurrent.{Await, Future}
@@ -46,21 +48,40 @@ class EServiceApiServiceImpl(
   /** Code: 200, Message: EService created, DataType: EService
     * Code: 405, Message: Invalid input, DataType: Problem
     */
-  override def addEService(eService: EService)(implicit
+  override def addEService(
+    name: String,
+    description: String,
+    version: String,
+    openapiFile: (FileInfo, File),
+    scopes: Option[Seq[String]]
+  )(implicit
     toEntityMarshallerProblem: ToEntityMarshaller[Problem],
     toEntityMarshallerEService: ToEntityMarshaller[EService],
-    contexts: Map[String, String]
+    contexts: Seq[(String, String)]
   ): Route = {
+    contexts.foreach(println)
     val id = UUID.randomUUID()
-    val newEService: EService = eService.copy(
-      id = Some(id),
-      status = Some("active"),
-      versions = eService.versions.map(_.copy(id = Some(UUID.randomUUID())))
-    )
+    val eService: EService =
+      EService(
+        id = id,
+        producer = UUID.randomUUID(),
+        name = name,
+        status = "active",
+        versions = Seq(
+          EServiceVersion(
+            id = UUID.randomUUID(),
+            version = version,
+            docs = Seq(openapiFile._1.fileName),
+            proposal = None
+          )
+        ),
+        scopes = scopes,
+        description = description
+      )
     val commander: EntityRef[Command]       = sharding.entityRefFor(EServicePersistentBehavior.TypeKey, getShard(id.toString))
-    val result: Future[StatusReply[String]] = commander.ask(ref => AddEService(newEService, ref))
+    val result: Future[StatusReply[String]] = commander.ask(ref => AddEService(eService, ref))
     onSuccess(result) {
-      case statusReply if statusReply.isSuccess => addEService200(newEService)
+      case statusReply if statusReply.isSuccess => addEService200(eService)
       case statusReply if statusReply.isError =>
         addEService405(Problem(Option(statusReply.getError.getMessage), status = 405, "some error"))
     }
@@ -73,8 +94,9 @@ class EServiceApiServiceImpl(
   override def getEService(eServiceId: String)(implicit
     toEntityMarshallerProblem: ToEntityMarshaller[Problem],
     toEntityMarshallerEService: ToEntityMarshaller[EService],
-    contexts: Map[String, String]
+    contexts: Seq[(String, String)]
   ): Route = {
+    contexts.foreach(println)
     val commander: EntityRef[Command]                 = sharding.entityRefFor(EServicePersistentBehavior.TypeKey, getShard(eServiceId))
     val result: Future[StatusReply[Option[EService]]] = commander.ask(ref => GetEService(eServiceId, ref))
     onSuccess(result) {
@@ -118,12 +140,14 @@ class EServiceApiServiceImpl(
 //    getEServices200(eServices)
 //
 //  }
+
   /** Code: 200, Message: A list of EService, DataType: Seq[EService]
     */
   override def getEServices(producerId: Option[String], consumerId: Option[String], status: Option[String])(implicit
     toEntityMarshallerEServicearray: ToEntityMarshaller[Seq[EService]],
-    contexts: Map[String, String]
+    contexts: Seq[(String, String)]
   ): Route = {
+    contexts.foreach(println)
     val sliceSize = 100
     def getSlice(commander: EntityRef[Command], from: Int, to: Int): LazyList[EService] = {
       val slice: Seq[EService] = Await
