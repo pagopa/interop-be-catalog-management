@@ -11,11 +11,11 @@ package object system {
 
   implicit val timeout: Timeout = 300.seconds
 
-  object Authenticator extends Authenticator[Map[String, String]] {
+  object Authenticator extends Authenticator[Seq[(String, String)]] {
 
-    override def apply(credentials: Credentials): Option[Map[String, String]] = {
+    override def apply(credentials: Credentials): Option[Seq[(String, String)]] = {
       credentials match {
-        case Provided(identifier) => Some(Map("bearer" -> identifier))
+        case Provided(identifier) => Some(Seq("bearer" -> identifier))
         case Missing              => None
       }
     }

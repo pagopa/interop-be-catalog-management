@@ -30,7 +30,7 @@ import akka.http.scaladsl.server.directives.FileInfo
     class {{classname}}(
     {{classVarName}}Service: {{classname}}Service{{#hasMarshalling}},
     {{classVarName}}Marshaller: {{classname}}Marshaller{{/hasMarshalling}},
-    wrappingDirective: Directive1[Map[String, String]]
+    wrappingDirective: Directive1[Seq[(String, String)]]
     ) {{#hasMultipart}} extends MultipartDirectives with StringDirectives {{/hasMultipart}}{
     {{#pathMatcherPatterns}}import {{classname}}Patterns.{{pathMatcherVarName}}
     {{/pathMatcherPatterns}}
@@ -73,7 +73,7 @@ import akka.http.scaladsl.server.directives.FileInfo
         {{/responses}}
         */
         def {{operationId}}({{> operationParam}}){{^vendorExtensions.x-specific-marshallers.isEmpty}}
-            (implicit {{#vendorExtensions.x-specific-marshallers}}toEntityMarshaller{{varName}}: ToEntityMarshaller[{{dataType}}]{{^-last}}, {{/-last}}{{/vendorExtensions.x-specific-marshallers}}, contexts: Map[String, String]){{/vendorExtensions.x-specific-marshallers.isEmpty}}: Route
+            (implicit {{#vendorExtensions.x-specific-marshallers}}toEntityMarshaller{{varName}}: ToEntityMarshaller[{{dataType}}]{{^-last}}, {{/-last}}{{/vendorExtensions.x-specific-marshallers}}, contexts: Seq[(String, String)]){{/vendorExtensions.x-specific-marshallers.isEmpty}}: Route
 
     {{/operation}}
     }

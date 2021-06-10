@@ -21,20 +21,20 @@ package object v1 {
           (
             eServicesV1.key,
             EService(
-              id = Some(UUID.fromString(eServicesV1.value.id)),
-              producer = Some(UUID.fromString(eServicesV1.value.producer)),
+              id = UUID.fromString(eServicesV1.value.id),
+              producer = UUID.fromString(eServicesV1.value.producer),
               name = eServicesV1.value.name,
               description = eServicesV1.value.description,
               scopes = Some(eServicesV1.value.scopes),
               versions = eServicesV1.value.versions.map(ver1 =>
                 EServiceVersion(
-                  id = Some(UUID.fromString(ver1.id)),
+                  id = UUID.fromString(ver1.id),
                   version = ver1.version,
                   docs = ver1.docs,
                   proposal = Some(ver1.proposal)
                 )
               ),
-              status = Some(eServicesV1.value.status)
+              status = eServicesV1.value.status
             )
           )
         )
@@ -50,20 +50,20 @@ package object v1 {
         EServicesV1(
           key,
           EServiceV1(
-            id = eService.id.get.toString,
-            producer = eService.producer.get.toString,
+            id = eService.id.toString,
+            producer = eService.producer.toString,
             name = eService.name,
             description = eService.description,
-            scopes = eService.scopes.get,
+            scopes = eService.scopes.getOrElse(Seq.empty),
             versions = eService.versions.map(ver =>
               EServiceVersionV1(
-                id = ver.id.get.toString,
+                id = ver.id.toString,
                 version = ver.version,
                 docs = ver.docs,
                 proposal = ver.proposal.get
               )
             ),
-            status = eService.status.get
+            status = eService.status
           )
         )
       }.toSeq
@@ -75,48 +75,47 @@ package object v1 {
       Right[Throwable, EServiceAdded](
         EServiceAdded(eService =
           EService(
-            id = Some(UUID.fromString(event.eService.id)),
-            producer = Some(UUID.fromString(event.eService.producer)),
+            id = UUID.fromString(event.eService.id),
+            producer = UUID.fromString(event.eService.producer),
             name = event.eService.name,
             description = event.eService.description,
             scopes = Some(event.eService.scopes),
             versions = event.eService.versions.map(ver1 =>
               EServiceVersion(
-                id = Some(UUID.fromString(ver1.id)),
+                id = UUID.fromString(ver1.id),
                 version = ver1.version,
                 docs = ver1.docs,
                 proposal = Some(ver1.proposal)
               )
             ),
-            status = Some(event.eService.status)
+            status = event.eService.status
           )
         )
       )
 
   implicit def eServiceAddedV1PersistEventSerializer: PersistEventSerializer[EServiceAdded, EServiceAddedV1] = event =>
-    {
-      for {
-        id       <- event.eService.id
-        producer <- event.eService.producer
-        status   <- event.eService.status
-        scopes   <- event.eService.scopes
-      } yield EServiceAddedV1
+    Right[Throwable, EServiceAddedV1] {
+      EServiceAddedV1
         .of(
           EServiceV1(
-            id = id.toString,
-            producer = producer.toString,
+            id = event.eService.id.toString,
+            producer = event.eService.producer.toString,
             name = event.eService.name,
             description = event.eService.description,
-            scopes = scopes,
+            scopes = event.eService.scopes.getOrElse(Seq.empty[String]),
             versions = event.eService.versions.flatMap(ver =>
               for {
-                id       <- ver.id
                 proposal <- ver.proposal
-              } yield EServiceVersionV1(id = id.toString, version = ver.version, docs = ver.docs, proposal = proposal)
+              } yield EServiceVersionV1(
+                id = ver.id.toString,
+                version = ver.version,
+                docs = ver.docs,
+                proposal = proposal
+              )
             ),
-            status = status
+            status = event.eService.status
           )
         )
-    }.toRight(new RuntimeException("Deserialization from protobuf failed"))
+    }
 
 }

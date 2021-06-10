@@ -24,22 +24,17 @@ object EServicePersistentBehavior {
     context.setReceiveTimeout(idleTimeout.get(ChronoUnit.SECONDS) seconds, Idle)
     command match {
       case AddEService(newEService, replyTo) =>
-        val eService: Option[EService] = for {
-          id    <- newEService.id
-          found <- state.eServices.get(id.toString)
-        } yield found
+        val eService: Option[EService] = state.eServices.get(newEService.id.toString)
 
         eService
           .map { es =>
-            replyTo ! StatusReply.Error[String](
-              s"E-Service ${es.id.map(_.toString).getOrElse("UNKNOWN")} already exists"
-            )
+            replyTo ! StatusReply.Error[String](s"E-Service ${es.id.toString} already exists")
             Effect.none[EServiceAdded, State]
           }
           .getOrElse {
             Effect
               .persist(EServiceAdded(newEService))
-              .thenRun((_: State) => replyTo ! StatusReply.Success(newEService.id.map(_.toString).getOrElse("UNKNOWN")))
+              .thenRun((_: State) => replyTo ! StatusReply.Success(newEService.id.toString))
           }
 
       case GetEService(eServiceId, replyTo) =>
@@ -50,8 +45,8 @@ object EServicePersistentBehavior {
       case ListServices(from, to, producerId, _, status, replyTo) =>
         val eServices: Seq[EService] = state.eServices
           .filter { case (_, v) =>
-            (if (producerId.isDefined) v.producer.map(_.toString) == producerId else true) &&
-              (if (status.isDefined) v.status == status else true)
+            (if (producerId.isDefined) producerId.contains(v.producer.toString) else true) &&
+              (if (status.isDefined) status.contains(v.status) else true)
           }
           .values
           .toSeq

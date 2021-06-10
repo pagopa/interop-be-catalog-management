@@ -34,9 +34,37 @@ paths:
       requestBody:
         description: A E-Service seed
         content:
-          application/json:
+          multipart/form-data:
             schema:
-              $ref: '#/components/schemas/EService'
+              type: object
+              required:
+                - name
+                - description
+                - version
+                - openapiFile
+              properties:
+                name:
+                  type: string
+                  maxLength: 64
+                  minLength: 6
+                description:
+                  type: string
+                  maxLength: 64
+                  minLength: 6
+                scopes:
+                  type: array
+                  items:
+                    type: string
+                version:
+                  type: string
+                  maxLength: 64
+                  minLength: 6
+                openapiFile:
+                  type: string
+                  format: binary
+            encoding:
+              openapiFile:
+                contentType: text/plain, application/json, application/yaml
         required: true
       responses:
         "200":
@@ -118,9 +146,12 @@ components:
     EService:
       type: object
       required:
+        - id
+        - producer
         - name
         - versions
         - description
+        - status
       properties:
         id:
           type: string
@@ -146,10 +177,11 @@ components:
             $ref: '#/components/schemas/EServiceVersion'
         status:
           type: string
-          enum: [ 'active' ]
+          enum: [ 'draft', 'active' ]
     EServiceVersion:
       type: object
       required:
+        - id
         - version
         - docs
       properties:
