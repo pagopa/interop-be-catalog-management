@@ -2,18 +2,18 @@ package it.pagopa.pdnd.interop.uservice.catalogmanagement.model.persistence
 
 import akka.actor.typed.ActorRef
 import akka.pattern.StatusReply
-import it.pagopa.pdnd.interop.uservice.catalogmanagement.model.EService
 
 sealed trait Command
 
-case object Idle                                                                                   extends Command
-final case class AddEService(eService: EService, replyTo: ActorRef[StatusReply[String]])           extends Command
-final case class GetEService(eServiceId: String, replyTo: ActorRef[StatusReply[Option[EService]]]) extends Command
-final case class ListServices(
+case object Idle                                                                                       extends Command
+final case class AddCatalogItem(catalogItem: CatalogItem, replyTo: ActorRef[StatusReply[CatalogItem]]) extends Command
+final case class GetCatalogItem(catalogItemId: String, replyTo: ActorRef[StatusReply[Option[CatalogItem]]])
+    extends Command
+final case class ListCatalogItem(
   from: Int,
   to: Int,
   producerId: Option[String],
   consumerId: Option[String],
   status: Option[String],
-  replyTo: ActorRef[Seq[EService]]
+  replyTo: ActorRef[Seq[CatalogItem]]
 ) extends Command

@@ -1,12 +1,12 @@
 syntax = "proto2";
 
 import "scalapb/scalapb.proto";
-import "v1/e-service.proto";
+import "v1/catalog-item.proto";
 
 option (scalapb.options) = {
   package_name: "it.pagopa.pdnd.interop.uservice.catalogmanagement.model.persistence.serializer.v1"
 };
 
-message EServiceAddedV1 {
-  required EServiceV1 eService = 1;
+message CatalogItemV1AddedV1 {
+  required CatalogItemV1 catalogItem = 1;
 }

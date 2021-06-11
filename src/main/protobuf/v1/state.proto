@@ -6,14 +6,14 @@ option (scalapb.options) = {
   package_name: "it.pagopa.pdnd.interop.uservice.catalogmanagement.model.persistence.serializer.v1"
 };
 
-import "v1/e-service.proto";
+import "v1/catalog-item.proto";
 
 
 message StateV1 {
-  repeated EServicesV1 eServices = 1;
+  repeated CatalogItemsV1 items = 1;
 }
 
-message EServicesV1 {
+message CatalogItemsV1 {
   required  string key = 1;
-  required EServiceV1 value = 2;
+  required CatalogItemV1 value = 2;
 }

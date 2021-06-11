@@ -16,7 +16,7 @@ import akka.stream.scaladsl.FlowWithContext
 import scala.concurrent.duration.DurationInt
 
 @SuppressWarnings(Array("org.wartremover.warts.StringPlusAny"))
-class EServicePersistentProjection(system: ActorSystem[_], entity: Entity[Command, ShardingEnvelope[Command]]) {
+class CatalogPersistentProjection(system: ActorSystem[_], entity: Entity[Command, ShardingEnvelope[Command]]) {
 
   private val settings: ClusterShardingSettings = entity.settings match {
     case None    => ClusterShardingSettings(system)
