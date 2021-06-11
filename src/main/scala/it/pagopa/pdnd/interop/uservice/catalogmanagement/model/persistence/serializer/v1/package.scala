@@ -22,7 +22,7 @@ package object v1 {
             eServicesV1.key,
             EService(
               id = UUID.fromString(eServicesV1.value.id),
-              producer = UUID.fromString(eServicesV1.value.producer),
+              producerId = UUID.fromString(eServicesV1.value.producerId),
               name = eServicesV1.value.name,
               description = eServicesV1.value.description,
               scopes = Some(eServicesV1.value.scopes),
@@ -51,7 +51,7 @@ package object v1 {
           key,
           EServiceV1(
             id = eService.id.toString,
-            producer = eService.producer.toString,
+            producerId = eService.producerId.toString,
             name = eService.name,
             description = eService.description,
             scopes = eService.scopes.getOrElse(Seq.empty),
@@ -76,7 +76,7 @@ package object v1 {
         EServiceAdded(eService =
           EService(
             id = UUID.fromString(event.eService.id),
-            producer = UUID.fromString(event.eService.producer),
+            producerId = UUID.fromString(event.eService.producerId),
             name = event.eService.name,
             description = event.eService.description,
             scopes = Some(event.eService.scopes),
@@ -99,7 +99,7 @@ package object v1 {
         .of(
           EServiceV1(
             id = event.eService.id.toString,
-            producer = event.eService.producer.toString,
+            producerId = event.eService.producerId.toString,
             name = event.eService.name,
             description = event.eService.description,
             scopes = event.eService.scopes.getOrElse(Seq.empty[String]),

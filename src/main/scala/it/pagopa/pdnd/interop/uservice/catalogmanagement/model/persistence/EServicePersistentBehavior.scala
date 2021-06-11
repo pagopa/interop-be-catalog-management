@@ -45,7 +45,7 @@ object EServicePersistentBehavior {
       case ListServices(from, to, producerId, _, status, replyTo) =>
         val eServices: Seq[EService] = state.eServices
           .filter { case (_, v) =>
-            (if (producerId.isDefined) producerId.contains(v.producer.toString) else true) &&
+            (if (producerId.isDefined) producerId.contains(v.producerId.toString) else true) &&
               (if (status.isDefined) status.contains(v.status) else true)
           }
           .values

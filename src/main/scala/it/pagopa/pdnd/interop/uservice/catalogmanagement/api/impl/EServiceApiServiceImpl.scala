@@ -64,7 +64,7 @@ class EServiceApiServiceImpl(
     val eService: EService =
       EService(
         id = id,
-        producer = UUID.randomUUID(),
+        producerId = UUID.randomUUID(),
         name = name,
         status = "active",
         versions = Seq(
