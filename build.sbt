@@ -60,7 +60,7 @@ lazy val generated = project
 lazy val client = project
   .in(file("client"))
   .settings(
-    name := "pdnd-interop-uservice-catalog-management",
+    name := "pdnd-interop-uservice-catalog-management-client",
     scalacOptions := Seq(),
     scalafmtOnCompile := true,
     libraryDependencies := Dependencies.Jars.client.map(m =>
