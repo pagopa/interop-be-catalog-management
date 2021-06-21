@@ -45,7 +45,7 @@ object Main extends App {
         import akka.actor.typed.scaladsl.adapter._
         implicit val classicSystem: classic.ActorSystem         = context.system.toClassic
         implicit val executionContext: ExecutionContextExecutor = context.system.executionContext
-        val cluster                                             = Cluster(context.system)
+        val cluster: Cluster                                    = Cluster(context.system)
 
         context.log.error("Started [" + context.system + "], cluster.selfAddress = " + cluster.selfMember.address + ")")
 
