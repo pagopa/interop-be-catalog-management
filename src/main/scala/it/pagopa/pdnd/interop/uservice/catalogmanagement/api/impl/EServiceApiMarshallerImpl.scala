@@ -1,16 +1,18 @@
 package it.pagopa.pdnd.interop.uservice.catalogmanagement.api.impl
 
-import akka.http.scaladsl.unmarshalling.Unmarshaller
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import akka.http.scaladsl.marshalling.ToEntityMarshaller
-import akka.http.scaladsl.unmarshalling.FromStringUnmarshaller
+import akka.http.scaladsl.unmarshalling.{FromStringUnmarshaller, Unmarshaller}
 import it.pagopa.pdnd.interop.uservice.catalogmanagement.api.EServiceApiMarshaller
 import it.pagopa.pdnd.interop.uservice.catalogmanagement.model.{EService, Problem}
 import spray.json._
 
+import java.io.File
 import scala.concurrent.Future
 
 class EServiceApiMarshallerImpl extends EServiceApiMarshaller with SprayJsonSupport with DefaultJsonProtocol {
+
+  override implicit def toEntityMarshallerFile: ToEntityMarshaller[File] = ???
 
   override implicit def fromStringUnmarshallerStringList: FromStringUnmarshaller[Seq[String]] =
     Unmarshaller(_ => s => Future.successful(s.split(",").toSeq))

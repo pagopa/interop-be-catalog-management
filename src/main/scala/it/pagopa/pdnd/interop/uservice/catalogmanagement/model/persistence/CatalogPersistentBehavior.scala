@@ -6,14 +6,13 @@ import akka.cluster.sharding.typed.scaladsl.{ClusterSharding, EntityTypeKey}
 import akka.pattern.StatusReply
 import akka.persistence.typed.PersistenceId
 import akka.persistence.typed.scaladsl.{Effect, EventSourcedBehavior, RetentionCriteria}
-import it.pagopa.pdnd.interop.uservice.catalogmanagement.model.EService
 
 import java.time.temporal.ChronoUnit
 import scala.concurrent.duration.{DurationInt, DurationLong}
 import scala.language.postfixOps
 
 @SuppressWarnings(Array("org.wartremover.warts.Equals"))
-object EServicePersistentBehavior {
+object CatalogPersistentBehavior {
 
   def commandHandler(
     shard: ActorRef[ClusterSharding.ShardCommand],
@@ -23,27 +22,27 @@ object EServicePersistentBehavior {
       context.system.settings.config.getDuration("pdnd-interop-uservice-catalog-management.idle-timeout")
     context.setReceiveTimeout(idleTimeout.get(ChronoUnit.SECONDS) seconds, Idle)
     command match {
-      case AddEService(newEService, replyTo) =>
-        val eService: Option[EService] = state.eServices.get(newEService.id.toString)
+      case AddCatalogItem(newCatalogItem, replyTo) =>
+        val catalogItem: Option[CatalogItem] = state.items.get(newCatalogItem.id.toString)
 
-        eService
-          .map { es =>
-            replyTo ! StatusReply.Error[String](s"E-Service ${es.id.toString} already exists")
-            Effect.none[EServiceAdded, State]
+        catalogItem
+          .map { ci =>
+            replyTo ! StatusReply.Error[CatalogItem](s"E-Service ${ci.id.toString} already exists")
+            Effect.none[CatalogItemAdded, State]
           }
           .getOrElse {
             Effect
-              .persist(EServiceAdded(newEService))
-              .thenRun((_: State) => replyTo ! StatusReply.Success(newEService.id.toString))
+              .persist(CatalogItemAdded(newCatalogItem))
+              .thenRun((_: State) => replyTo ! StatusReply.Success(newCatalogItem))
           }
 
-      case GetEService(eServiceId, replyTo) =>
-        val eService: Option[EService] = state.eServices.get(eServiceId)
-        replyTo ! StatusReply.Success[Option[EService]](eService)
+      case GetCatalogItem(itemId, replyTo) =>
+        val catalogItem: Option[CatalogItem] = state.items.get(itemId)
+        replyTo ! StatusReply.Success[Option[CatalogItem]](catalogItem)
         Effect.none[Event, State]
 
-      case ListServices(from, to, producerId, _, status, replyTo) =>
-        val eServices: Seq[EService] = state.eServices
+      case ListCatalogItem(from, to, producerId, _, status, replyTo) =>
+        val catalogItems: Seq[CatalogItem] = state.items
           .filter { case (_, v) =>
             (if (producerId.isDefined) producerId.contains(v.producerId.toString) else true) &&
               (if (status.isDefined) status.contains(v.status) else true)
@@ -51,7 +50,7 @@ object EServicePersistentBehavior {
           .values
           .toSeq
           .slice(from, to)
-        replyTo ! eServices
+        replyTo ! catalogItems
         Effect.none[Event, State]
 
       case Idle =>
@@ -63,7 +62,7 @@ object EServicePersistentBehavior {
 
   val eventHandler: (State, Event) => State = (state, event) =>
     event match {
-      case EServiceAdded(eService) => state.add(eService)
+      case CatalogItemAdded(catalogItem) => state.add(catalogItem)
     }
 
   val TypeKey: EntityTypeKey[Command] =

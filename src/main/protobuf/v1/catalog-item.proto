@@ -6,19 +6,26 @@ option (scalapb.options) = {
   package_name: "it.pagopa.pdnd.interop.uservice.catalogmanagement.model.persistence.serializer.v1"
 };
 
-message EServiceV1 {
+message CatalogItemV1 {
   required string id = 1;
   required string producerId = 2;
   required string name = 3;
-  repeated EServiceVersionV1 versions = 4;
+  repeated CatalogItemVersionV1 versions = 4;
   required string description = 5;
   repeated string scopes = 6;
   required string status = 7;
 }
 
-message EServiceVersionV1 {
+message CatalogItemVersionV1 {
   required string id = 1;
   required string version = 2;
-  repeated string docs = 3;
+  repeated CatalogItemDocumentV1 docs = 3;
   repeated string proposal = 4;
+}
+
+message CatalogItemDocumentV1 {
+  required string id = 1;
+  required string name = 2;
+  required string contentType = 3;
+  required string path = 4;
 }

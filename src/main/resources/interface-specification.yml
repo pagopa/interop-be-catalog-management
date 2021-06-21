@@ -23,7 +23,7 @@ tags:
       description: Find out more
       url: http://swagger.io
 paths:
-  /eservice:
+  /eservices:
     post:
       security:
         - bearerAuth: [ ]
@@ -113,7 +113,7 @@ paths:
         - bearerAuth: [ ]
       tags:
         - e_service
-      summary: Get a e-service
+      summary: Get an e-service
       operationId: getEService
       parameters:
         - name: e_service_id
@@ -129,6 +129,47 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/EService'
+        '404':
+          description: EService not found
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '400':
+          description: Bad request
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+  /eservice/{e_service_id}/documents/{document_id}:
+    get:
+      security:
+        - bearerAuth: [ ]
+      tags:
+        - e_service
+      summary: Get an e-service document
+      operationId: getEServiceDocument
+      parameters:
+        - name: e_service_id
+          in: path
+          description: the eservice id
+          required: true
+          schema:
+            type: string
+        - name: document_id
+          in: path
+          description: the document id
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: EService document retrieved
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
         '404':
           description: EService not found
           content:
@@ -178,6 +219,20 @@ components:
         status:
           type: string
           enum: [ 'draft', 'active' ]
+    EServiceDoc:
+      type: object
+      required:
+        - id
+        - name
+        - contentType
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        contentType:
+          type: string
     EServiceVersion:
       type: object
       required:
@@ -193,7 +248,7 @@ components:
         docs:
           type: array
           items:
-            type: string
+            $ref: '#/components/schemas/EServiceDoc'
         proposal:
           type: array
           items:

@@ -1,13 +1,13 @@
 package it.pagopa.pdnd.interop.uservice.catalogmanagement.model.persistence.serializer
 
-import it.pagopa.pdnd.interop.uservice.catalogmanagement.model.{EService, EServiceVersion}
-import it.pagopa.pdnd.interop.uservice.catalogmanagement.model.persistence.serializer.v1.e_service.{
-  EServiceV1,
-  EServiceVersionV1
+import it.pagopa.pdnd.interop.uservice.catalogmanagement.model.persistence._
+import it.pagopa.pdnd.interop.uservice.catalogmanagement.model.persistence.serializer.v1.catalog_item.{
+  CatalogItemDocumentV1,
+  CatalogItemV1,
+  CatalogItemVersionV1
 }
-import it.pagopa.pdnd.interop.uservice.catalogmanagement.model.persistence.serializer.v1.events.EServiceAddedV1
-import it.pagopa.pdnd.interop.uservice.catalogmanagement.model.persistence.serializer.v1.state.{EServicesV1, StateV1}
-import it.pagopa.pdnd.interop.uservice.catalogmanagement.model.persistence.{EServiceAdded, State}
+import it.pagopa.pdnd.interop.uservice.catalogmanagement.model.persistence.serializer.v1.events.CatalogItemV1AddedV1
+import it.pagopa.pdnd.interop.uservice.catalogmanagement.model.persistence.serializer.v1.state.{CatalogItemsV1, StateV1}
 
 import java.util.UUID
 
@@ -16,106 +16,136 @@ package object v1 {
   @SuppressWarnings(Array("org.wartremover.warts.Nothing"))
   implicit def stateV1PersistEventDeserializer: PersistEventDeserializer[StateV1, State] =
     state => {
-      val eServices = state.eServices
-        .map(eServicesV1 =>
+      val items = state.items
+        .map(itemsV1 =>
           (
-            eServicesV1.key,
-            EService(
-              id = UUID.fromString(eServicesV1.value.id),
-              producerId = UUID.fromString(eServicesV1.value.producerId),
-              name = eServicesV1.value.name,
-              description = eServicesV1.value.description,
-              scopes = Some(eServicesV1.value.scopes),
-              versions = eServicesV1.value.versions.map(ver1 =>
-                EServiceVersion(
+            itemsV1.key,
+            CatalogItem(
+              id = UUID.fromString(itemsV1.value.id),
+              producerId = UUID.fromString(itemsV1.value.producerId),
+              name = itemsV1.value.name,
+              description = itemsV1.value.description,
+              scopes = Some(itemsV1.value.scopes),
+              versions = itemsV1.value.versions.map(ver1 =>
+                CatalogItemVersion(
                   id = UUID.fromString(ver1.id),
                   version = ver1.version,
-                  docs = ver1.docs,
+                  docs = ver1.docs.map { doc =>
+                    CatalogItemDocument(
+                      id = UUID.fromString(doc.id),
+                      name = doc.name,
+                      contentType = doc.contentType,
+                      path = doc.path
+                    )
+                  },
                   proposal = Some(ver1.proposal)
                 )
               ),
-              status = eServicesV1.value.status
+              status = itemsV1.value.status
             )
           )
         )
         .toMap
-      Right(State(eServices))
+      Right(State(items))
     }
 
   @SuppressWarnings(Array("org.wartremover.warts.Nothing", "org.wartremover.warts.OptionPartial"))
   implicit def stateV1PersistEventSerializer: PersistEventSerializer[State, StateV1] =
     state => {
-      val eServices = state.eServices
-      val eServicesV1 = eServices.map { case (key, eService) =>
-        EServicesV1(
+      val itemsV1 = state.items.map { case (key, catalogItem) =>
+        CatalogItemsV1(
           key,
-          EServiceV1(
-            id = eService.id.toString,
-            producerId = eService.producerId.toString,
-            name = eService.name,
-            description = eService.description,
-            scopes = eService.scopes.getOrElse(Seq.empty),
-            versions = eService.versions.map(ver =>
-              EServiceVersionV1(
+          CatalogItemV1(
+            id = catalogItem.id.toString,
+            producerId = catalogItem.producerId.toString,
+            name = catalogItem.name,
+            description = catalogItem.description,
+            scopes = catalogItem.scopes.getOrElse(Seq.empty),
+            versions = catalogItem.versions.map(ver =>
+              CatalogItemVersionV1(
                 id = ver.id.toString,
                 version = ver.version,
-                docs = ver.docs,
+                docs = ver.docs.map { doc =>
+                  CatalogItemDocumentV1(
+                    id = doc.id.toString,
+                    name = doc.name,
+                    contentType = doc.contentType,
+                    path = doc.path
+                  )
+                },
                 proposal = ver.proposal.get
               )
             ),
-            status = eService.status
+            status = catalogItem.status
           )
         )
       }.toSeq
-      Right(StateV1(eServicesV1))
+      Right(StateV1(itemsV1))
     }
 
-  implicit def eServiceAddedV1PersistEventDeserializer: PersistEventDeserializer[EServiceAddedV1, EServiceAdded] =
+  implicit def catalogItemV1AddedV1PersistEventDeserializer
+    : PersistEventDeserializer[CatalogItemV1AddedV1, CatalogItemAdded] =
     event =>
-      Right[Throwable, EServiceAdded](
-        EServiceAdded(eService =
-          EService(
-            id = UUID.fromString(event.eService.id),
-            producerId = UUID.fromString(event.eService.producerId),
-            name = event.eService.name,
-            description = event.eService.description,
-            scopes = Some(event.eService.scopes),
-            versions = event.eService.versions.map(ver1 =>
-              EServiceVersion(
+      Right[Throwable, CatalogItemAdded](
+        CatalogItemAdded(catalogItem =
+          CatalogItem(
+            id = UUID.fromString(event.catalogItem.id),
+            producerId = UUID.fromString(event.catalogItem.producerId),
+            name = event.catalogItem.name,
+            description = event.catalogItem.description,
+            scopes = Some(event.catalogItem.scopes),
+            versions = event.catalogItem.versions.map(ver1 =>
+              CatalogItemVersion(
                 id = UUID.fromString(ver1.id),
                 version = ver1.version,
-                docs = ver1.docs,
+                docs = ver1.docs.map { doc =>
+                  CatalogItemDocument(
+                    id = UUID.fromString(doc.id),
+                    name = doc.name,
+                    contentType = doc.contentType,
+                    path = doc.path
+                  )
+                },
                 proposal = Some(ver1.proposal)
               )
             ),
-            status = event.eService.status
+            status = event.catalogItem.status
           )
         )
       )
 
-  implicit def eServiceAddedV1PersistEventSerializer: PersistEventSerializer[EServiceAdded, EServiceAddedV1] = event =>
-    Right[Throwable, EServiceAddedV1] {
-      EServiceAddedV1
-        .of(
-          EServiceV1(
-            id = event.eService.id.toString,
-            producerId = event.eService.producerId.toString,
-            name = event.eService.name,
-            description = event.eService.description,
-            scopes = event.eService.scopes.getOrElse(Seq.empty[String]),
-            versions = event.eService.versions.flatMap(ver =>
-              for {
-                proposal <- ver.proposal
-              } yield EServiceVersionV1(
-                id = ver.id.toString,
-                version = ver.version,
-                docs = ver.docs,
-                proposal = proposal
-              )
-            ),
-            status = event.eService.status
+  implicit def catalogItemV1AddedV1PersistEventSerializer
+    : PersistEventSerializer[CatalogItemAdded, CatalogItemV1AddedV1] =
+    event =>
+      Right[Throwable, CatalogItemV1AddedV1] {
+        CatalogItemV1AddedV1
+          .of(
+            CatalogItemV1(
+              id = event.catalogItem.id.toString,
+              producerId = event.catalogItem.producerId.toString,
+              name = event.catalogItem.name,
+              description = event.catalogItem.description,
+              scopes = event.catalogItem.scopes.getOrElse(Seq.empty[String]),
+              versions = event.catalogItem.versions.flatMap(ver =>
+                for {
+                  proposal <- ver.proposal
+                } yield CatalogItemVersionV1(
+                  id = ver.id.toString,
+                  version = ver.version,
+                  docs = ver.docs.map { doc =>
+                    CatalogItemDocumentV1(
+                      id = doc.id.toString,
+                      name = doc.name,
+                      contentType = doc.contentType,
+                      path = doc.path
+                    )
+                  },
+                  proposal = proposal
+                )
+              ),
+              status = event.catalogItem.status
+            )
           )
-        )
-    }
+      }
 
 }
