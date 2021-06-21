@@ -69,7 +69,7 @@ object Main extends App {
         val catalogPersistentProjection = new CatalogPersistentProjection(context.system, catalogPersistentEntity)
 
         ShardedDaemonProcess(context.system).init[ProjectionBehavior.Command](
-          name = "eservice-projections",
+          name = "catalog-projections",
           numberOfInstances = settings.numberOfShards,
           behaviorFactory = (i: Int) => ProjectionBehavior(catalogPersistentProjection.projections(i)),
           stopMessage = ProjectionBehavior.Stop

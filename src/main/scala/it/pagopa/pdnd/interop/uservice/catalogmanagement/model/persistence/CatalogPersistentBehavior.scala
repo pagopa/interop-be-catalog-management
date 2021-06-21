@@ -19,7 +19,7 @@ object CatalogPersistentBehavior {
     context: ActorContext[Command]
   ): (State, Command) => Effect[Event, State] = { (state, command) =>
     val idleTimeout =
-      context.system.settings.config.getDuration("pdnd-interop-uservice-catalog-management.idle-timeout")
+      context.system.settings.config.getDuration("uservice-catalog-management.idle-timeout")
     context.setReceiveTimeout(idleTimeout.get(ChronoUnit.SECONDS) seconds, Idle)
     command match {
       case AddCatalogItem(newCatalogItem, replyTo) =>
@@ -66,14 +66,14 @@ object CatalogPersistentBehavior {
     }
 
   val TypeKey: EntityTypeKey[Command] =
-    EntityTypeKey[Command]("pdnd-interop-uservice-catalog-management-persistence-eservice")
+    EntityTypeKey[Command]("uservice-catalog-management-persistence-catalog")
 
   def apply(shard: ActorRef[ClusterSharding.ShardCommand], persistenceId: PersistenceId): Behavior[Command] = {
     Behaviors.setup { context =>
       context.log.error(s"Starting EService Shard ${persistenceId.id}")
       val numberOfEvents =
         context.system.settings.config
-          .getInt("pdnd-interop-uservice-catalog-management.number-of-events-before-snapshot")
+          .getInt("uservice-catalog-management.number-of-events-before-snapshot")
       EventSourcedBehavior[Command, Event, State](
         persistenceId = persistenceId,
         emptyState = State.empty,
