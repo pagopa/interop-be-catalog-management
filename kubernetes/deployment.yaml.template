@@ -6,7 +6,7 @@ metadata:
   name: {{name}}
   namespace: {{name}}
 spec:
-  replicas: 4
+  replicas: 1
   selector:
     matchLabels:
       app: {{name}}
@@ -26,7 +26,7 @@ spec:
       containers:
         - name: {{name}}
           image: {{repository}}/services/{{name}}:{{version}}
-          command: ["bin/pdnd-uservice-rest-template"]
+          command: ["bin/{{name}}"]
           args: ["-Dconfig.file=etc/application.conf", "-Dconfig.override_with_env_vars=true"]
           imagePullPolicy: Always
           readinessProbe:
@@ -67,6 +67,11 @@ spec:
                 secretKeyRef:
                   name: aws
                   key: AWS_SECRET_ACCESS_KEY
+            - name: CASSANDRA_HOST
+              valueFrom:
+                secretKeyRef:
+                  name: cassandra
+                  key: CASSANDRA_HOST
             - name: CASSANDRA_USER
               valueFrom:
                 secretKeyRef:
@@ -139,29 +144,14 @@ metadata:
   annotations:
     kubernetes.io/ingress.class: nginx
     nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
-    kubernetes.io/tls-acme: "true"
-    cert-manager.io/cluster-issuer: letsencrypt-prod
-    external-dns.alpha.kubernetes.io/hostname: gateway.private.pdnd.pagopa.it
-  name: ingress-{{name}}-cert
+  name: {{name}}
   namespace: {{name}}
 spec:
-  tls:
-  - hosts:
-    - gateway.private.pdnd.pagopa.it
-    secretName: gateway
   rules:
-  - host: gateway.private.pdnd.pagopa.it
-    http:
-      paths:
-        - path: /{{name}}
-          backend:
-            serviceName: {{name}}
-            servicePort: 8088
-        - path: /dataviz
-          backend:
-            serviceName: {{name}}
-            servicePort: 8088
-        - path: /apps
-          backend:
-            serviceName: {{name}}
-            servicePort: 8088
+    - host: gateway.interop.pdnd.dev
+      http:
+        paths:
+          - path: /{{name}}
+            backend:
+              serviceName: {{name}}
+              servicePort: 8088
