@@ -1,5 +1,3 @@
-import scala.sys.process.Process
-
 ThisBuild / scalaVersion := "2.13.5"
 ThisBuild / organization := "it.pagopa"
 ThisBuild / organizationName := "Pagopa S.p.A."
@@ -9,10 +7,10 @@ ThisBuild / libraryDependencies := Dependencies.Jars.`server`.map(m =>
   else
     m
 )
-ThisBuild / dependencyOverrides ++= Dependencies.Jars.overrides
-ThisBuild / version := {
-  Process("./version.sh").lineStream_!.head.replaceFirst("v", "")
-}
+
+PB.targets in Compile := Seq(scalapb.gen() -> (sourceManaged in Compile).value)
+
+ThisBuild / version := "0.1.0-SNAPSHOT"
 
 lazy val generateCode = taskKey[Unit]("A task for generating the code starting from the swagger definition")
 
@@ -47,29 +45,29 @@ generateCode := {
 
 }
 
-Compile / PB.targets := Seq(scalapb.gen() -> (Compile / sourceManaged).value)
+(compile in Compile) := ((compile in Compile) dependsOn generateCode).value
 
 cleanFiles += baseDirectory.value / "generated" / "src"
 
 cleanFiles += baseDirectory.value / "client" / "src"
 
-lazy val generated = project
-  .in(file("generated"))
-  .settings(scalacOptions := Seq())
+credentials += Credentials(Path.userHome / ".sbt" / ".credentials")
+
+lazy val generated = project.in(file("generated")).settings(scalacOptions := Seq(), scalafmtOnCompile := true)
 
 lazy val client = project
   .in(file("client"))
   .settings(
-    name := "pdnd-interop-uservice-catalog-management-client",
+    name := "pdnd-interop-uservice-party-management-client",
     scalacOptions := Seq(),
     scalafmtOnCompile := true,
+    version := (version in ThisBuild).value,
     libraryDependencies := Dependencies.Jars.client.map(m =>
       if (scalaVersion.value.startsWith("3.0"))
         m.withDottyCompat(scalaVersion.value)
       else
         m
     ),
-    credentials += Credentials(Path.userHome / ".sbt" / ".credentials"),
     updateOptions := updateOptions.value.withGigahorse(false),
     publishTo := {
       val nexus = s"https://${System.getenv("MAVEN_REPO")}/nexus/repository/"
@@ -84,24 +82,18 @@ lazy val client = project
 lazy val root = (project in file("."))
   .settings(
     name := "pdnd-interop-uservice-catalog-management",
-    Test / parallelExecution := false,
-    scalafmtOnCompile := true,
+    parallelExecution in Test := false,
     dockerBuildOptions ++= Seq("--network=host"),
-    dockerRepository := Some(System.getenv("DOCKER_REPO")),
-    dockerBaseImage := "adoptopenjdk:11-jdk-hotspot",
-    dockerUpdateLatest := true,
-    daemonUser := "daemon",
-    Docker / version := s"${
-      val buildVersion = (ThisBuild / version).value
-      if (buildVersion == "latest")
-        buildVersion
-      else
-        s"v$buildVersion"
-    }".toLowerCase,
-    Docker / packageName := s"services/${name.value}",
-    Docker / dockerExposedPorts := Seq(8080),
-    wartremoverErrors ++= Warts.all,
-    wartremoverExcluded += sourceManaged.value
+    dockerRepository in Docker := Some(System.getenv("DOCKER_REPO")),
+    version in Docker := (version in ThisBuild).value,
+    packageName in Docker := s"services/${name.value}",
+    daemonUser in Docker := "daemon",
+    dockerExposedPorts in Docker := Seq(8080),
+    dockerBaseImage in Docker := "openjdk:11-jre-alpine",
+    dockerUpdateLatest in Docker := true,
+    wartremoverErrors ++= Warts.unsafe,
+    wartremoverExcluded += sourceManaged.value,
+    scalafmtOnCompile := true
   )
   .aggregate(client)
   .dependsOn(generated)
