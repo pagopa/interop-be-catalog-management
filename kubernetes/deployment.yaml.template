@@ -27,7 +27,6 @@ spec:
         - name: {{name}}
           image: {{repository}}/services/{{name}}:{{version}}
           command: ["bin/{{name}}"]
-          args: ["-Dconfig.file=etc/application.conf", "-Dconfig.override_with_env_vars=true"]
           imagePullPolicy: Always
           readinessProbe:
             httpGet:
