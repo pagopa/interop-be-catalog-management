@@ -34,15 +34,15 @@ spec:
               path: /ready
               port: management
             periodSeconds: 10
-            failureThreshold: 5
-            initialDelaySeconds: 30
+            failureThreshold: 3
+            initialDelaySeconds: 10
           livenessProbe:
             httpGet:
               path: "/alive"
               port: management
             periodSeconds: 10
             failureThreshold: 5
-            initialDelaySeconds: 30
+            initialDelaySeconds: 20
           ports:
             - name: management
               containerPort: 8558
@@ -53,10 +53,17 @@ spec:
             - name: monitoring
               containerPort: 9095
               protocol: TCP
-          securityContext:
-            runAsUser: 1001
-            allowPrivilegeEscalation: false
           env:
+            - name: VAULT_ADDR
+              valueFrom:
+                secretKeyRef:
+                  name: vault
+                  key: VAULT_ADDR
+            - name: VAULT_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: vault
+                  key: VAULT_TOKEN
             - name: AWS_ACCESS_KEY_ID
               valueFrom:
                 secretKeyRef:
@@ -67,11 +74,6 @@ spec:
                 secretKeyRef:
                   name: aws
                   key: AWS_SECRET_ACCESS_KEY
-            - name: CASSANDRA_HOST
-              valueFrom:
-                secretKeyRef:
-                  name: cassandra
-                  key: CASSANDRA_HOST
             - name: CASSANDRA_USER
               valueFrom:
                 secretKeyRef:
@@ -82,15 +84,6 @@ spec:
                 secretKeyRef:
                   name: cassandra
                   key: CASSANDRA_PWD
-            - name: NAMESPACE
-              valueFrom:
-                fieldRef:
-                  fieldPath: metadata.namespace
-            - name: REQUIRED_CONTACT_POINT_NR
-              value: "3"
-          volumeMounts:
-            - name: application-conf
-              mountPath: /opt/docker/etc
 ---
 apiVersion: v1
 kind: Service
@@ -148,7 +141,7 @@ metadata:
   namespace: {{name}}
 spec:
   rules:
-    - host: gateway.interop.pdnd.dev
+    - host: {{repository}}
       http:
         paths:
           - path: /{{name}}
