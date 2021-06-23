@@ -1,16 +1,12 @@
 ThisBuild / scalaVersion := "2.13.5"
 ThisBuild / organization := "it.pagopa"
 ThisBuild / organizationName := "Pagopa S.p.A."
-
 ThisBuild / libraryDependencies := Dependencies.Jars.`server`.map(m =>
   if (scalaVersion.value.startsWith("3.0"))
     m.withDottyCompat(scalaVersion.value)
   else
     m
 )
-
-Compile / PB.targets  := Seq(scalapb.gen() -> ( Compile / sourceManaged).value)
-
 ThisBuild / version := "0.1.0-SNAPSHOT"
 
 lazy val generateCode = taskKey[Unit]("A task for generating the code starting from the swagger definition")
@@ -46,29 +42,28 @@ generateCode := {
 
 }
 
-(Compile / compile) := ((Compile / compile) dependsOn generateCode).value
+Compile / PB.targets := Seq(scalapb.gen() -> (Compile / sourceManaged).value)
 
 cleanFiles += baseDirectory.value / "generated" / "src"
 
 cleanFiles += baseDirectory.value / "client" / "src"
 
-credentials += Credentials(Path.userHome / ".sbt" / ".credentials")
-
-lazy val generated = project.in(file("generated")).settings(scalacOptions := Seq(), scalafmtOnCompile := true)
+lazy val generated = project
+  .in(file("generated"))
+  .settings(scalacOptions := Seq())
 
 lazy val client = project
   .in(file("client"))
   .settings(
     name := "pdnd-interop-uservice-catalog-management-client",
     scalacOptions := Seq(),
-    scalafmtOnCompile := true,
-    version := (ThisBuild / version).value,
     libraryDependencies := Dependencies.Jars.client.map(m =>
       if (scalaVersion.value.startsWith("3.0"))
         m.withDottyCompat(scalaVersion.value)
       else
         m
     ),
+    credentials += Credentials(Path.userHome / ".sbt" / ".credentials"),
     updateOptions := updateOptions.value.withGigahorse(false),
     publishTo := {
       val nexus = s"https://${System.getenv("MAVEN_REPO")}/nexus/repository/"
