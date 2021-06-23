@@ -66,14 +66,17 @@ object Main extends App {
           case Some(s) => s
         }
 
-        val catalogPersistentProjection = new CatalogPersistentProjection(context.system, catalogPersistentEntity)
+        val persistence = classicSystem.classicSystem.settings.config.getString("pdnd-uservice-rest-template.persistence")
+        if(persistence == "cassandra") {
+          val catalogPersistentProjection = new CatalogPersistentProjection(context.system, catalogPersistentEntity)
 
-        ShardedDaemonProcess(context.system).init[ProjectionBehavior.Command](
-          name = "catalog-projections",
-          numberOfInstances = settings.numberOfShards,
-          behaviorFactory = (i: Int) => ProjectionBehavior(catalogPersistentProjection.projections(i)),
-          stopMessage = ProjectionBehavior.Stop
-        )
+          ShardedDaemonProcess(context.system).init[ProjectionBehavior.Command](
+            name = "catalog-projections",
+            numberOfInstances = settings.numberOfShards,
+            behaviorFactory = (i: Int) => ProjectionBehavior(catalogPersistentProjection.projections(i)),
+            stopMessage = ProjectionBehavior.Stop
+          )
+        }
 
         val uuidSupplier: UUIDSupplier = new UUIDSupplierImpl
         val fileManager: FileManager   = new FileManagerImpl
@@ -88,8 +91,7 @@ object Main extends App {
         val _ = AkkaManagement.get(classicSystem).start()
 
         val controller = new Controller(
-          eServiceApi
-          ,
+          eServiceApi,
           validationExceptionToRoute = Some(e => {
             val results = e.results()
             results.crumbs().asScala.foreach { crumb =>

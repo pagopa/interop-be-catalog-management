@@ -26,23 +26,23 @@ spec:
       containers:
         - name: {{name}}
           image: {{repository}}/services/{{name}}:{{version}}
-          args: ["-Dconfig.file=etc/application.conf", "-Dconfig.override_with_env_vars=true"]
           command: ["bin/{{name}}"]
+          args: ["-Dconfig.file=etc/application.conf", "-Dconfig.override_with_env_vars=true"]
           imagePullPolicy: Always
           readinessProbe:
             httpGet:
               path: /ready
               port: management
             periodSeconds: 10
-            failureThreshold: 3
-            initialDelaySeconds: 10
+            failureThreshold: 5
+            initialDelaySeconds: 30
           livenessProbe:
             httpGet:
               path: "/alive"
               port: management
             periodSeconds: 10
             failureThreshold: 5
-            initialDelaySeconds: 20
+            initialDelaySeconds: 30
           ports:
             - name: management
               containerPort: 8558
@@ -53,17 +53,10 @@ spec:
             - name: monitoring
               containerPort: 9095
               protocol: TCP
+          securityContext:
+            runAsUser: 1001
+            allowPrivilegeEscalation: false
           env:
-            - name: AWS_ACCESS_KEY_ID
-              valueFrom:
-                secretKeyRef:
-                  name: aws
-                  key: AWS_ACCESS_KEY_ID
-            - name: AWS_SECRET_ACCESS_KEY
-              valueFrom:
-                secretKeyRef:
-                  name: aws
-                  key: AWS_SECRET_ACCESS_KEY
             - name: CASSANDRA_HOST
               valueFrom:
                 secretKeyRef:
