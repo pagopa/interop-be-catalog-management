@@ -18,7 +18,7 @@ kubectl create secret generic vault --from-literal=VAULT_ADDR=$VAULT_ADDR --from
 
 kubectl create secret generic aws --from-literal=AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID --from-literal=AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY -n $NAMESPACE
 
-kubectl create secret generic cassandra --from-literal=CASSANDRA_USER=$CASSANDRA_USER --from-literal=CASSANDRA_PWD=$CASSANDRA_PWD -n $NAMESPACE
+kubectl create secret generic cassandra --from-literal=CASSANDRA_HOST=$CASSANDRA_HOST --from-literal=CASSANDRA_USER=$CASSANDRA_USER --from-literal=CASSANDRA_PWD=$CASSANDRA_PWD -n $NAMESPACE
 
 kubectl create secret generic application.conf --from-file=application.conf=$SCRIPT_PATH/../src/main/resources/reference.conf -n $NAMESPACE
 

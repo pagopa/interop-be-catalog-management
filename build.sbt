@@ -9,7 +9,7 @@ ThisBuild / libraryDependencies := Dependencies.Jars.`server`.map(m =>
     m
 )
 
-PB.targets in Compile := Seq(scalapb.gen() -> (sourceManaged in Compile).value)
+Compile / PB.targets  := Seq(scalapb.gen() -> ( Compile / sourceManaged).value)
 
 ThisBuild / version := "0.1.0-SNAPSHOT"
 
@@ -46,7 +46,7 @@ generateCode := {
 
 }
 
-(compile in Compile) := ((compile in Compile) dependsOn generateCode).value
+(Compile / compile) := ((Compile / compile) dependsOn generateCode).value
 
 cleanFiles += baseDirectory.value / "generated" / "src"
 
@@ -62,7 +62,7 @@ lazy val client = project
     name := "pdnd-interop-uservice-catalog-management-client",
     scalacOptions := Seq(),
     scalafmtOnCompile := true,
-    version := (version in ThisBuild).value,
+    version := (ThisBuild / version).value,
     libraryDependencies := Dependencies.Jars.client.map(m =>
       if (scalaVersion.value.startsWith("3.0"))
         m.withDottyCompat(scalaVersion.value)
@@ -83,18 +83,23 @@ lazy val client = project
 lazy val root = (project in file("."))
   .settings(
     name := "pdnd-interop-uservice-catalog-management",
-    parallelExecution in Test := false,
+    Test / parallelExecution := false,
     dockerBuildOptions ++= Seq("--network=host"),
-    dockerRepository in Docker := Some(System.getenv("DOCKER_REPO")),
-    version in Docker := (version in ThisBuild).value,
-    packageName in Docker := s"services/${name.value}",
-    daemonUser in Docker := "daemon",
-    dockerExposedPorts in Docker := Seq(8080),
-    dockerBaseImage in Docker := "openjdk:11-jre-alpine",
-    dockerUpdateLatest in Docker := true,
-    wartremoverErrors ++= Warts.unsafe,
-    wartremoverExcluded += sourceManaged.value,
-    scalafmtOnCompile := true
+    dockerRepository := Some(System.getenv("DOCKER_REPO")),
+    dockerBaseImage := "adoptopenjdk:11-jdk-hotspot",
+    dockerUpdateLatest := true,
+    daemonUser := "daemon",
+    Docker / version := s"${
+      val buildVersion = (ThisBuild / version).value
+      if (buildVersion == "latest")
+        buildVersion
+      else
+        s"v$buildVersion"
+    }".toLowerCase,
+    Docker / packageName := s"services/${name.value}",
+    Docker / dockerExposedPorts := Seq(8080),
+    wartremoverErrors ++= Warts.all,
+    wartremoverExcluded += sourceManaged.value
   )
   .aggregate(client)
   .dependsOn(generated)
