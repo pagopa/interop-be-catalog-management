@@ -66,7 +66,7 @@ object Main extends App {
           case Some(s) => s
         }
 
-        val persistence = classicSystem.classicSystem.settings.config.getString("pdnd-uservice-rest-template.persistence")
+        val persistence = classicSystem.classicSystem.settings.config.getString("uservice-catalog-management.persistence")
         if(persistence == "cassandra") {
           val catalogPersistentProjection = new CatalogPersistentProjection(context.system, catalogPersistentEntity)
 
