@@ -24,12 +24,11 @@ package object v1 {
               id = UUID.fromString(itemsV1.value.id),
               producerId = UUID.fromString(itemsV1.value.producerId),
               name = itemsV1.value.name,
-              description = itemsV1.value.description,
-              scopes = Some(itemsV1.value.scopes),
               versions = itemsV1.value.versions.map(ver1 =>
                 CatalogItemVersion(
                   id = UUID.fromString(ver1.id),
                   version = ver1.version,
+                  description = ver1.description,
                   docs = ver1.docs.map { doc =>
                     CatalogItemDocument(
                       id = UUID.fromString(doc.id),
@@ -38,7 +37,7 @@ package object v1 {
                       path = doc.path
                     )
                   },
-                  proposal = Some(ver1.proposal)
+                  status = ver1.status
                 )
               ),
               status = itemsV1.value.status
@@ -59,12 +58,11 @@ package object v1 {
             id = catalogItem.id.toString,
             producerId = catalogItem.producerId.toString,
             name = catalogItem.name,
-            description = catalogItem.description,
-            scopes = catalogItem.scopes.getOrElse(Seq.empty),
             versions = catalogItem.versions.map(ver =>
               CatalogItemVersionV1(
                 id = ver.id.toString,
                 version = ver.version,
+                description = ver.description,
                 docs = ver.docs.map { doc =>
                   CatalogItemDocumentV1(
                     id = doc.id.toString,
@@ -73,7 +71,7 @@ package object v1 {
                     path = doc.path
                   )
                 },
-                proposal = ver.proposal.get
+                status = ver.status
               )
             ),
             status = catalogItem.status
@@ -92,12 +90,11 @@ package object v1 {
             id = UUID.fromString(event.catalogItem.id),
             producerId = UUID.fromString(event.catalogItem.producerId),
             name = event.catalogItem.name,
-            description = event.catalogItem.description,
-            scopes = Some(event.catalogItem.scopes),
             versions = event.catalogItem.versions.map(ver1 =>
               CatalogItemVersion(
                 id = UUID.fromString(ver1.id),
                 version = ver1.version,
+                description = ver1.description,
                 docs = ver1.docs.map { doc =>
                   CatalogItemDocument(
                     id = UUID.fromString(doc.id),
@@ -106,7 +103,7 @@ package object v1 {
                     path = doc.path
                   )
                 },
-                proposal = Some(ver1.proposal)
+                status = ver1.status
               )
             ),
             status = event.catalogItem.status
@@ -124,14 +121,11 @@ package object v1 {
               id = event.catalogItem.id.toString,
               producerId = event.catalogItem.producerId.toString,
               name = event.catalogItem.name,
-              description = event.catalogItem.description,
-              scopes = event.catalogItem.scopes.getOrElse(Seq.empty[String]),
-              versions = event.catalogItem.versions.flatMap(ver =>
-                for {
-                  proposal <- ver.proposal
-                } yield CatalogItemVersionV1(
+              versions = event.catalogItem.versions.map(ver =>
+                CatalogItemVersionV1(
                   id = ver.id.toString,
                   version = ver.version,
+                  description = ver.description,
                   docs = ver.docs.map { doc =>
                     CatalogItemDocumentV1(
                       id = doc.id.toString,
@@ -140,7 +134,7 @@ package object v1 {
                       path = doc.path
                     )
                   },
-                  proposal = proposal
+                  status = ver.status
                 )
               ),
               status = event.catalogItem.status

@@ -30,7 +30,7 @@ paths:
       tags:
         - e_service
       summary: Add a new e-service
-      operationId: addEService
+      operationId: createEService
       requestBody:
         description: A E-Service seed
         content:
@@ -51,10 +51,6 @@ paths:
                   type: string
                   maxLength: 64
                   minLength: 6
-                scopes:
-                  type: array
-                  items:
-                    type: string
                 version:
                   type: string
                   maxLength: 64
@@ -73,7 +69,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/EService'
-        "405":
+        "400":
           description: Invalid input
           content:
             application/problem+json:
@@ -191,7 +187,6 @@ components:
         - producer_id
         - name
         - versions
-        - description
         - status
       properties:
         id:
@@ -204,14 +199,6 @@ components:
           type: string
           maxLength: 64
           minLength: 6
-        description:
-          type: string
-          maxLength: 64
-          minLength: 6
-        scopes:
-          type: array
-          items:
-            type: string
         versions:
           type: array
           items:
@@ -238,21 +225,24 @@ components:
       required:
         - id
         - version
+        - description
         - docs
+        - status
       properties:
         id:
           type: string
           format: uuid
         version:
           type: string
+        description:
+          type: string
         docs:
           type: array
           items:
             $ref: '#/components/schemas/EServiceDoc'
-        proposal:
-          type: array
-          items:
-            type: string
+        status:
+          type: string
+          enum: [ 'draft', 'active', 'deprecated', 'archieved' ]
     EServices:
       type: array
       items:

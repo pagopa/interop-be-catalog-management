@@ -11,16 +11,15 @@ message CatalogItemV1 {
   required string producerId = 2;
   required string name = 3;
   repeated CatalogItemVersionV1 versions = 4;
-  required string description = 5;
-  repeated string scopes = 6;
-  required string status = 7;
+  required string status = 5;
 }
 
 message CatalogItemVersionV1 {
   required string id = 1;
   required string version = 2;
-  repeated CatalogItemDocumentV1 docs = 3;
-  repeated string proposal = 4;
+  required string description = 3;
+  repeated CatalogItemDocumentV1 docs = 4;
+  required string status = 5;
 }
 
 message CatalogItemDocumentV1 {

@@ -42,18 +42,13 @@ class EServiceApiServiceImpl(
     case Some(s) => s
   }
 
-  @inline private def getShard(id: String): String = (id.hashCode % settings.numberOfShards).toString
+  @inline private def getShard(id: String): String = Math.abs(id.hashCode % settings.numberOfShards).toString
 
   /** Code: 200, Message: EService created, DataType: EService
     * Code: 405, Message: Invalid input, DataType: Problem
     */
-  override def addEService(
-    name: String,
-    description: String,
-    version: String,
-    openapiFile: (FileInfo, File),
-    scopes: Option[Seq[String]]
-  )(implicit
+  override def createEService(name: String, description: String, version: String, openapiFile: (FileInfo, File))(
+    implicit
     toEntityMarshallerProblem: ToEntityMarshaller[Problem],
     toEntityMarshallerEService: ToEntityMarshaller[EService],
     contexts: Seq[(String, String)]
@@ -71,10 +66,15 @@ class EServiceApiServiceImpl(
         producerId = producerId,
         name = name,
         status = "active",
-        versions =
-          Seq(CatalogItemVersion(id = uuidSupplier.get, version = version, docs = Seq(openapiDoc), proposal = None)),
-        scopes = scopes,
-        description = description
+        versions = Seq(
+          CatalogItemVersion(
+            id = uuidSupplier.get,
+            description = description,
+            version = version,
+            docs = Seq(openapiDoc),
+            status = "draft"
+          )
+        )
       )
     }
 
@@ -83,9 +83,9 @@ class EServiceApiServiceImpl(
     val result: Future[StatusReply[CatalogItem]] =
       catalogItem.flatMap(ci => commander.ask(ref => AddCatalogItem(ci, ref)))
     onSuccess(result) {
-      case statusReply if statusReply.isSuccess => addEService200(statusReply.getValue.toApi)
+      case statusReply if statusReply.isSuccess => createEService200(statusReply.getValue.toApi)
       case statusReply if statusReply.isError =>
-        addEService405(Problem(Option(statusReply.getError.getMessage), status = 405, "some error"))
+        createEService400(Problem(Option(statusReply.getError.getMessage), status = 405, "some error"))
     }
   }
 

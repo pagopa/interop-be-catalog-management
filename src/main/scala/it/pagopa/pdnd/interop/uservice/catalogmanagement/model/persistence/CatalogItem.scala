@@ -15,8 +15,6 @@ final case class CatalogItem(
   id: UUID,
   producerId: UUID,
   name: String,
-  description: String,
-  scopes: Option[Seq[String]],
   versions: Seq[CatalogItemVersion],
   status: String
 ) extends Convertable[EService] {
@@ -26,9 +24,7 @@ final case class CatalogItem(
       producerId = producerId,
       name = name,
       status = "active",
-      versions = versions.map(_.toApi),
-      scopes = scopes,
-      description = description
+      versions = versions.map(_.toApi)
     )
   }
 
@@ -43,11 +39,13 @@ final case class CatalogItem(
 final case class CatalogItemVersion(
   id: UUID,
   version: String,
+  description: String,
   docs: Seq[CatalogItemDocument],
-  proposal: Option[Seq[String]]
+  status: String
 ) extends Convertable[EServiceVersion] {
-  def toApi: EServiceVersion =
-    EServiceVersion(id = id, version = version, docs = docs.map(_.toApi), proposal = proposal)
+  def toApi: EServiceVersion = {
+    EServiceVersion(id = id, version = version, description = description, docs =  docs.map(_.toApi), status = status)
+  }
 
 }
 
