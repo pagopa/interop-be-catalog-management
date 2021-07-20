@@ -24,6 +24,7 @@ package object v1 {
               id = UUID.fromString(itemsV1.value.id),
               producerId = UUID.fromString(itemsV1.value.producerId),
               name = itemsV1.value.name,
+              audience = itemsV1.value.audience,
               versions = itemsV1.value.versions.map(ver1 =>
                 CatalogItemVersion(
                   id = UUID.fromString(ver1.id),
@@ -58,6 +59,7 @@ package object v1 {
             id = catalogItem.id.toString,
             producerId = catalogItem.producerId.toString,
             name = catalogItem.name,
+            audience = catalogItem.audience,
             versions = catalogItem.versions.map(ver =>
               CatalogItemVersionV1(
                 id = ver.id.toString,
@@ -90,6 +92,7 @@ package object v1 {
             id = UUID.fromString(event.catalogItem.id),
             producerId = UUID.fromString(event.catalogItem.producerId),
             name = event.catalogItem.name,
+            audience = event.catalogItem.audience,
             versions = event.catalogItem.versions.map(ver1 =>
               CatalogItemVersion(
                 id = UUID.fromString(ver1.id),
@@ -121,6 +124,7 @@ package object v1 {
               id = event.catalogItem.id.toString,
               producerId = event.catalogItem.producerId.toString,
               name = event.catalogItem.name,
+              audience = event.catalogItem.audience,
               versions = event.catalogItem.versions.map(ver =>
                 CatalogItemVersionV1(
                   id = ver.id.toString,

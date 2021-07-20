@@ -15,6 +15,7 @@ final case class CatalogItem(
   id: UUID,
   producerId: UUID,
   name: String,
+  audience: Seq[String],
   versions: Seq[CatalogItemVersion],
   status: String
 ) extends Convertable[EService] {
@@ -23,7 +24,7 @@ final case class CatalogItem(
       id = id,
       producerId = producerId,
       name = name,
-      status = "active",
+      audience = audience,
       versions = versions.map(_.toApi)
     )
   }

@@ -45,9 +45,9 @@ class EServiceApiServiceImpl(
   @inline private def getShard(id: String): String = Math.abs(id.hashCode % settings.numberOfShards).toString
 
   /** Code: 200, Message: EService created, DataType: EService
-    * Code: 405, Message: Invalid input, DataType: Problem
+    * Code: 400, Message: Invalid input, DataType: Problem
     */
-  override def createEService(name: String, description: String, version: String, openapiFile: (FileInfo, File))(
+  override def createEService(name: String, description: String, audience: Seq[String], openapiFile: (FileInfo, File))(
     implicit
     toEntityMarshallerProblem: ToEntityMarshaller[Problem],
     toEntityMarshallerEService: ToEntityMarshaller[EService],
@@ -55,22 +55,25 @@ class EServiceApiServiceImpl(
   ): Route = {
     contexts.foreach(println)
 
+    val firstVersion: String = "1"
+
     val id: UUID   = uuidSupplier.get
     val producerId = uuidSupplier.get //TODO from jwt
 
     val catalogItem: Future[CatalogItem] = Future.fromTry {
       for {
-        openapiDoc <- fileManager.store(uuidSupplier.get, producerId.toString, version, openapiFile)
+        openapiDoc <- fileManager.store(uuidSupplier.get, producerId.toString, firstVersion, openapiFile)
       } yield CatalogItem(
         id = id,
         producerId = producerId,
         name = name,
+        audience = audience,
         status = "active",
         versions = Seq(
           CatalogItemVersion(
             id = uuidSupplier.get,
             description = description,
-            version = version,
+            version = firstVersion,
             docs = Seq(openapiDoc),
             status = "draft"
           )

@@ -38,29 +38,17 @@ paths:
             schema:
               type: object
               required:
-                - name
-                - description
-                - version
-                - openapiFile
+                - seed
+                - idl
               properties:
-                name:
-                  type: string
-                  maxLength: 64
-                  minLength: 6
-                description:
-                  type: string
-                  maxLength: 64
-                  minLength: 6
-                version:
-                  type: string
-                  maxLength: 64
-                  minLength: 6
-                openapiFile:
+                seed:
+                  $ref: '#/components/schemas/EServiceSeed'
+                idl:
                   type: string
                   format: binary
             encoding:
-              openapiFile:
-                contentType: text/plain, application/json, application/yaml
+              idl:
+                contentType: text/plain, application/json, application/yaml, application/xml
         required: true
       responses:
         "200":
@@ -180,14 +168,37 @@ paths:
                 $ref: '#/components/schemas/Problem'
 components:
   schemas:
+    EServiceSeed:
+      type: object
+        required:
+          - id
+          - producer_id
+          - name
+          - audience
+          - versions
+      name:
+        type: string
+        maxLength: 64
+        minLength: 6
+      description:
+        type: string
+        maxLength: 64
+        minLength: 6
+      audience:
+        type: array
+        items:
+          type: string
+      technology:
+        type: string
+        enum: [ 'REST', 'SOAP' ]
     EService:
       type: object
       required:
         - id
         - producer_id
         - name
+        - audience
         - versions
-        - status
       properties:
         id:
           type: string
@@ -199,13 +210,14 @@ components:
           type: string
           maxLength: 64
           minLength: 6
+        audience:
+          type: array
+          items:
+            type: string
         versions:
           type: array
           items:
             $ref: '#/components/schemas/EServiceVersion'
-        status:
-          type: string
-          enum: [ 'draft', 'active' ]
     EServiceDoc:
       type: object
       required:
@@ -242,7 +254,7 @@ components:
             $ref: '#/components/schemas/EServiceDoc'
         status:
           type: string
-          enum: [ 'draft', 'active', 'deprecated', 'archieved' ]
+          enum: [ 'draft', 'published','deprecated','archived' ]
     EServices:
       type: array
       items:
