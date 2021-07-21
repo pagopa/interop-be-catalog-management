@@ -15,18 +15,13 @@ import akka.persistence.typed.PersistenceId
 import akka.projection.ProjectionBehavior
 import akka.{actor => classic}
 import it.pagopa.pdnd.interop.uservice.catalogmanagement.api.EServiceApi
-import it.pagopa.pdnd.interop.uservice.catalogmanagement.api.impl.{EServiceApiMarshallerImpl, EServiceApiServiceImpl}
-import it.pagopa.pdnd.interop.uservice.catalogmanagement.api.impl._
-import it.pagopa.pdnd.interop.uservice.catalogmanagement.common.system.{ApplicationConfiguration, Authenticator}
+import it.pagopa.pdnd.interop.uservice.catalogmanagement.api.impl.{EServiceApiMarshallerImpl, EServiceApiServiceImpl, _}
+import it.pagopa.pdnd.interop.uservice.catalogmanagement.common.system.{ApplicationConfiguration, Authenticator, s3Client}
 import it.pagopa.pdnd.interop.uservice.catalogmanagement.model.Problem
-import it.pagopa.pdnd.interop.uservice.catalogmanagement.model.persistence.{
-  CatalogPersistentBehavior,
-  CatalogPersistentProjection,
-  Command
-}
+import it.pagopa.pdnd.interop.uservice.catalogmanagement.model.persistence.{CatalogPersistentBehavior, CatalogPersistentProjection, Command}
 import it.pagopa.pdnd.interop.uservice.catalogmanagement.server.Controller
+import it.pagopa.pdnd.interop.uservice.catalogmanagement.service.impl.{S3ManagerImpl, UUIDSupplierImpl}
 import it.pagopa.pdnd.interop.uservice.catalogmanagement.service.{FileManager, UUIDSupplier}
-import it.pagopa.pdnd.interop.uservice.catalogmanagement.service.impl.{FileManagerImpl, UUIDSupplierImpl}
 import kamon.Kamon
 import spray.json._
 
@@ -81,7 +76,7 @@ object Main extends App {
         }
 
         val uuidSupplier: UUIDSupplier = new UUIDSupplierImpl
-        val fileManager: FileManager   = new FileManagerImpl
+        val fileManager: FileManager   = new S3ManagerImpl(s3Client)
         val eServiceApiMarshallerImpl  = new EServiceApiMarshallerImpl()
 
         val eServiceApi = new EServiceApi(

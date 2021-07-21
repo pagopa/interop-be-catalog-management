@@ -1,7 +1,7 @@
 openapi: 3.0.3
 info:
-  title: Agreement Management Micro Service
-  description: 'This is a sample server'
+  title: Catalog Management Micro Service
+  description: 'Service implementing the persistence of e-services'
   version: 0.0.1
   contact:
     name: API Support
