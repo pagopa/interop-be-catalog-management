@@ -33,8 +33,7 @@ package object v1 {
             producerId = UUID.fromString(itemsV1.value.producerId),
             name = itemsV1.value.name,
             audience = itemsV1.value.audience,
-            descriptors = descriptors,
-            status = itemsV1.value.status
+            descriptors = descriptors
           )
         )
 
@@ -59,8 +58,7 @@ package object v1 {
                 producerId = catalogItem.producerId.toString,
                 name = catalogItem.name,
                 audience = catalogItem.audience,
-                descriptors = ds,
-                status = catalogItem.status
+                descriptors = ds
               )
             )
 
@@ -84,8 +82,7 @@ package object v1 {
             producerId = UUID.fromString(event.catalogItem.producerId),
             name = event.catalogItem.name,
             audience = event.catalogItem.audience,
-            descriptors = ds,
-            status = event.catalogItem.status
+            descriptors = ds
           )
         )
       }
@@ -106,8 +103,7 @@ package object v1 {
               producerId = event.catalogItem.producerId.toString,
               name = event.catalogItem.name,
               audience = event.catalogItem.audience,
-              descriptors = ds,
-              status = event.catalogItem.status
+              descriptors = ds
             )
           )
 

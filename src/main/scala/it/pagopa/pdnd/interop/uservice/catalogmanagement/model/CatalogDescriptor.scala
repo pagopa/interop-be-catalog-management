@@ -3,13 +3,13 @@ package it.pagopa.pdnd.interop.uservice.catalogmanagement.model
 import java.util.UUID
 
 final case class CatalogDescriptor(
-                                    id: UUID,
-                                    version: String,
-                                    description: String,
-                                    docs: Seq[CatalogDocument],
-                                    voucherLifespan: Int,
-                                    technology: String,
-                                    status: CatalogDescriptorStatus
+  id: UUID,
+  version: String,
+  description: String,
+  docs: Seq[CatalogDocument],
+  voucherLifespan: Int,
+  technology: String,
+  status: CatalogDescriptorStatus
 ) extends Convertable[EServiceDescriptor] {
   def toApi: EServiceDescriptor = {
     EServiceDescriptor(

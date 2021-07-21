@@ -12,7 +12,6 @@ message CatalogItemV1 {
   required string name = 3;
   repeated string audience = 4;
   repeated CatalogDescriptorV1 descriptors = 5;
-  required string status = 6;
 }
 
 message CatalogDescriptorV1 {

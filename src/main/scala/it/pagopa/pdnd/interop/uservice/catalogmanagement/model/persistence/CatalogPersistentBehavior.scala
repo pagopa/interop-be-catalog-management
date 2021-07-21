@@ -46,7 +46,8 @@ object CatalogPersistentBehavior {
         val catalogItems: Seq[CatalogItem] = state.items
           .filter { case (_, v) =>
             (if (producerId.isDefined) producerId.contains(v.producerId.toString) else true) &&
-              (if (status.isDefined) status.contains(v.status) else true)
+              (if (status.isDefined) v.descriptors.exists(descriptor => status.contains(descriptor.status.stringify))
+               else true)
           }
           .values
           .toSeq

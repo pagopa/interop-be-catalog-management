@@ -74,7 +74,6 @@ class EServiceApiServiceImpl(
         producerId = producerId,
         name = name,
         audience = audience,
-        status = "active",
         descriptors = Seq(
           CatalogDescriptor(
             id = uuidSupplier.get,
@@ -83,7 +82,7 @@ class EServiceApiServiceImpl(
             docs = Seq(openapiDoc),
             voucherLifespan = voucherLifespan,
             technology = technology,
-            status = Draft
+            status = Published //TODO temporary, use Draft
           )
         )
       )
