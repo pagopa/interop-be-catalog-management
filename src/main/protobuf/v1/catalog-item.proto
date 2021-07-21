@@ -10,21 +10,31 @@ message CatalogItemV1 {
   required string id = 1;
   required string producerId = 2;
   required string name = 3;
-  repeated CatalogItemVersionV1 versions = 4;
-  required string status = 5;
+  repeated string audience = 4;
+  repeated CatalogDescriptorV1 descriptors = 5;
+  required string status = 6;
 }
 
-message CatalogItemVersionV1 {
+message CatalogDescriptorV1 {
   required string id = 1;
   required string version = 2;
   required string description = 3;
-  repeated CatalogItemDocumentV1 docs = 4;
-  required string status = 5;
+  required string technology = 4;
+  required int32 voucherLifespan = 5;
+  repeated CatalogDocumentV1 docs = 6;
+  required CatalogDescriptorStatusV1 status = 7;
 }
 
-message CatalogItemDocumentV1 {
+message CatalogDocumentV1 {
   required string id = 1;
   required string name = 2;
   required string contentType = 3;
   required string path = 4;
+}
+
+enum CatalogDescriptorStatusV1 {
+  draft = 1;
+  published = 2;
+  deprecated = 3;
+  archived = 4;
 }

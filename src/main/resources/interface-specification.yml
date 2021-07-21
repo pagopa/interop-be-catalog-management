@@ -40,27 +40,31 @@ paths:
               required:
                 - name
                 - description
-                - version
-                - openapiFile
+                - audience
+                - technology
+                - voucherLifespan
+                - idl
               properties:
                 name:
                   type: string
-                  maxLength: 64
-                  minLength: 6
                 description:
                   type: string
-                  maxLength: 64
-                  minLength: 6
-                version:
+                audience:
+                  type: array
+                  items:
+                    type: string
+                voucherLifespan:
+                  type: integer
+                  format: int32
+                technology:
                   type: string
-                  maxLength: 64
-                  minLength: 6
-                openapiFile:
+                  enum: [ 'REST', 'SOAP' ]
+                idl:
                   type: string
                   format: binary
             encoding:
-              openapiFile:
-                contentType: text/plain, application/json, application/yaml
+              idl:
+                contentType: text/plain, application/json, application/yaml, application/xml
         required: true
       responses:
         "200":
@@ -84,11 +88,11 @@ paths:
       operationId: getEServices
       parameters:
         - in: query
-          name: producer_id
+          name: producerId
           schema:
             type: string
         - in: query
-          name: consumer_id
+          name: consumerId
           schema:
             type: string
         - in: query
@@ -103,7 +107,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/EServices'
-  /eservice/{e_service_id}:
+  /eservice/{eServiceId}:
     get:
       security:
         - bearerAuth: [ ]
@@ -112,7 +116,7 @@ paths:
       summary: Get an e-service
       operationId: getEService
       parameters:
-        - name: e_service_id
+        - name: eServiceId
           in: path
           description: the eservice id
           required: true
@@ -137,7 +141,7 @@ paths:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/Problem'
-  /eservice/{e_service_id}/documents/{document_id}:
+  /eservice/{eServiceId}/documents/{documentId}:
     get:
       security:
         - bearerAuth: [ ]
@@ -146,13 +150,13 @@ paths:
       summary: Get an e-service document
       operationId: getEServiceDocument
       parameters:
-        - name: e_service_id
+        - name: eServiceId
           in: path
           description: the eservice id
           required: true
           schema:
             type: string
-        - name: document_id
+        - name: documentId
           in: path
           description: the document id
           required: true
@@ -184,28 +188,29 @@ components:
       type: object
       required:
         - id
-        - producer_id
+        - producerId
         - name
-        - versions
-        - status
+        - audience
+        - descriptors
       properties:
         id:
           type: string
           format: uuid
-        producer_id:
+        producerId:
           type: string
           format: uuid
         name:
           type: string
           maxLength: 64
           minLength: 6
-        versions:
+        audience:
           type: array
           items:
-            $ref: '#/components/schemas/EServiceVersion'
-        status:
-          type: string
-          enum: [ 'draft', 'active' ]
+            type: string
+        descriptors:
+          type: array
+          items:
+            $ref: '#/components/schemas/EServiceDescriptor'
     EServiceDoc:
       type: object
       required:
@@ -220,14 +225,16 @@ components:
           type: string
         contentType:
           type: string
-    EServiceVersion:
+    EServiceDescriptor:
       type: object
       required:
         - id
         - version
         - description
+        - technology
         - docs
         - status
+        - creationDate
       properties:
         id:
           type: string
@@ -236,13 +243,18 @@ components:
           type: string
         description:
           type: string
+        technology:
+          type: string
         docs:
           type: array
           items:
             $ref: '#/components/schemas/EServiceDoc'
+        voucherLifespan:
+          type: integer
+          format: int32
         status:
           type: string
-          enum: [ 'draft', 'active', 'deprecated', 'archieved' ]
+          enum: [ 'draft', 'published','deprecated','archived' ]
     EServices:
       type: array
       items:

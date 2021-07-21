@@ -29,6 +29,11 @@ object Dependencies {
     lazy val slf4j       = namespace                       %% "akka-slf4j"                   % akkaVersion
   }
 
+  private[this] object cats {
+    lazy val namespace = "org.typelevel"
+    lazy val core      = namespace %% "cats-core" % catsVersion
+  }
+
   private[this] object awssdk {
     lazy val namespace = "software.amazon.awssdk"
     lazy val s3        = namespace % "s3" % awsSdkVersion
@@ -110,6 +115,7 @@ object Dependencies {
       akka.http                    % Compile,
       akka.httpJson                % Compile,
       awssdk.s3                    % Compile,
+      cats.core                    % Compile,
       logback.classic              % Compile,
       akka.slf4j                   % Compile,
       openapi4j.operationValidator % Compile,

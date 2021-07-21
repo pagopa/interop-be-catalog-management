@@ -1,7 +1,7 @@
 package it.pagopa.pdnd.interop.uservice.catalogmanagement.service.impl
 
 import akka.http.scaladsl.server.directives.FileInfo
-import it.pagopa.pdnd.interop.uservice.catalogmanagement.model.persistence.CatalogItemDocument
+import it.pagopa.pdnd.interop.uservice.catalogmanagement.model.CatalogDocument
 import it.pagopa.pdnd.interop.uservice.catalogmanagement.service.FileManager
 
 import java.io.File
@@ -14,12 +14,12 @@ class FileManagerImpl extends FileManager {
 
   val currentPath: Path = Paths.get(System.getProperty("user.dir"))
 
-  def store(id: UUID, producerId: String, version: String, fileParts: (FileInfo, File)): Try[CatalogItemDocument] =
+  def store(id: UUID, producerId: String, version: String, fileParts: (FileInfo, File)): Try[CatalogDocument] =
     Try {
       val destPath = createPath(producerId, version, id.toString, fileParts._1)
 
       val path = moveRenameFile(fileParts._2.getPath, destPath).toString
-      CatalogItemDocument(id, fileParts._1.getFileName, fileParts._1.getContentType.toString(), path)
+      CatalogDocument(id, fileParts._1.getFileName, fileParts._1.getContentType.toString(), path)
     }
 
   def get(id: UUID, producerId: String): File = ???

@@ -17,7 +17,7 @@ import akka.{actor => classic}
 import it.pagopa.pdnd.interop.uservice.catalogmanagement.api.EServiceApi
 import it.pagopa.pdnd.interop.uservice.catalogmanagement.api.impl.{EServiceApiMarshallerImpl, EServiceApiServiceImpl}
 import it.pagopa.pdnd.interop.uservice.catalogmanagement.api.impl._
-import it.pagopa.pdnd.interop.uservice.catalogmanagement.common.system.Authenticator
+import it.pagopa.pdnd.interop.uservice.catalogmanagement.common.system.{ApplicationConfiguration, Authenticator}
 import it.pagopa.pdnd.interop.uservice.catalogmanagement.model.Problem
 import it.pagopa.pdnd.interop.uservice.catalogmanagement.model.persistence.{
   CatalogPersistentBehavior,
@@ -29,6 +29,7 @@ import it.pagopa.pdnd.interop.uservice.catalogmanagement.service.{FileManager, U
 import it.pagopa.pdnd.interop.uservice.catalogmanagement.service.impl.{FileManagerImpl, UUIDSupplierImpl}
 import kamon.Kamon
 import spray.json._
+
 import scala.concurrent.ExecutionContextExecutor
 import scala.jdk.CollectionConverters._
 
@@ -66,8 +67,9 @@ object Main extends App {
           case Some(s) => s
         }
 
-        val persistence = classicSystem.classicSystem.settings.config.getString("uservice-catalog-management.persistence")
-        if(persistence == "cassandra") {
+        val persistence =
+          classicSystem.classicSystem.settings.config.getString("uservice-catalog-management.persistence")
+        if (persistence == "cassandra") {
           val catalogPersistentProjection = new CatalogPersistentProjection(context.system, catalogPersistentEntity)
 
           ShardedDaemonProcess(context.system).init[ProjectionBehavior.Command](
@@ -110,7 +112,7 @@ object Main extends App {
           })
         )
 
-        val _ = Http().newServerAt("0.0.0.0", 8088).bind(controller.routes)
+        val _ = Http().newServerAt("0.0.0.0", ApplicationConfiguration.serverPort).bind(controller.routes)
 
         val listener = context.spawn(
           Behaviors.receive[ClusterEvent.MemberEvent]((ctx, event) => {
