@@ -1,5 +1,7 @@
 package it.pagopa.pdnd.interop.uservice.catalogmanagement.model.persistence
 
+import it.pagopa.pdnd.interop.uservice.catalogmanagement.model.CatalogItem
+
 final case class State(items: Map[String, CatalogItem]) extends Persistable {
 
   def add(catalogItem: CatalogItem): State =

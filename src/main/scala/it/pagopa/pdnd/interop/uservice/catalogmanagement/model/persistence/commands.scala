@@ -2,6 +2,7 @@ package it.pagopa.pdnd.interop.uservice.catalogmanagement.model.persistence
 
 import akka.actor.typed.ActorRef
 import akka.pattern.StatusReply
+import it.pagopa.pdnd.interop.uservice.catalogmanagement.model.CatalogItem
 
 sealed trait Command
 
