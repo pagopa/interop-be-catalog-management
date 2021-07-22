@@ -33,6 +33,7 @@ package object v1 {
             producerId = UUID.fromString(itemsV1.value.producerId),
             name = itemsV1.value.name,
             audience = itemsV1.value.audience,
+            technology = itemsV1.value.technology,
             descriptors = descriptors
           )
         )
@@ -58,6 +59,7 @@ package object v1 {
                 producerId = catalogItem.producerId.toString,
                 name = catalogItem.name,
                 audience = catalogItem.audience,
+                technology = catalogItem.technology,
                 descriptors = ds
               )
             )
@@ -82,6 +84,7 @@ package object v1 {
             producerId = UUID.fromString(event.catalogItem.producerId),
             name = event.catalogItem.name,
             audience = event.catalogItem.audience,
+            technology = event.catalogItem.technology,
             descriptors = ds
           )
         )
@@ -103,6 +106,7 @@ package object v1 {
               producerId = event.catalogItem.producerId.toString,
               name = event.catalogItem.name,
               audience = event.catalogItem.audience,
+              technology = event.catalogItem.technology,
               descriptors = ds
             )
           )
@@ -124,7 +128,6 @@ package object v1 {
             id = ver.id.toString,
             version = ver.version,
             description = ver.description,
-            technology = ver.technology,
             voucherLifespan = ver.voucherLifespan,
             docs = ver.docs.map { doc =>
               CatalogDocumentV1(id = doc.id.toString, name = doc.name, contentType = doc.contentType, path = doc.path)
@@ -146,7 +149,6 @@ package object v1 {
           id = UUID.fromString(ver1.id),
           version = ver1.version,
           description = ver1.description,
-          technology = ver1.technology,
           voucherLifespan = ver1.voucherLifespan,
           docs = ver1.docs.map { doc =>
             CatalogDocument(

@@ -8,7 +8,6 @@ final case class CatalogDescriptor(
   description: String,
   docs: Seq[CatalogDocument],
   voucherLifespan: Int,
-  technology: String,
   status: CatalogDescriptorStatus
 ) extends Convertable[EServiceDescriptor] {
   def toApi: EServiceDescriptor = {
@@ -18,7 +17,6 @@ final case class CatalogDescriptor(
       description = description,
       docs = docs.map(_.toApi),
       voucherLifespan = Some(voucherLifespan),
-      technology = technology,
       status = status.stringify
     )
   }

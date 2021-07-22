@@ -74,6 +74,7 @@ class EServiceApiServiceImpl(
         producerId = producerId,
         name = name,
         audience = audience,
+        technology = technology,
         descriptors = Seq(
           CatalogDescriptor(
             id = uuidSupplier.get,
@@ -81,7 +82,6 @@ class EServiceApiServiceImpl(
             version = firstVersion,
             docs = Seq(openapiDoc),
             voucherLifespan = voucherLifespan,
-            technology = technology,
             status = Published //TODO temporary, use Draft
           )
         )
@@ -93,7 +93,8 @@ class EServiceApiServiceImpl(
     val result: Future[StatusReply[CatalogItem]] =
       catalogItem.flatMap(ci => commander.ask(ref => AddCatalogItem(ci, ref)))
     onSuccess(result) {
-      case statusReply if statusReply.isSuccess => createEService200(statusReply.getValue.toApi)
+      case statusReply if statusReply.isSuccess =>
+        createEService200(statusReply.getValue.toApi)
       case statusReply if statusReply.isError =>
         createEService400(Problem(Option(statusReply.getError.getMessage), status = 405, "some error"))
     }

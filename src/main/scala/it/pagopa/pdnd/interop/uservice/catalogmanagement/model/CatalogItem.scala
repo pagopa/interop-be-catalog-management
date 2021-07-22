@@ -11,10 +11,18 @@ final case class CatalogItem(
   producerId: UUID,
   name: String,
   audience: Seq[String],
+  technology: String,
   descriptors: Seq[CatalogDescriptor]
 ) extends Convertable[EService] {
   def toApi: EService = {
-    EService(id = id, producerId = producerId, name = name, audience = audience, descriptors = descriptors.map(_.toApi))
+    EService(
+      id = id,
+      producerId = producerId,
+      name = name,
+      audience = audience,
+      technology = technology,
+      descriptors = descriptors.map(_.toApi)
+    )
   }
 
   def extractFile(documentId: UUID): Option[(ContentType, Path)] = for {

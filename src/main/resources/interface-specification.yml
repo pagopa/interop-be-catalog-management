@@ -191,6 +191,7 @@ components:
         - producerId
         - name
         - audience
+        - technology
         - descriptors
       properties:
         id:
@@ -207,6 +208,8 @@ components:
           type: array
           items:
             type: string
+        technology:
+          type: string
         descriptors:
           type: array
           items:
@@ -231,7 +234,6 @@ components:
         - id
         - version
         - description
-        - technology
         - docs
         - status
         - creationDate
@@ -242,8 +244,6 @@ components:
         version:
           type: string
         description:
-          type: string
-        technology:
           type: string
         docs:
           type: array
