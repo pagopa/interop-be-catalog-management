@@ -3,7 +3,7 @@ package it.pagopa.pdnd.interop.uservice.catalogmanagement.model
 sealed trait CatalogDescriptorStatus {
   def stringify: String = this match {
     case Draft      => "draft"
-    case Published  => "delegate"
+    case Published  => "published"
     case Deprecated => "deprecated"
     case Archived   => "archived"
   }
