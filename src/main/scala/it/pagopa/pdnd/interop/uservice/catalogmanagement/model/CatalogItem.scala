@@ -12,6 +12,7 @@ final case class CatalogItem(
   name: String,
   audience: Seq[String],
   technology: String,
+  attributes: CatalogAttributes,
   descriptors: Seq[CatalogDescriptor]
 ) extends Convertable[EService] {
   def toApi: EService = {
@@ -21,6 +22,7 @@ final case class CatalogItem(
       name = name,
       audience = audience,
       technology = technology,
+      attributes = attributes.toApi,
       descriptors = descriptors.map(_.toApi)
     )
   }

@@ -42,6 +42,7 @@ paths:
                 - description
                 - audience
                 - technology
+                - attributes
                 - voucherLifespan
                 - idl
               properties:
@@ -62,6 +63,8 @@ paths:
                 idl:
                   type: string
                   format: binary
+                attributes:
+                  $ref: '#/components/schemas/Attributes'
             encoding:
               idl:
                 contentType: text/plain, application/json, application/yaml, application/xml
@@ -191,6 +194,7 @@ components:
         - producerId
         - name
         - audience
+        - attributes
         - technology
         - descriptors
       properties:
@@ -210,6 +214,8 @@ components:
             type: string
         technology:
           type: string
+        attributes:
+          $ref: '#/components/schemas/Attributes'
         descriptors:
           type: array
           items:
@@ -255,6 +261,33 @@ components:
         status:
           type: string
           enum: [ 'draft', 'published','deprecated','archived' ]
+    Attribute:
+      type: object
+      properties:
+        simple:
+          type: string
+        group:
+          type: array
+          items:
+            type: string
+    Attributes:
+      properties:
+        certified:
+          type: array
+          items:
+            $ref: '#/components/schemas/Attribute'
+        declared:
+          type: array
+          items:
+            $ref: '#/components/schemas/Attribute'
+        verified:
+          type: array
+          items:
+            $ref: '#/components/schemas/Attribute'
+      required:
+        - certified
+        - declared
+        - verified
     EServices:
       type: array
       items:

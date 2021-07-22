@@ -20,7 +20,7 @@ generateCode := {
     .replaceFirst("uservice-", "uservice.")
     .replaceAll("-", "")
 
-  Process(s"""openapi-generator-cli generate -t template/scala-akka-http-server
+  Process(s"""openapi-generator generate -t template/scala-akka-http-server
              |                               -i src/main/resources/interface-specification.yml
              |                               -g scala-akka-http-server
              |                               -p projectName=${name.value}
@@ -30,7 +30,7 @@ generateCode := {
              |                               -p dateLibrary=java8
              |                               -o generated""".stripMargin).!!
 
-  Process(s"""openapi-generator-cli generate -t template/scala-akka-http-client
+  Process(s"""openapi-generator generate -t template/scala-akka-http-client
              |                               -i src/main/resources/interface-specification.yml
              |                               -g scala-akka
              |                               -p projectName=${name.value}

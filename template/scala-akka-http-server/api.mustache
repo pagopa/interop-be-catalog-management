@@ -84,6 +84,10 @@ import akka.http.scaladsl.server.directives.FileInfo
 
         {{/entityUnmarshallers}}
 
+        {{#stringUnmarshallers}}  implicit def fromStringUnmarshaller{{varName}}: FromStringUnmarshaller[{{dataType}}]
+
+        {{/stringUnmarshallers}}
+
         {{#entityMarshallers}}  implicit def toEntityMarshaller{{varName}}: ToEntityMarshaller[{{dataType}}]
 
         {{/entityMarshallers}}

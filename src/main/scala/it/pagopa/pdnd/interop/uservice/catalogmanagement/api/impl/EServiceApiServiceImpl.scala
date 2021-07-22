@@ -11,8 +11,8 @@ import akka.http.scaladsl.server.directives.FileInfo
 import akka.pattern.StatusReply
 import it.pagopa.pdnd.interop.uservice.catalogmanagement.api.EServiceApiService
 import it.pagopa.pdnd.interop.uservice.catalogmanagement.common.system._
-import it.pagopa.pdnd.interop.uservice.catalogmanagement.model.persistence._
 import it.pagopa.pdnd.interop.uservice.catalogmanagement.model._
+import it.pagopa.pdnd.interop.uservice.catalogmanagement.model.persistence._
 import it.pagopa.pdnd.interop.uservice.catalogmanagement.service.{FileManager, UUIDSupplier}
 
 import java.io.File
@@ -53,7 +53,8 @@ class EServiceApiServiceImpl(
     audience: Seq[String],
     voucherLifespan: Int,
     technology: String,
-    idl: (FileInfo, File)
+    idl: (FileInfo, File),
+    attributes: Attributes
   )(implicit
     toEntityMarshallerProblem: ToEntityMarshaller[Problem],
     toEntityMarshallerEService: ToEntityMarshaller[EService],
@@ -69,12 +70,14 @@ class EServiceApiServiceImpl(
     val catalogItem: Future[CatalogItem] = Future.fromTry {
       for {
         openapiDoc <- fileManager.store(uuidSupplier.get, producerId.toString, firstVersion, idl)
+        attributes <- CatalogAttributes.fromApi(attributes)
       } yield CatalogItem(
         id = id,
         producerId = producerId,
         name = name,
         audience = audience,
         technology = technology,
+        attributes = attributes,
         descriptors = Seq(
           CatalogDescriptor(
             id = uuidSupplier.get,
