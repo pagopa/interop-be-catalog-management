@@ -52,6 +52,8 @@ message CatalogDocumentV1 {
   required string name = 2;
   required string contentType = 3;
   required string path = 4;
+  required string checksum = 5;
+  required string uploadDate = 6;
 }
 
 enum CatalogDescriptorStatusV1 {

@@ -41,14 +41,14 @@ object CatalogPersistentBehavior {
         val catalogItem: Option[CatalogItem] = state.items.get(modifiedCatalogItem.id.toString)
 
         catalogItem
-          .map { ci =>
-            replyTo ! StatusReply.Error[CatalogItem](s"E-Service ${ci.id.toString} already exists")
-            Effect.none[CatalogItemUpdated, State]
-          }
-          .getOrElse {
+          .map { _ =>
             Effect
               .persist(CatalogItemUpdated(modifiedCatalogItem))
-              .thenRun((_: State) => replyTo ! StatusReply.Success(modifiedCatalogItem))
+              .thenRun((_: State) => replyTo ! Some(modifiedCatalogItem))
+          }
+          .getOrElse {
+            replyTo ! None
+            Effect.none[CatalogItemUpdated, State]
           }
 
       case GetCatalogItem(itemId, replyTo) =>

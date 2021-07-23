@@ -21,6 +21,8 @@ import it.pagopa.pdnd.interop.uservice.catalogmanagement.model.persistence.seria
   SimpleAttributeV1
 }
 
+import java.time.OffsetDateTime
+import java.time.format.DateTimeFormatter
 import java.util.UUID
 
 @SuppressWarnings(Array("org.wartremover.warts.Nothing", "org.wartremover.warts.Any"))
@@ -70,7 +72,14 @@ object utils {
             version = ver.version,
             description = ver.description,
             docs = ver.docs.map { doc =>
-              CatalogDocumentV1(id = doc.id.toString, name = doc.name, contentType = doc.contentType, path = doc.path)
+              CatalogDocumentV1(
+                id = doc.id.toString,
+                name = doc.name,
+                contentType = doc.contentType,
+                path = doc.path,
+                checksum = doc.checksum,
+                uploadDate = doc.uploadDate.format(DateTimeFormatter.ISO_DATE_TIME)
+              )
             },
             status = status
           )
@@ -91,7 +100,9 @@ object utils {
               id = UUID.fromString(doc.id),
               name = doc.name,
               contentType = doc.contentType,
-              path = doc.path
+              path = doc.path,
+              checksum = doc.checksum,
+              uploadDate = OffsetDateTime.parse(doc.uploadDate, DateTimeFormatter.ISO_DATE_TIME)
             )
           },
           status = status

@@ -33,10 +33,10 @@ final case class CatalogItem(
     )
   }
 
-  def extractFile(descriptorId: UUID, documentId: UUID): Option[(ContentType, Path)] = for {
+  def extractFile(descriptorId: String, documentId: String): Option[(ContentType, Path)] = for {
     doc <- descriptors
-      .find(_.id == descriptorId)
-      .flatMap(_.docs.find(_.id == documentId))
+      .find(_.id == UUID.fromString(descriptorId))
+      .flatMap(_.docs.find(_.id == UUID.fromString(documentId)))
     contentType <- ContentType.parse(doc.contentType).toOption //TODO: improve
   } yield (contentType, Paths.get(doc.path))
 
