@@ -14,9 +14,9 @@ class FileManagerImpl extends FileManager {
 
   val currentPath: Path = Paths.get(System.getProperty("user.dir"))
 
-  def store(id: UUID, producerId: String, version: String, fileParts: (FileInfo, File)): Try[CatalogDocument] =
+  def store(id: UUID, eServiceId: String, descriptorId: String, fileParts: (FileInfo, File)): Try[CatalogDocument] =
     Try {
-      val destPath = createPath(producerId, version, id.toString, fileParts._1)
+      val destPath = createPath(eServiceId, descriptorId, id.toString, fileParts._1)
 
       val path = moveRenameFile(fileParts._2.getPath, destPath).toString
       CatalogDocument(id, fileParts._1.getFileName, fileParts._1.getContentType.toString(), path)
@@ -24,11 +24,11 @@ class FileManagerImpl extends FileManager {
 
   def get(id: UUID, producerId: String): File = ???
 
-  private def createPath(producerId: String, version: String, id: String, fileInfo: FileInfo): String = {
+  private def createPath(producerId: String, descriptorId: String, id: String, fileInfo: FileInfo): String = {
 
     val docsPath: Path = Paths.get(
       currentPath.toString,
-      s"target/pdnd-interop/docs/$producerId/$version/$id${fileInfo.getFieldName}/${fileInfo.getContentType.toString}"
+      s"target/pdnd-interop/docs/$producerId/$descriptorId/$id${fileInfo.getFieldName}/${fileInfo.getContentType.toString}"
     )
     val pathCreated: Path = Files.createDirectories(docsPath)
 

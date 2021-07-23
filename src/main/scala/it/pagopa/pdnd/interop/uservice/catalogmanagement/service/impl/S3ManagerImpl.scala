@@ -17,13 +17,13 @@ class S3ManagerImpl(s3Client: S3Client) extends FileManager {
 
   override def store(
     id: UUID,
-    producerId: String,
-    version: String,
+    eServiceId: String,
+    descriptorId: String,
     fileParts: (FileInfo, File)
   ): Try[CatalogDocument] = {
 
     Try {
-      val s3Key = createS3Key(producerId, version, id.toString, fileInfo = fileParts._1)
+      val s3Key = createS3Key(eServiceId, descriptorId, id.toString, fileInfo = fileParts._1)
       val objectRequest =
         PutObjectRequest.builder
           .bucket(bucketName)
@@ -37,8 +37,8 @@ class S3ManagerImpl(s3Client: S3Client) extends FileManager {
 
   }
 
-  private def createS3Key(producerId: String, version: String, id: String, fileInfo: FileInfo): String =
-    s"e-services/docs/${producerId}/${version}/${id}/${fileInfo.getFieldName}/${fileInfo.getContentType.toString}/${fileInfo.getFileName}"
+  private def createS3Key(eServiceId: String, descriptorId: String, id: String, fileInfo: FileInfo): String =
+    s"e-services/docs/${eServiceId}/${descriptorId}/${id}/${fileInfo.getFieldName}/${fileInfo.getContentType.toString}/${fileInfo.getFileName}"
 
   override def get(id: UUID, producerId: String): File = ???
 }

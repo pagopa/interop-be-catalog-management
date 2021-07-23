@@ -10,8 +10,10 @@ case object Idle extends Command
 
 final case class AddCatalogItem(catalogItem: CatalogItem, replyTo: ActorRef[StatusReply[CatalogItem]]) extends Command
 
-final case class GetCatalogItem(catalogItemId: String, replyTo: ActorRef[StatusReply[Option[CatalogItem]]])
+final case class UpdateCatalogItem(catalogItem: CatalogItem, replyTo: ActorRef[StatusReply[CatalogItem]])
     extends Command
+
+final case class GetCatalogItem(catalogItemId: String, replyTo: ActorRef[Option[CatalogItem]]) extends Command
 
 final case class ListCatalogItem(
   from: Int,

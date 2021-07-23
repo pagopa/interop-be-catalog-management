@@ -69,7 +69,6 @@ object utils {
             id = ver.id.toString,
             version = ver.version,
             description = ver.description,
-            voucherLifespan = ver.voucherLifespan,
             docs = ver.docs.map { doc =>
               CatalogDocumentV1(id = doc.id.toString, name = doc.name, contentType = doc.contentType, path = doc.path)
             },
@@ -87,7 +86,6 @@ object utils {
           id = UUID.fromString(ver1.id),
           version = ver1.version,
           description = ver1.description,
-          voucherLifespan = ver1.voucherLifespan,
           docs = ver1.docs.map { doc =>
             CatalogDocument(
               id = UUID.fromString(doc.id),

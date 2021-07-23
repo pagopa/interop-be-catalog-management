@@ -10,10 +10,12 @@ message CatalogItemV1 {
   required string id = 1;
   required string producerId = 2;
   required string name = 3;
-  repeated string audience = 4;
-  required string technology = 5;
-  required CatalogAttributesV1  attributes = 6;
-  repeated CatalogDescriptorV1 descriptors = 7;
+  required string description = 4;
+  repeated string audience = 5;
+  optional string technology = 6;
+  required int32 voucherLifespan = 7;
+  required CatalogAttributesV1  attributes = 8;
+  repeated CatalogDescriptorV1 descriptors = 9;
 }
 
 message CatalogAttributesV1 {
@@ -40,10 +42,9 @@ message CatalogAttributeV1 {
 message CatalogDescriptorV1 {
   required string id = 1;
   required string version = 2;
-  required string description = 3;
-  required int32 voucherLifespan = 4;
-  repeated CatalogDocumentV1 docs = 5;
-  required CatalogDescriptorStatusV1 status = 6;
+  optional string description = 3;
+  repeated CatalogDocumentV1 docs = 4;
+  required CatalogDescriptorStatusV1 status = 5;
 }
 
 message CatalogDocumentV1 {

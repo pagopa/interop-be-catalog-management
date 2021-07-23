@@ -9,7 +9,7 @@ import scala.util.Try
 
 trait FileManager {
 
-  def store(id: UUID, producerId: String, version: String, fileParts: (FileInfo, File)): Try[CatalogDocument]
+  def store(id: UUID, eServiceId: String, descriptorId: String, fileParts: (FileInfo, File)): Try[CatalogDocument]
 
   def get(id: UUID, producerId: String): File
 

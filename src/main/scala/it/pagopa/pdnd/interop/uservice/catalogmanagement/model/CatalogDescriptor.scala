@@ -5,9 +5,8 @@ import java.util.UUID
 final case class CatalogDescriptor(
   id: UUID,
   version: String,
-  description: String,
+  description: Option[String],
   docs: Seq[CatalogDocument],
-  voucherLifespan: Int,
   status: CatalogDescriptorStatus
 ) extends Convertable[EServiceDescriptor] {
   def toApi: EServiceDescriptor = {
@@ -16,9 +15,12 @@ final case class CatalogDescriptor(
       version = version,
       description = description,
       docs = docs.map(_.toApi),
-      voucherLifespan = Some(voucherLifespan),
       status = status.stringify
     )
+  }
+
+  def publish: CatalogDescriptor = {
+    copy(status = Published)
   }
 
 }

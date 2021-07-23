@@ -4,7 +4,7 @@ import akka.actor.typed.ActorSystem
 import akka.cluster.sharding.typed.scaladsl.{ClusterSharding, Entity, EntityRef}
 import akka.cluster.sharding.typed.{ClusterShardingSettings, ShardingEnvelope}
 import akka.http.scaladsl.marshalling.ToEntityMarshaller
-import akka.http.scaladsl.model.{ContentType, HttpEntity}
+import akka.http.scaladsl.model.HttpEntity
 import akka.http.scaladsl.server.Directives.{complete, onSuccess}
 import akka.http.scaladsl.server.Route
 import akka.http.scaladsl.server.directives.FileInfo
@@ -16,7 +16,6 @@ import it.pagopa.pdnd.interop.uservice.catalogmanagement.model.persistence._
 import it.pagopa.pdnd.interop.uservice.catalogmanagement.service.{FileManager, UUIDSupplier}
 
 import java.io.File
-import java.nio.file.Path
 import java.util.UUID
 import scala.concurrent.duration.Duration
 import scala.concurrent.{Await, ExecutionContext, Future}
@@ -44,63 +43,88 @@ class EServiceApiServiceImpl(
 
   @inline private def getShard(id: String): String = Math.abs(id.hashCode % settings.numberOfShards).toString
 
+  private def getCommander(id: String): EntityRef[Command] =
+    sharding.entityRefFor(CatalogPersistentBehavior.TypeKey, getShard(id))
+
   /** Code: 200, Message: EService created, DataType: EService
     * Code: 400, Message: Invalid input, DataType: Problem
     */
-  override def createEService(
-    name: String,
-    description: String,
-    audience: Seq[String],
-    voucherLifespan: Int,
-    technology: String,
-    idl: (FileInfo, File),
-    attributes: Attributes
-  )(implicit
+  override def createEService(eServiceSeed: EServiceSeed)(implicit
     toEntityMarshallerProblem: ToEntityMarshaller[Problem],
     toEntityMarshallerEService: ToEntityMarshaller[EService],
     contexts: Seq[(String, String)]
   ): Route = {
     contexts.foreach(println)
 
-    val firstVersion: String = "1"
-
-    val id: UUID   = uuidSupplier.get
-    val producerId = uuidSupplier.get //TODO from jwt
-
-    val catalogItem: Future[CatalogItem] = Future.fromTry {
-      for {
-        openapiDoc <- fileManager.store(uuidSupplier.get, producerId.toString, firstVersion, idl)
-        attributes <- CatalogAttributes.fromApi(attributes)
-      } yield CatalogItem(
-        id = id,
-        producerId = producerId,
-        name = name,
-        audience = audience,
-        technology = technology,
-        attributes = attributes,
-        descriptors = Seq(
-          CatalogDescriptor(
-            id = uuidSupplier.get,
-            description = description,
-            version = firstVersion,
-            docs = Seq(openapiDoc),
-            voucherLifespan = voucherLifespan,
-            status = Published //TODO temporary, use Draft
-          )
-        )
-      )
-    }
-
-    val commander: EntityRef[Command] = sharding.entityRefFor(CatalogPersistentBehavior.TypeKey, getShard(id.toString))
-
     val result: Future[StatusReply[CatalogItem]] =
-      catalogItem.flatMap(ci => commander.ask(ref => AddCatalogItem(ci, ref)))
+      for {
+        catalogItem <- CatalogItem.create(eServiceSeed, uuidSupplier)
+        added       <- getCommander(catalogItem.id.toString).ask(ref => AddCatalogItem(catalogItem, ref))
+      } yield added
+
     onSuccess(result) {
       case statusReply if statusReply.isSuccess =>
         createEService200(statusReply.getValue.toApi)
       case statusReply if statusReply.isError =>
         createEService400(Problem(Option(statusReply.getError.getMessage), status = 405, "some error"))
     }
+  }
+
+  /** Code: 200, Message: EService Interface created, DataType: EService
+    * Code: 400, Message: Invalid input, DataType: Problem
+    */
+  override def createEServiceInterface(
+    eServiceId: String,
+    descriptorId: String,
+    description: String,
+    technology: String,
+    idl: (FileInfo, File)
+  )(implicit
+    toEntityMarshallerProblem: ToEntityMarshaller[Problem],
+    toEntityMarshallerEService: ToEntityMarshaller[EService],
+    contexts: Seq[(String, String)]
+  ): Route = {
+    val commander: EntityRef[Command] = getCommander(eServiceId)
+
+    val result: Future[StatusReply[CatalogItem]] = for {
+      found      <- commander.ask(ref => GetCatalogItem(eServiceId, ref))
+      current    <- Future.fromTry(found.toRight(new RuntimeException("EService non found")).toTry)
+      openapiDoc <- Future.fromTry(fileManager.store(uuidSupplier.get, eServiceId, descriptorId, idl))
+      updated    <- commander.ask(ref => UpdateCatalogItem(current.updateFile(descriptorId, openapiDoc), ref))
+    } yield updated
+
+    onSuccess(result) {
+      case statusReply if statusReply.isSuccess =>
+        createEService200(statusReply.getValue.toApi)
+      case statusReply if statusReply.isError =>
+        createEService400(Problem(Option(statusReply.getError.getMessage), status = 405, "some error"))
+    }
+
+  }
+
+  /** Code: 200, Message: EService Descriptor published, DataType: EService
+    * Code: 400, Message: Invalid input, DataType: Problem
+    */
+  override def publishDescriptor(eServiceId: String, descriptorId: String)(implicit
+    toEntityMarshallerProblem: ToEntityMarshaller[Problem],
+    toEntityMarshallerEService: ToEntityMarshaller[EService],
+    contexts: Seq[(String, String)]
+  ): Route = {
+    val commander: EntityRef[Command] = getCommander(eServiceId)
+
+    val result: Future[StatusReply[CatalogItem]] = for {
+      found   <- commander.ask(ref => GetCatalogItem(eServiceId, ref))
+      current <- Future.fromTry(found.toRight(new RuntimeException("EService non found")).toTry)
+      updated <- commander.ask(ref => UpdateCatalogItem(current.publish(descriptorId), ref))
+    } yield updated
+
+    onSuccess(result) {
+      case statusReply if statusReply.isSuccess =>
+        createEService200(statusReply.getValue.toApi)
+      case statusReply if statusReply.isError =>
+        createEService400(Problem(Option(statusReply.getError.getMessage), status = 405, "some error"))
+    }
+
   }
 
   /** Code: 200, Message: EService retrieved, DataType: EService
@@ -113,15 +137,12 @@ class EServiceApiServiceImpl(
     contexts: Seq[(String, String)]
   ): Route = {
     contexts.foreach(println)
-    val commander: EntityRef[Command]                    = sharding.entityRefFor(CatalogPersistentBehavior.TypeKey, getShard(eServiceId))
-    val result: Future[StatusReply[Option[CatalogItem]]] = commander.ask(ref => GetCatalogItem(eServiceId, ref))
+    val commander: EntityRef[Command]       = sharding.entityRefFor(CatalogPersistentBehavior.TypeKey, getShard(eServiceId))
+    val result: Future[Option[CatalogItem]] = commander.ask(ref => GetCatalogItem(eServiceId, ref))
+
     onSuccess(result) {
-      case statusReply if statusReply.isSuccess =>
-        statusReply.getValue.fold(getEService404(Problem(None, status = 404, "some error")))(catalogItem =>
-          getEService200(catalogItem.toApi)
-        )
-      case statusReply if statusReply.isError =>
-        getEService400(Problem(Option(statusReply.getError.getMessage), status = 400, "some error"))
+      case Some(catalogItem) => getEService200(catalogItem.toApi)
+      case None              => getEService404(Problem(None, status = 404, "some error"))
     }
   }
 
@@ -155,7 +176,7 @@ class EServiceApiServiceImpl(
     * Code: 404, Message: EService not found, DataType: Problem
     * Code: 400, Message: Bad request, DataType: Problem
     */
-  override def getEServiceDocument(eServiceId: String, documentId: String)(implicit
+  override def getEServiceDocument(eServiceId: String, descriptorId: String, documentId: String)(implicit
     toEntityMarshallerProblem: ToEntityMarshaller[Problem],
     toEntityMarshallerFile: ToEntityMarshaller[File],
     contexts: Seq[(String, String)]
@@ -163,20 +184,20 @@ class EServiceApiServiceImpl(
     contexts.foreach(println)
     val commander: EntityRef[Command] = sharding.entityRefFor(CatalogPersistentBehavior.TypeKey, getShard(eServiceId))
 
-    val result: Future[StatusReply[Option[CatalogItem]]] = commander.ask(ref => GetCatalogItem(eServiceId, ref))
+    val result: Future[Option[CatalogItem]] = commander.ask(ref => GetCatalogItem(eServiceId, ref))
 
     onSuccess(result) {
-      case statusReply if statusReply.isSuccess =>
-        val fileInfo: Option[(ContentType, Path)] = for {
-          catalogItem <- statusReply.getValue
-          fileInfo    <- catalogItem.extractFile(UUID.fromString(documentId))
-        } yield fileInfo
+      case Some(catalogItem) =>
+        val fileInfo = catalogItem.extractFile(
+          descriptorId = UUID.fromString(descriptorId),
+          documentId = UUID.fromString(documentId)
+        )
 
-        fileInfo.fold(getEServiceDocument404(Problem(None, status = 404, "some error"))) { case (contentType, file) =>
-          complete(HttpEntity.fromFile(contentType, file.toFile))
+        fileInfo.fold(getEServiceDocument404(Problem(None, status = 404, s"Document $documentId not found"))) {
+          case (contentType, file) =>
+            complete(HttpEntity.fromFile(contentType, file.toFile))
         }
-      case statusReply if statusReply.isError =>
-        getEService400(Problem(Option(statusReply.getError.getMessage), status = 400, "some error"))
+      case None => getEService400(Problem(None, status = 400, s"EService $eServiceId not found"))
     }
   }
 

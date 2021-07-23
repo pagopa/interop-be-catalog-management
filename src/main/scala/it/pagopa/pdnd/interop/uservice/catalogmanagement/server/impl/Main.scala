@@ -7,7 +7,6 @@ import akka.cluster.sharding.typed.scaladsl.{ClusterSharding, Entity, ShardedDae
 import akka.cluster.sharding.typed.{ClusterShardingSettings, ShardingEnvelope}
 import akka.cluster.typed.{Cluster, Subscribe}
 import akka.http.scaladsl.Http
-import akka.http.scaladsl.server.Directives.complete
 import akka.http.scaladsl.server.directives.SecurityDirectives
 import akka.management.cluster.bootstrap.ClusterBootstrap
 import akka.management.scaladsl.AkkaManagement
@@ -15,18 +14,23 @@ import akka.persistence.typed.PersistenceId
 import akka.projection.ProjectionBehavior
 import akka.{actor => classic}
 import it.pagopa.pdnd.interop.uservice.catalogmanagement.api.EServiceApi
-import it.pagopa.pdnd.interop.uservice.catalogmanagement.api.impl.{EServiceApiMarshallerImpl, EServiceApiServiceImpl, _}
-import it.pagopa.pdnd.interop.uservice.catalogmanagement.common.system.{ApplicationConfiguration, Authenticator, s3Client}
-import it.pagopa.pdnd.interop.uservice.catalogmanagement.model.Problem
-import it.pagopa.pdnd.interop.uservice.catalogmanagement.model.persistence.{CatalogPersistentBehavior, CatalogPersistentProjection, Command}
+import it.pagopa.pdnd.interop.uservice.catalogmanagement.api.impl.{EServiceApiMarshallerImpl, EServiceApiServiceImpl}
+import it.pagopa.pdnd.interop.uservice.catalogmanagement.common.system.{
+  ApplicationConfiguration,
+  Authenticator,
+  s3Client
+}
+import it.pagopa.pdnd.interop.uservice.catalogmanagement.model.persistence.{
+  CatalogPersistentBehavior,
+  CatalogPersistentProjection,
+  Command
+}
 import it.pagopa.pdnd.interop.uservice.catalogmanagement.server.Controller
 import it.pagopa.pdnd.interop.uservice.catalogmanagement.service.impl.{S3ManagerImpl, UUIDSupplierImpl}
 import it.pagopa.pdnd.interop.uservice.catalogmanagement.service.{FileManager, UUIDSupplier}
 import kamon.Kamon
-import spray.json._
 
 import scala.concurrent.ExecutionContextExecutor
-import scala.jdk.CollectionConverters._
 
 @SuppressWarnings(
   Array("org.wartremover.warts.StringPlusAny", "org.wartremover.warts.Nothing", "org.wartremover.warts.Throw")
@@ -87,25 +91,7 @@ object Main extends App {
 
         val _ = AkkaManagement.get(classicSystem).start()
 
-        val controller = new Controller(
-          eServiceApi,
-          validationExceptionToRoute = Some(e => {
-            val results = e.results()
-            results.crumbs().asScala.foreach { crumb =>
-              println(crumb.crumb())
-            }
-            results.items().asScala.foreach { item =>
-              println(item.dataCrumbs())
-              println(item.dataJsonPointer())
-              println(item.schemaCrumbs())
-              println(item.message())
-              println(item.severity())
-            }
-            val message =
-              Problem(Some(e.results().items().asScala.map(_.message()).mkString("\n")), 400, "some error").toJson
-            complete((400, message))
-          })
-        )
+        val controller = new Controller(eServiceApi)
 
         val _ = Http().newServerAt("0.0.0.0", ApplicationConfiguration.serverPort).bind(controller.routes)
 

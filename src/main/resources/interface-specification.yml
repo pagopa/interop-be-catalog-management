@@ -34,40 +34,9 @@ paths:
       requestBody:
         description: A E-Service seed
         content:
-          multipart/form-data:
+          application/json:
             schema:
-              type: object
-              required:
-                - name
-                - description
-                - audience
-                - technology
-                - attributes
-                - voucherLifespan
-                - idl
-              properties:
-                name:
-                  type: string
-                description:
-                  type: string
-                audience:
-                  type: array
-                  items:
-                    type: string
-                voucherLifespan:
-                  type: integer
-                  format: int32
-                technology:
-                  type: string
-                  enum: [ 'REST', 'SOAP' ]
-                idl:
-                  type: string
-                  format: binary
-                attributes:
-                  $ref: '#/components/schemas/Attributes'
-            encoding:
-              idl:
-                contentType: text/plain, application/json, application/yaml, application/xml
+              $ref: '#/components/schemas/EServiceSeed'
         required: true
       responses:
         "200":
@@ -144,7 +113,98 @@ paths:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/Problem'
-  /eservice/{eServiceId}/documents/{documentId}:
+  /eservice/{eServiceId}/descriptors/{descriptorId}:
+    post:
+      security:
+        - bearerAuth: [ ]
+      tags:
+        - e_service
+      summary: Publish a new descriptors
+      operationId: publishDescriptor
+      parameters:
+        - name: eServiceId
+          in: path
+          description: the eservice id
+          required: true
+          schema:
+            type: string
+        - name: descriptorId
+          in: path
+          description: the descriptor Id
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: EService Descriptor published
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EService'
+        "400":
+          description: Invalid input
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+  /eservice/{eServiceId}/descriptors/{descriptorId}/interface:
+    post:
+      security:
+        - bearerAuth: [ ]
+      tags:
+        - e_service
+      summary: Add a new e-service inteface
+      operationId: createEServiceInterface
+      parameters:
+        - name: eServiceId
+          in: path
+          description: the eservice id
+          required: true
+          schema:
+            type: string
+        - name: descriptorId
+          in: path
+          description: the descriptor Id
+          required: true
+          schema:
+            type: string
+      requestBody:
+        description: A E-Service seed
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - description
+                - technology
+                - idl
+              properties:
+                description:
+                  type: string
+                technology:
+                  type: string
+                  enum: [ 'REST', 'SOAP' ]
+                idl:
+                  type: string
+                  format: binary
+            encoding:
+              idl:
+                contentType: application/yaml, application/xml
+        required: true
+      responses:
+        "200":
+          description: EService Interface created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EService'
+        "400":
+          description: Invalid input
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+  /eservice/{eServiceId}/descriptors/{descriptorId}/documents/{documentId}:
     get:
       security:
         - bearerAuth: [ ]
@@ -156,6 +216,12 @@ paths:
         - name: eServiceId
           in: path
           description: the eservice id
+          required: true
+          schema:
+            type: string
+        - name: descriptorId
+          in: path
+          description: the descriptor Id
           required: true
           schema:
             type: string
@@ -187,15 +253,38 @@ paths:
                 $ref: '#/components/schemas/Problem'
 components:
   schemas:
+    EServiceSeed:
+      type: object
+      required:
+        - name
+        - description
+        - audience
+        - attributes
+        - voucherLifespan
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        audience:
+          type: array
+          items:
+            type: string
+        voucherLifespan:
+          type: integer
+          format: int32
+        attributes:
+          $ref: '#/components/schemas/Attributes'
     EService:
       type: object
       required:
         - id
         - producerId
         - name
+        - description
         - audience
+        - voucherLifespan
         - attributes
-        - technology
         - descriptors
       properties:
         id:
@@ -206,14 +295,17 @@ components:
           format: uuid
         name:
           type: string
-          maxLength: 64
-          minLength: 6
+        description:
+          type: string
         audience:
           type: array
           items:
             type: string
         technology:
           type: string
+        voucherLifespan:
+          type: integer
+          format: int32
         attributes:
           $ref: '#/components/schemas/Attributes'
         descriptors:
@@ -239,7 +331,6 @@ components:
       required:
         - id
         - version
-        - description
         - docs
         - status
         - creationDate
@@ -255,9 +346,6 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/EServiceDoc'
-        voucherLifespan:
-          type: integer
-          format: int32
         status:
           type: string
           enum: [ 'draft', 'published','deprecated','archived' ]

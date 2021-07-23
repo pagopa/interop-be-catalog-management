@@ -22,8 +22,10 @@ package object v1 {
           id = UUID.fromString(itemsV1.value.id),
           producerId = UUID.fromString(itemsV1.value.producerId),
           name = itemsV1.value.name,
+          description = itemsV1.value.description,
           audience = itemsV1.value.audience,
           technology = itemsV1.value.technology,
+          voucherLifespan = itemsV1.value.voucherLifespan,
           attributes = attributes,
           descriptors = descriptors
         )
@@ -45,8 +47,10 @@ package object v1 {
               id = catalogItem.id.toString,
               producerId = catalogItem.producerId.toString,
               name = catalogItem.name,
+              description = catalogItem.description,
               audience = catalogItem.audience,
               technology = catalogItem.technology,
+              voucherLifespan = catalogItem.voucherLifespan,
               attributes = attributes,
               descriptors = descriptors
             )
@@ -68,8 +72,10 @@ package object v1 {
           id = UUID.fromString(event.catalogItem.id),
           producerId = UUID.fromString(event.catalogItem.producerId),
           name = event.catalogItem.name,
+          description = event.catalogItem.description,
           audience = event.catalogItem.audience,
           technology = event.catalogItem.technology,
+          voucherLifespan = event.catalogItem.voucherLifespan,
           attributes = attributes,
           descriptors = descriptors
         )
@@ -89,8 +95,10 @@ package object v1 {
             id = event.catalogItem.id.toString,
             producerId = event.catalogItem.producerId.toString,
             name = event.catalogItem.name,
+            description = event.catalogItem.description,
             audience = event.catalogItem.audience,
             technology = event.catalogItem.technology,
+            voucherLifespan = event.catalogItem.voucherLifespan,
             attributes = attributes,
             descriptors = descriptors
           )
