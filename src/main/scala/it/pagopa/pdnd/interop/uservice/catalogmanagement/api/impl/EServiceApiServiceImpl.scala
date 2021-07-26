@@ -111,7 +111,7 @@ class EServiceApiServiceImpl(
     * Code: 400, Message: Invalid input, DataType: Problem
     * Code: 404, Message: Not found, DataType: Problem
     */
-  override def createEServiceDocuments(
+  override def createEServiceDocument(
     eServiceId: String,
     descriptorId: String,
     description: String,
@@ -121,21 +121,25 @@ class EServiceApiServiceImpl(
     toEntityMarshallerEService: ToEntityMarshaller[EService],
     contexts: Seq[(String, String)]
   ): Route = {
+    println("DOCUMENT")
     val commander: EntityRef[Command] = getCommander(eServiceId)
 
     val result: Future[Option[CatalogItem]] = for {
-      current          <- retrieveCatalogItem(commander, eServiceId)
+      current <- retrieveCatalogItem(commander, eServiceId)
+      _ = println("DOCUMENT")
       checksumVerified <- fileManager.verifyChecksum(doc, current)
-      updated          <- storeFile(commander, eServiceId, descriptorId, description, NOT_INTERFACE, checksumVerified, doc)
+      _ = println("DOCUMENT")
+      updated <- storeFile(commander, eServiceId, descriptorId, description, NOT_INTERFACE, checksumVerified, doc)
+      _ = println("DOCUMENT")
     } yield updated
 
     onComplete(result) {
       case Success(catalogItem) =>
-        catalogItem.fold(createEServiceInterface404(Problem(None, status = 404, "some error")))(ci =>
-          createEServiceInterface200(ci.toApi)
+        catalogItem.fold(createEServiceDocument404(Problem(None, status = 404, "some error")))(ci =>
+          createEServiceDocument200(ci.toApi)
         )
       case Failure(exception) =>
-        createEServiceInterface400(Problem(Option(exception.getMessage), status = 400, "some error"))
+        createEServiceDocument400(Problem(Option(exception.getMessage), status = 400, "some error"))
     }
   }
 
