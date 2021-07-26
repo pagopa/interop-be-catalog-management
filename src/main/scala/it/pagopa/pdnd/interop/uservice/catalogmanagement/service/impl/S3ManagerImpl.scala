@@ -42,7 +42,6 @@ class S3ManagerImpl(s3Client: S3Client) extends FileManager {
         name = fileParts._1.getFileName,
         contentType = fileParts._1.getContentType.toString(),
         description = description,
-        interface = interface,
         path = s3Key,
         checksum = Digester.createHash(fileParts._2),
         uploadDate = OffsetDateTime.now()

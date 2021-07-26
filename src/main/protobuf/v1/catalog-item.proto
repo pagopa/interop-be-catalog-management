@@ -45,6 +45,7 @@ message CatalogDescriptorV1 {
   optional string description = 3;
   repeated CatalogDocumentV1 docs = 4;
   required CatalogDescriptorStatusV1 status = 5;
+  optional CatalogDocumentV1 interface = 6;
 }
 
 message CatalogDocumentV1 {
@@ -55,7 +56,6 @@ message CatalogDocumentV1 {
   required string checksum = 5;
   required string uploadDate = 6;
   required string description = 7;
-  required bool interface = 8;
 }
 
 enum CatalogDescriptorStatusV1 {

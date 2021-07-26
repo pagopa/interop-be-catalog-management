@@ -7,6 +7,7 @@ final case class CatalogDescriptor(
   id: UUID,
   version: String,
   description: Option[String],
+  interface: Option[CatalogDocument],
   docs: Seq[CatalogDocument],
   status: CatalogDescriptorStatus
 ) extends Convertable[EServiceDescriptor] {
@@ -15,13 +16,14 @@ final case class CatalogDescriptor(
       id = id,
       version = version,
       description = description,
+      interface = interface.map(_.toApi),
       docs = docs.map(_.toApi),
       status = status.stringify
     )
   }
 
   def isPublishable: Boolean = {
-    docs.exists(doc => doc.interface) && status == Draft
+    interface.isDefined && status == Draft
   }
 
   def publish: CatalogDescriptor = {

@@ -77,7 +77,6 @@ object utils {
                 name = doc.name,
                 contentType = doc.contentType,
                 description = doc.description,
-                interface = doc.interface,
                 path = doc.path,
                 checksum = doc.checksum,
                 uploadDate = doc.uploadDate.format(DateTimeFormatter.ISO_DATE_TIME)
@@ -97,13 +96,23 @@ object utils {
           id = UUID.fromString(ver1.id),
           version = ver1.version,
           description = ver1.description,
+          interface = ver1.interface.map { doc =>
+            CatalogDocument(
+              id = UUID.fromString(doc.id),
+              name = doc.name,
+              contentType = doc.contentType,
+              description = doc.description,
+              path = doc.path,
+              checksum = doc.checksum,
+              uploadDate = OffsetDateTime.parse(doc.uploadDate, DateTimeFormatter.ISO_DATE_TIME)
+            )
+          },
           docs = ver1.docs.map { doc =>
             CatalogDocument(
               id = UUID.fromString(doc.id),
               name = doc.name,
               contentType = doc.contentType,
               description = doc.description,
-              interface = doc.interface,
               path = doc.path,
               checksum = doc.checksum,
               uploadDate = OffsetDateTime.parse(doc.uploadDate, DateTimeFormatter.ISO_DATE_TIME)

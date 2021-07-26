@@ -40,12 +40,15 @@ final case class CatalogItem(
     contentType <- ContentType.parse(doc.contentType).toOption //TODO: improve
   } yield (contentType, Paths.get(doc.path))
 
-  def updateFile(descriptorId: String, document: CatalogDocument): CatalogItem = {
-    val updated: Seq[CatalogDescriptor] = descriptors.map {
-      case descriptor if descriptor.id == UUID.fromString(descriptorId) =>
-        descriptor.copy(docs = descriptor.docs.appended(document))
-      case descriptor => descriptor
-    }
+  def updateFile(descriptorId: String, document: CatalogDocument, isInterface: Boolean): CatalogItem = {
+    val uuid: UUID = UUID.fromString(descriptorId)
+    val updated: Seq[CatalogDescriptor] =
+      descriptors.map {
+        case descriptor if descriptor.id == uuid && isInterface => descriptor.copy(interface = Some(document))
+        case descriptor if descriptor.id == uuid                => descriptor.copy(docs = descriptor.docs.appended(document))
+        case descriptor                                         => descriptor
+      }
+
     copy(descriptors = updated)
   }
 
@@ -84,6 +87,7 @@ object CatalogItem {
             id = uuidSupplier.get,
             description = None,
             version = firstVersion,
+            interface = None,
             docs = Seq.empty[CatalogDocument],
             status = Draft
           )

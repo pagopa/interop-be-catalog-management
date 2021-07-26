@@ -8,13 +8,12 @@ final case class CatalogDocument(
   name: String,
   contentType: String,
   description: String,
-  interface: Boolean,
   path: String,
   checksum: String,
   uploadDate: OffsetDateTime
 ) extends Convertable[EServiceDoc] {
 
   override def toApi: EServiceDoc =
-    EServiceDoc(id = id, name = name, contentType = contentType, description = description, interface = interface)
+    EServiceDoc(id = id, name = name, contentType = contentType, description = description)
 
 }
