@@ -22,6 +22,8 @@ class S3ManagerImpl(s3Client: S3Client) extends FileManager {
     id: UUID,
     eServiceId: String,
     descriptorId: String,
+    description: String,
+    interface: Boolean,
     fileParts: (FileInfo, File)
   ): Future[CatalogDocument] = Future.fromTry {
 
@@ -39,6 +41,8 @@ class S3ManagerImpl(s3Client: S3Client) extends FileManager {
         id = id,
         name = fileParts._1.getFileName,
         contentType = fileParts._1.getContentType.toString(),
+        description = description,
+        interface = interface,
         path = s3Key,
         checksum = Digester.createHash(fileParts._2),
         uploadDate = OffsetDateTime.now()

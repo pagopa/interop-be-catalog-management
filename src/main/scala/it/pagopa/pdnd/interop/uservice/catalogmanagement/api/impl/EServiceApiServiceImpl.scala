@@ -20,12 +20,14 @@ import java.io.File
 import scala.concurrent.duration.Duration
 import scala.concurrent.{Await, ExecutionContext, Future}
 import scala.util.{Failure, Success}
+
 @SuppressWarnings(
   Array(
     "org.wartremover.warts.ImplicitParameter",
     "org.wartremover.warts.Any",
     "org.wartremover.warts.Nothing",
-    "org.wartremover.warts.Recursion"
+    "org.wartremover.warts.Recursion",
+    "org.wartremover.warts.Equals"
   )
 )
 class EServiceApiServiceImpl(
@@ -42,10 +44,10 @@ class EServiceApiServiceImpl(
     case Some(s) => s
   }
 
-  @inline private def getShard(id: String): String = Math.abs(id.hashCode % settings.numberOfShards).toString
+  private val INTERFACE     = true
+  private val NOT_INTERFACE = false
 
-  private def getCommander(id: String): EntityRef[Command] =
-    sharding.entityRefFor(CatalogPersistentBehavior.TypeKey, getShard(id))
+  @inline private def getShard(id: String): String = Math.abs(id.hashCode % settings.numberOfShards).toString
 
   /** Code: 200, Message: EService created, DataType: EService
     * Code: 400, Message: Invalid input, DataType: Problem
@@ -73,12 +75,12 @@ class EServiceApiServiceImpl(
 
   /** Code: 200, Message: EService Interface created, DataType: EService
     * Code: 400, Message: Invalid input, DataType: Problem
+    * Code: 404, Message: Not found, DataType: Problem
     */
   override def createEServiceInterface(
     eServiceId: String,
     descriptorId: String,
     description: String,
-    technology: String,
     idl: (FileInfo, File)
   )(implicit
     toEntityMarshallerProblem: ToEntityMarshaller[Problem],
@@ -88,11 +90,10 @@ class EServiceApiServiceImpl(
     val commander: EntityRef[Command] = getCommander(eServiceId)
 
     val result: Future[Option[CatalogItem]] = for {
-      retrieved  <- commander.ask(ref => GetCatalogItem(eServiceId, ref))
-      current    <- retrieved.toFuture(new RuntimeException("EService not found"))
-      verified   <- fileManager.verifyFile(idl, current)
-      openapiDoc <- fileManager.store(uuidSupplier.get, eServiceId, descriptorId, idl)
-      updated    <- commander.ask(ref => UpdateCatalogItem(verified.updateFile(descriptorId, openapiDoc), ref))
+      current            <- retrieveCatalogItem(commander, eServiceId)
+      checksumVerified   <- fileManager.verifyChecksum(idl, current)
+      technologyVerified <- fileManager.verifyTechnology(idl, checksumVerified)
+      updated            <- storeFile(commander, eServiceId, descriptorId, description, INTERFACE, technologyVerified, idl)
     } yield updated
 
     onComplete(result) {
@@ -104,6 +105,38 @@ class EServiceApiServiceImpl(
         createEServiceInterface400(Problem(Option(exception.getMessage), status = 400, "some error"))
     }
 
+  }
+
+  /** Code: 200, Message: EService Interface created, DataType: EService
+    * Code: 400, Message: Invalid input, DataType: Problem
+    * Code: 404, Message: Not found, DataType: Problem
+    */
+  override def createEServiceDocuments(
+    eServiceId: String,
+    descriptorId: String,
+    description: String,
+    doc: (FileInfo, File)
+  )(implicit
+    toEntityMarshallerProblem: ToEntityMarshaller[Problem],
+    toEntityMarshallerEService: ToEntityMarshaller[EService],
+    contexts: Seq[(String, String)]
+  ): Route = {
+    val commander: EntityRef[Command] = getCommander(eServiceId)
+
+    val result: Future[Option[CatalogItem]] = for {
+      current          <- retrieveCatalogItem(commander, eServiceId)
+      checksumVerified <- fileManager.verifyChecksum(doc, current)
+      updated          <- storeFile(commander, eServiceId, descriptorId, description, NOT_INTERFACE, checksumVerified, doc)
+    } yield updated
+
+    onComplete(result) {
+      case Success(catalogItem) =>
+        catalogItem.fold(createEServiceInterface404(Problem(None, status = 404, "some error")))(ci =>
+          createEServiceInterface200(ci.toApi)
+        )
+      case Failure(exception) =>
+        createEServiceInterface400(Problem(Option(exception.getMessage), status = 400, "some error"))
+    }
   }
 
   /** Code: 200, Message: EService Descriptor published, DataType: EService
@@ -119,7 +152,12 @@ class EServiceApiServiceImpl(
     val result: Future[Option[CatalogItem]] = for {
       retrieved <- commander.ask(ref => GetCatalogItem(eServiceId, ref))
       current   <- retrieved.toFuture(new RuntimeException("EService non found"))
-      updated   <- commander.ask(ref => UpdateCatalogItem(current.publish(descriptorId), ref))
+      publishable = current.descriptors.exists(descriptor =>
+        descriptor.id.toString == descriptorId && descriptor.isPublishable
+      )
+      updated <-
+        if (publishable) commander.ask(ref => UpdateCatalogItem(current.publish(descriptorId), ref))
+        else Future.failed(new RuntimeException(s"Descriptor $descriptorId cannot be published"))
     } yield updated
 
     onComplete(result) {
@@ -200,6 +238,38 @@ class EServiceApiServiceImpl(
         }
       case None => getEService400(Problem(None, status = 400, s"EService $eServiceId not found"))
     }
+  }
+
+  private def getCommander(id: String): EntityRef[Command] =
+    sharding.entityRefFor(CatalogPersistentBehavior.TypeKey, getShard(id))
+
+  private def retrieveCatalogItem(commander: EntityRef[Command], eServiceId: String): Future[CatalogItem] = {
+    for {
+      retrieved <- commander.ask(ref => GetCatalogItem(eServiceId, ref))
+      current   <- retrieved.toFuture(new RuntimeException("EService non found"))
+    } yield current
+  }
+
+  private def storeFile(
+    commander: EntityRef[Command],
+    eServiceId: String,
+    descriptorId: String,
+    description: String,
+    interface: Boolean,
+    catalogItem: CatalogItem,
+    fileParts: (FileInfo, File)
+  ): Future[Option[CatalogItem]] = {
+    for {
+      openapiDoc <- fileManager.store(
+        id = uuidSupplier.get,
+        eServiceId = eServiceId,
+        descriptorId = descriptorId,
+        description = description,
+        interface = interface,
+        fileParts = fileParts
+      )
+      updated <- commander.ask(ref => UpdateCatalogItem(catalogItem.updateFile(descriptorId, openapiDoc), ref))
+    } yield updated
   }
 
 }

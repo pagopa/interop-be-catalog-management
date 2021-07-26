@@ -17,7 +17,14 @@ class FileManagerImpl extends FileManager {
 
   val currentPath: Path = Paths.get(System.getProperty("user.dir"))
 
-  def store(id: UUID, eServiceId: String, descriptorId: String, fileParts: (FileInfo, File)): Future[CatalogDocument] =
+  override def store(
+    id: UUID,
+    eServiceId: String,
+    descriptorId: String,
+    description: String,
+    interface: Boolean,
+    fileParts: (FileInfo, File)
+  ): Future[CatalogDocument] =
     Future.fromTry {
       Try {
         val destPath = createPath(eServiceId, descriptorId, id.toString, fileParts._1)
@@ -27,6 +34,8 @@ class FileManagerImpl extends FileManager {
           id = id,
           name = fileParts._1.getFileName,
           contentType = fileParts._1.getContentType.toString(),
+          description = description,
+          interface = interface,
           path = path,
           checksum = Digester.createHash(fileParts._2),
           uploadDate = OffsetDateTime.now()

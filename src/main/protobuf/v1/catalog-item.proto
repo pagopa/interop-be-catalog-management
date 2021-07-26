@@ -12,7 +12,7 @@ message CatalogItemV1 {
   required string name = 3;
   required string description = 4;
   repeated string audience = 5;
-  optional string technology = 6;
+  required string technology = 6;
   required int32 voucherLifespan = 7;
   required CatalogAttributesV1  attributes = 8;
   repeated CatalogDescriptorV1 descriptors = 9;
@@ -54,6 +54,8 @@ message CatalogDocumentV1 {
   required string path = 4;
   required string checksum = 5;
   required string uploadDate = 6;
+  required string description = 7;
+  required bool interface = 8;
 }
 
 enum CatalogDescriptorStatusV1 {

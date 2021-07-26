@@ -14,7 +14,7 @@ final case class CatalogItem(
   name: String,
   description: String,
   audience: Seq[String],
-  technology: Option[String],
+  technology: String,
   voucherLifespan: Int,
   attributes: CatalogAttributes,
   descriptors: Seq[CatalogDescriptor]
@@ -76,7 +76,7 @@ object CatalogItem {
         name = seed.name,
         description = seed.description,
         audience = seed.audience,
-        technology = None,
+        technology = seed.technology,
         voucherLifespan = seed.voucherLifespan,
         attributes = attributes,
         descriptors = Seq(

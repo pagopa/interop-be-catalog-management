@@ -76,6 +76,8 @@ object utils {
                 id = doc.id.toString,
                 name = doc.name,
                 contentType = doc.contentType,
+                description = doc.description,
+                interface = doc.interface,
                 path = doc.path,
                 checksum = doc.checksum,
                 uploadDate = doc.uploadDate.format(DateTimeFormatter.ISO_DATE_TIME)
@@ -100,6 +102,8 @@ object utils {
               id = UUID.fromString(doc.id),
               name = doc.name,
               contentType = doc.contentType,
+              description = doc.description,
+              interface = doc.interface,
               path = doc.path,
               checksum = doc.checksum,
               uploadDate = OffsetDateTime.parse(doc.uploadDate, DateTimeFormatter.ISO_DATE_TIME)
