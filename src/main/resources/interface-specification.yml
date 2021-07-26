@@ -34,37 +34,9 @@ paths:
       requestBody:
         description: A E-Service seed
         content:
-          multipart/form-data:
+          application/json:
             schema:
-              type: object
-              required:
-                - name
-                - description
-                - audience
-                - technology
-                - voucherLifespan
-                - idl
-              properties:
-                name:
-                  type: string
-                description:
-                  type: string
-                audience:
-                  type: array
-                  items:
-                    type: string
-                voucherLifespan:
-                  type: integer
-                  format: int32
-                technology:
-                  type: string
-                  enum: [ 'REST', 'SOAP' ]
-                idl:
-                  type: string
-                  format: binary
-            encoding:
-              idl:
-                contentType: text/plain, application/json, application/yaml, application/xml
+              $ref: '#/components/schemas/EServiceSeed'
         required: true
       responses:
         "200":
@@ -107,7 +79,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/EServices'
-  /eservice/{eServiceId}:
+  /eservices/{eServiceId}:
     get:
       security:
         - bearerAuth: [ ]
@@ -141,7 +113,107 @@ paths:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/Problem'
-  /eservice/{eServiceId}/documents/{documentId}:
+  /eservices/{eServiceId}/descriptors/{descriptorId}:
+    post:
+      security:
+        - bearerAuth: [ ]
+      tags:
+        - e_service
+      summary: Publish a new descriptors
+      operationId: publishDescriptor
+      parameters:
+        - name: eServiceId
+          in: path
+          description: the eservice id
+          required: true
+          schema:
+            type: string
+        - name: descriptorId
+          in: path
+          description: the descriptor Id
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: EService Descriptor published
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EService'
+        "400":
+          description: Invalid input
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        "404":
+          description: Not found
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+  /eservices/{eServiceId}/descriptors/{descriptorId}/documents:
+    post:
+      security:
+        - bearerAuth: [ ]
+      tags:
+        - e_service
+      summary: Add new e-service document
+      operationId: createEServiceDocument
+      parameters:
+        - name: eServiceId
+          in: path
+          description: the eservice id
+          required: true
+          schema:
+            type: string
+        - name: descriptorId
+          in: path
+          description: the descriptor Id
+          required: true
+          schema:
+            type: string
+      requestBody:
+        description: E-Service document
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - kind
+                - description
+                - doc
+              properties:
+                kind:
+                  type: string
+                  enum: [ "interface","document" ]
+                description:
+                  type: string
+                doc:
+                  type: string
+                  format: binary
+        required: true
+      responses:
+        "200":
+          description: EService Document created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EService'
+        "400":
+          description: Invalid input
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        "404":
+          description: Not found
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+  /eservices/{eServiceId}/descriptors/{descriptorId}/documents/{documentId}:
     get:
       security:
         - bearerAuth: [ ]
@@ -153,6 +225,12 @@ paths:
         - name: eServiceId
           in: path
           description: the eservice id
+          required: true
+          schema:
+            type: string
+        - name: descriptorId
+          in: path
+          description: the descriptor Id
           required: true
           schema:
             type: string
@@ -184,14 +262,43 @@ paths:
                 $ref: '#/components/schemas/Problem'
 components:
   schemas:
+    EServiceSeed:
+      type: object
+      required:
+        - name
+        - description
+        - audience
+        - technology
+        - attributes
+        - voucherLifespan
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        audience:
+          type: array
+          items:
+            type: string
+        technology:
+          type: string
+          enum: [ 'REST', 'SOAP' ]
+        voucherLifespan:
+          type: integer
+          format: int32
+        attributes:
+          $ref: '#/components/schemas/Attributes'
     EService:
       type: object
       required:
         - id
         - producerId
         - name
+        - description
         - audience
         - technology
+        - voucherLifespan
+        - attributes
         - descriptors
       properties:
         id:
@@ -202,14 +309,19 @@ components:
           format: uuid
         name:
           type: string
-          maxLength: 64
-          minLength: 6
+        description:
+          type: string
         audience:
           type: array
           items:
             type: string
         technology:
           type: string
+        voucherLifespan:
+          type: integer
+          format: int32
+        attributes:
+          $ref: '#/components/schemas/Attributes'
         descriptors:
           type: array
           items:
@@ -220,6 +332,7 @@ components:
         - id
         - name
         - contentType
+        - description
       properties:
         id:
           type: string
@@ -228,12 +341,13 @@ components:
           type: string
         contentType:
           type: string
+        description:
+          type: string
     EServiceDescriptor:
       type: object
       required:
         - id
         - version
-        - description
         - docs
         - status
         - creationDate
@@ -245,16 +359,42 @@ components:
           type: string
         description:
           type: string
+        interface:
+          $ref: '#/components/schemas/EServiceDoc'
         docs:
           type: array
           items:
             $ref: '#/components/schemas/EServiceDoc'
-        voucherLifespan:
-          type: integer
-          format: int32
         status:
           type: string
           enum: [ 'draft', 'published','deprecated','archived' ]
+    Attribute:
+      type: object
+      properties:
+        simple:
+          type: string
+        group:
+          type: array
+          items:
+            type: string
+    Attributes:
+      properties:
+        certified:
+          type: array
+          items:
+            $ref: '#/components/schemas/Attribute'
+        declared:
+          type: array
+          items:
+            $ref: '#/components/schemas/Attribute'
+        verified:
+          type: array
+          items:
+            $ref: '#/components/schemas/Attribute'
+      required:
+        - certified
+        - declared
+        - verified
     EServices:
       type: array
       items:

@@ -7,6 +7,9 @@ final case class State(items: Map[String, CatalogItem]) extends Persistable {
   def add(catalogItem: CatalogItem): State =
     copy(items = items + (catalogItem.id.toString -> catalogItem))
 
+  def update(catalogItem: CatalogItem): State =
+    copy(items = items + (catalogItem.id.toString -> catalogItem))
+
 }
 
 object State {

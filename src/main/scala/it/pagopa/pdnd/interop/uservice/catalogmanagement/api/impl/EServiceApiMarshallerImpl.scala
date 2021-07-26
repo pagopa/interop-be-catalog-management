@@ -3,8 +3,9 @@ package it.pagopa.pdnd.interop.uservice.catalogmanagement.api.impl
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import akka.http.scaladsl.marshalling.{Marshaller, ToEntityMarshaller}
 import akka.http.scaladsl.model.ContentTypes
+import akka.http.scaladsl.unmarshalling.FromEntityUnmarshaller
 import it.pagopa.pdnd.interop.uservice.catalogmanagement.api.EServiceApiMarshaller
-import it.pagopa.pdnd.interop.uservice.catalogmanagement.model.{EService, Problem}
+import it.pagopa.pdnd.interop.uservice.catalogmanagement.model.{EService, EServiceSeed, Problem}
 import spray.json._
 
 import java.io.File
@@ -27,4 +28,7 @@ class EServiceApiMarshallerImpl extends EServiceApiMarshaller with SprayJsonSupp
     sprayJsonMarshaller[Seq[EService]]
 
   override implicit def toEntityMarshallerEService: ToEntityMarshaller[EService] = sprayJsonMarshaller[EService]
+
+  override implicit def fromEntityUnmarshallerEServiceSeed: FromEntityUnmarshaller[EServiceSeed] =
+    sprayJsonUnmarshaller[EServiceSeed]
 }

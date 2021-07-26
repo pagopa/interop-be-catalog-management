@@ -37,9 +37,23 @@ object CatalogPersistentBehavior {
               .thenRun((_: State) => replyTo ! StatusReply.Success(newCatalogItem))
           }
 
+      case UpdateCatalogItem(modifiedCatalogItem, replyTo) =>
+        val catalogItem: Option[CatalogItem] = state.items.get(modifiedCatalogItem.id.toString)
+
+        catalogItem
+          .map { _ =>
+            Effect
+              .persist(CatalogItemUpdated(modifiedCatalogItem))
+              .thenRun((_: State) => replyTo ! Some(modifiedCatalogItem))
+          }
+          .getOrElse {
+            replyTo ! None
+            Effect.none[CatalogItemUpdated, State]
+          }
+
       case GetCatalogItem(itemId, replyTo) =>
         val catalogItem: Option[CatalogItem] = state.items.get(itemId)
-        replyTo ! StatusReply.Success[Option[CatalogItem]](catalogItem)
+        replyTo ! catalogItem
         Effect.none[Event, State]
 
       case ListCatalogItem(from, to, producerId, _, status, replyTo) =>
@@ -64,7 +78,8 @@ object CatalogPersistentBehavior {
 
   val eventHandler: (State, Event) => State = (state, event) =>
     event match {
-      case CatalogItemAdded(catalogItem) => state.add(catalogItem)
+      case CatalogItemAdded(catalogItem)   => state.add(catalogItem)
+      case CatalogItemUpdated(catalogItem) => state.update(catalogItem)
     }
 
   val TypeKey: EntityTypeKey[Command] =

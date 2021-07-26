@@ -2,12 +2,13 @@ package it.pagopa.pdnd.interop.uservice.catalogmanagement.model
 
 import java.util.UUID
 
+@SuppressWarnings(Array("org.wartremover.warts.Equals"))
 final case class CatalogDescriptor(
   id: UUID,
   version: String,
-  description: String,
+  description: Option[String],
+  interface: Option[CatalogDocument],
   docs: Seq[CatalogDocument],
-  voucherLifespan: Int,
   status: CatalogDescriptorStatus
 ) extends Convertable[EServiceDescriptor] {
   def toApi: EServiceDescriptor = {
@@ -15,10 +16,18 @@ final case class CatalogDescriptor(
       id = id,
       version = version,
       description = description,
+      interface = interface.map(_.toApi),
       docs = docs.map(_.toApi),
-      voucherLifespan = Some(voucherLifespan),
       status = status.stringify
     )
+  }
+
+  def isPublishable: Boolean = {
+    interface.isDefined && status == Draft
+  }
+
+  def publish: CatalogDescriptor = {
+    copy(status = Published)
   }
 
 }
