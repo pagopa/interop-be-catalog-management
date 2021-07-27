@@ -74,7 +74,7 @@ route
 }
 
 lazy val routes: Route = pathPrefix("{{projectName}}" / "{{appVersion}}") {
-toStrictEntity(3.seconds) {
+toStrictEntity(15.seconds) { //TODO investigate for a different solution
 extractRequest {
 request =>
 validationFunction(request){
