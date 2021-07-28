@@ -265,6 +265,7 @@ components:
     EServiceSeed:
       type: object
       required:
+        - producerId
         - name
         - description
         - audience
@@ -272,6 +273,9 @@ components:
         - attributes
         - voucherLifespan
       properties:
+        producerId:
+          type: string
+          format: uuid
         name:
           type: string
         description:

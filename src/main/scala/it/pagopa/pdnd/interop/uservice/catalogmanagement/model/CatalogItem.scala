@@ -67,15 +67,14 @@ object CatalogItem {
 
     val firstVersion: String = "1"
 
-    val id: UUID   = uuidSupplier.get
-    val producerId = uuidSupplier.get //TODO from jwt
+    val id: UUID = uuidSupplier.get
 
     Future.fromTry {
       for {
         attributes <- CatalogAttributes.fromApi(seed.attributes)
       } yield CatalogItem(
         id = id,
-        producerId = producerId,
+        producerId = seed.producerId,
         name = seed.name,
         description = seed.description,
         audience = seed.audience,
