@@ -59,7 +59,8 @@ class EServiceApiServiceImpl(
     val result: Future[StatusReply[CatalogItem]] =
       for {
         catalogItem <- CatalogItem.create(eServiceSeed, uuidSupplier)
-        added       <- getCommander(catalogItem.id.toString).ask(ref => AddCatalogItem(catalogItem, ref))
+        shard = getShard(catalogItem.id.toString)
+        added <- getCommander(shard).ask(ref => AddCatalogItem(catalogItem, ref))
       } yield added
 
     onSuccess(result) {
@@ -86,7 +87,9 @@ class EServiceApiServiceImpl(
     contexts: Seq[(String, String)]
   ): Route = {
 
-    val commander: EntityRef[Command] = getCommander(eServiceId)
+    val shard: String = getShard(eServiceId)
+
+    val commander: EntityRef[Command] = getCommander(shard)
 
     val isInterface: Boolean = kind match {
       case "interface" => true
@@ -127,7 +130,10 @@ class EServiceApiServiceImpl(
     toEntityMarshallerEService: ToEntityMarshaller[EService],
     contexts: Seq[(String, String)]
   ): Route = {
-    val commander: EntityRef[Command] = getCommander(eServiceId)
+
+    val shard: String = getShard(eServiceId)
+
+    val commander: EntityRef[Command] = getCommander(shard)
 
     val result: Future[Option[CatalogItem]] = for {
       retrieved <- commander.ask(ref => GetCatalogItem(eServiceId, ref))
@@ -161,7 +167,9 @@ class EServiceApiServiceImpl(
     contexts: Seq[(String, String)]
   ): Route = {
     contexts.foreach(println)
-    val result: Future[Option[CatalogItem]] = getCommander(eServiceId).ask(ref => GetCatalogItem(eServiceId, ref))
+
+    val shard: String                       = getShard(eServiceId)
+    val result: Future[Option[CatalogItem]] = getCommander(shard).ask(ref => GetCatalogItem(eServiceId, ref))
 
     onSuccess(result) {
       case Some(catalogItem) => getEService200(catalogItem.toApi)
@@ -204,7 +212,10 @@ class EServiceApiServiceImpl(
     contexts: Seq[(String, String)]
   ): Route = {
     contexts.foreach(println)
-    val commander: EntityRef[Command] = getCommander(eServiceId)
+
+    val shard: String = getShard(eServiceId)
+
+    val commander: EntityRef[Command] = getCommander(shard)
 
     val result: Future[Option[CatalogItem]] = commander.ask(ref => GetCatalogItem(eServiceId, ref))
 
@@ -220,8 +231,8 @@ class EServiceApiServiceImpl(
     }
   }
 
-  private def getCommander(id: String): EntityRef[Command] =
-    sharding.entityRefFor(CatalogPersistentBehavior.TypeKey, getShard(id))
+  private def getCommander(shard: String): EntityRef[Command] =
+    sharding.entityRefFor(CatalogPersistentBehavior.TypeKey, shard)
 
   private def retrieveCatalogItem(commander: EntityRef[Command], eServiceId: String): Future[CatalogItem] = {
     for {
