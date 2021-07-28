@@ -1,6 +1,6 @@
 package it.pagopa.pdnd.interop.uservice.catalogmanagement.service
 
-import akka.http.scaladsl.model.{ContentType, HttpCharsets, MediaType, MediaTypes}
+import akka.http.scaladsl.model.{HttpCharsets, MediaType, MediaTypes}
 import akka.http.scaladsl.server.directives.FileInfo
 import it.pagopa.pdnd.interop.uservice.catalogmanagement.common.Digester
 import it.pagopa.pdnd.interop.uservice.catalogmanagement.model.{CatalogDocument, CatalogItem}
@@ -51,17 +51,17 @@ trait FileManager {
 
   //TODO use Apache Tika
   private def verifyTechnology(fileParts: (FileInfo, File), catalogItem: CatalogItem): Future[CatalogItem] = {
+    val restContentTypes: Set[MediaType] = Set(
+      MediaType.textWithFixedCharset("yaml", HttpCharsets.`UTF-8`, "yaml", "yml"),
+      MediaType.applicationWithFixedCharset("yaml", HttpCharsets.`UTF-8`, "yaml", "yml")
+    )
+
+    val soapContentTypes: Set[MediaType] = Set(MediaTypes.`application/soap+xml`)
+
     val isValidTechnology = catalogItem.technology match {
-      case "REST" =>
-        fileParts._1.getContentType.toString == ContentType(
-          MediaType.textWithFixedCharset("yaml", HttpCharsets.`UTF-8`, "yaml", "yml")
-        ).toString
-      case "SOAP" =>
-        fileParts._1.getContentType.toString == ContentType(
-          MediaTypes.`application/soap+xml`,
-          HttpCharsets.`UTF-8`
-        ).toString
-      case _ => false
+      case "REST" => restContentTypes.contains(fileParts._1.contentType.mediaType)
+      case "SOAP" => soapContentTypes.contains(fileParts._1.contentType.mediaType)
+      case _      => false
     }
 
     if (isValidTechnology)
