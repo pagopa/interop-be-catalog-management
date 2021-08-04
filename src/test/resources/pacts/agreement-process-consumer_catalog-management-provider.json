@@ -1,0 +1,94 @@
+{
+  "provider" : {
+    "name" : "catalog-management-provider"
+  },
+  "consumer" : {
+    "name" : "agreement-process-consumer"
+  },
+  "interactions" : [
+    {
+      "providerState" : "e-service id",
+      "description" : "Fetching e-service by id",
+      "request" : {
+        "method" : "GET",
+        "path" : "/pdnd-interop-uservice-catalog-management/0.0.1/eservices/24772a3d-e6f2-47f2-96e5-4cbd1e4e8c84",
+        "headers" : {
+          "Authorization" : "Bearer 1234"
+        }
+      },
+      "response" : {
+        "status" : 200,
+        "headers" : {
+          "Content-Type" : "application/json"
+        },
+        "body" : {
+          "id" : "24772a3d-e6f2-47f2-96e5-4cbd1e4e8c84",
+          "producerId" : "24772a3d-e6f2-47f2-96e5-4cbd1e4e9999",
+          "name" : "string",
+          "description" : "string",
+          "audience" : [
+            "pippo"
+          ],
+          "technology" : "REST",
+          "voucherLifespan" : 124,
+          "attributes" : {
+            "certified" : [
+              {
+                "simple" : "1234"
+              }
+            ],
+            "declared" : [
+              {
+                "simple" : "1234"
+              }
+            ],
+            "verified" : [
+              {
+                "group" : [
+                  "1234",
+                  "5555"
+                ]
+              }
+            ]
+          },
+          "descriptors" : [
+            {
+              "id" : "24772a3d-e6f2-47f2-96e5-4cbd1e4e9999",
+              "version" : "1",
+              "docs" : [
+              ],
+              "status" : "draft"
+            }
+          ]
+        },
+        "matchingRules" : {
+          "$.body.description" : {
+            "match" : "type"
+          },
+          "$.body.name" : {
+            "match" : "type"
+          },
+          "$.body.id" : {
+            "match" : "type"
+          },
+          "$.body.descriptors[*].status" : {
+            "match" : "regex",
+            "regex" : "draft|active"
+          },
+          "$.body.descriptors" : {
+            "match" : "type",
+            "min" : 1
+          }
+        }
+      }
+    }
+  ],
+  "metadata" : {
+    "pactSpecification" : {
+      "version" : "2.0.0"
+    },
+    "scala-pact" : {
+      "version" : "3.3.2-RC2"
+    }
+  }
+}

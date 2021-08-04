@@ -27,6 +27,7 @@ object Dependencies {
       "com.lightbend.akka.management" %% "akka-management-cluster-bootstrap" % akkaManagementVersion
     lazy val clusterHttp = "com.lightbend.akka.management" %% "akka-management-cluster-http" % akkaManagementVersion
     lazy val slf4j       = namespace                       %% "akka-slf4j"                   % akkaVersion
+    lazy val testkit     = namespace                       %% "akka-actor-testkit-typed"     % akkaVersion
   }
 
   private[this] object cats {
@@ -80,9 +81,14 @@ object Dependencies {
     lazy val core      = namespace %% "scalatest" % scalatestVersion
   }
 
-  private[this] object mockito {
-    lazy val namespace = "org.mockito"
-    lazy val core      = namespace % "mockito-core" % mockitoVersion
+  private[this] object scalamock {
+    lazy val namespace = "org.scalamock"
+    lazy val core      = namespace %% "scalamock" % scalaMockVersion
+  }
+
+  private[this] object scalapact {
+    lazy val namespace = "com.itv"
+    lazy val core      = namespace %% "scalapact-scalatest-suite" % scalaPactVersion
   }
 
   private[this] object commons {
@@ -123,7 +129,10 @@ object Dependencies {
       kamon.bundle                 % Compile,
       kamon.prometheus             % Compile,
       scalaprotobuf.core           % Protobuf,
-      scalatest.core               % Test
+      scalatest.core               % Test,
+      scalamock.core               % Test,
+      akka.testkit                 % Test,
+      scalapact.core               % Test
     )
     lazy val client: Seq[ModuleID] = Seq(
       akka.stream     % Compile,

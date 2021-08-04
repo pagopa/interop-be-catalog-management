@@ -33,7 +33,16 @@ import scala.jdk.CollectionConverters._
 )
 object Main extends App {
 
+  def buildPersistentEntity(): Entity[Command, ShardingEnvelope[Command]] =
+    Entity(typeKey = CatalogPersistentBehavior.TypeKey) { entityContext =>
+      CatalogPersistentBehavior(
+        entityContext.shard,
+        PersistenceId(entityContext.entityTypeKey.name, entityContext.entityId)
+      )
+    }
+
   Kamon.init()
+
 
   locally {
     val _ = ActorSystem[Nothing](
@@ -47,13 +56,7 @@ object Main extends App {
 
         val sharding: ClusterSharding = ClusterSharding(context.system)
 
-        val catalogPersistentEntity: Entity[Command, ShardingEnvelope[Command]] =
-          Entity(typeKey = CatalogPersistentBehavior.TypeKey) { entityContext =>
-            CatalogPersistentBehavior(
-              entityContext.shard,
-              PersistenceId(entityContext.entityTypeKey.name, entityContext.entityId)
-            )
-          }
+        val catalogPersistentEntity = buildPersistentEntity()
 
         val _ = sharding.init(catalogPersistentEntity)
 
