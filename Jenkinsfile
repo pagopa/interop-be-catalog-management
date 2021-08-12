@@ -55,6 +55,7 @@ pipeline {
       agent { label 'sbt-template' }
       environment {
         CASSANDRA = credentials('cassandra-db')
+        AWS_SECRET_ACCESS = credentials('jenkins-aws')
         CASSANDRA_HOST = 'cluster1-dc1-service.cassandra-operator.svc.cluster.local:9042'
         DOCKER_REPO = 'gateway.interop.pdnd.dev'
         //REPLICAS_NR = 1
