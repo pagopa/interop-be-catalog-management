@@ -1,5 +1,6 @@
 package it.pagopa.pdnd.interop.uservice.catalogmanagement.api.impl
 
+import akka.Done
 import akka.actor.typed.ActorSystem
 import akka.cluster.sharding.typed.scaladsl.{ClusterSharding, Entity, EntityRef}
 import akka.cluster.sharding.typed.{ClusterShardingSettings, ShardingEnvelope}
@@ -229,6 +230,44 @@ class EServiceApiServiceImpl(
         }
       case None => getEService400(Problem(None, status = 400, s"EService $eServiceId not found"))
     }
+  }
+
+  override def deleteDraft(eServiceId: String, descriptorId: String)(implicit
+    toEntityMarshallerProblem: ToEntityMarshaller[Problem],
+    contexts: Seq[(String, String)]
+  ): Route = {
+
+    val shard: String = getShard(eServiceId)
+
+    val commander: EntityRef[Command] = getCommander(shard)
+
+    val result: Future[StatusReply[Done]] = for {
+      retrieved <- commander.ask(ref => GetCatalogItem(eServiceId, ref))
+      current   <- retrieved.toFuture(new RuntimeException("EService non found"))
+      _         <- descriptorDeletable(current, descriptorId)
+      _         <- current.getInterfacePath(descriptorId).fold(Future.successful(true))(path => fileManager.delete(path))
+      _ <- current
+        .getDocumentPaths(descriptorId)
+        .fold(Future.successful(Seq.empty[Boolean]))(path => Future.traverse(path)(fileManager.delete(_)))
+      deleted <- commander.ask(ref => DeleteCatalogItemWithDescriptor(current, descriptorId, ref))
+    } yield deleted
+
+    onComplete(result) {
+      case Success(statusReply) => {
+        if (statusReply.isSuccess) deleteDraft204
+        else
+          deleteDraft400(Problem(Option(statusReply.getError.getMessage), status = 400, "some error"))
+      }
+      case Failure(exception) =>
+        deleteDraft400(Problem(Option(exception.getMessage), status = 400, "some error"))
+    }
+  }
+
+  private def descriptorDeletable(catalogItem: CatalogItem, descriptorId: String): Future[Boolean] = {
+    if (catalogItem.descriptors.exists(descriptor => descriptor.id.toString == descriptorId && descriptor.isDraft))
+      Future.successful(true)
+    else
+      Future.failed(new RuntimeException(s"Descriptor $descriptorId cannot be deleted"))
   }
 
   private def getCommander(shard: String): EntityRef[Command] =

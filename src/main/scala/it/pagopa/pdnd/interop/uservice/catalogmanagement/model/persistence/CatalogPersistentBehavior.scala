@@ -1,14 +1,16 @@
 package it.pagopa.pdnd.interop.uservice.catalogmanagement.model.persistence
 
+import akka.Done
 import akka.actor.typed.scaladsl.{ActorContext, Behaviors}
 import akka.actor.typed.{ActorRef, Behavior, SupervisorStrategy}
 import akka.cluster.sharding.typed.scaladsl.{ClusterSharding, EntityTypeKey}
 import akka.pattern.StatusReply
 import akka.persistence.typed.PersistenceId
 import akka.persistence.typed.scaladsl.{Effect, EventSourcedBehavior, RetentionCriteria}
-import it.pagopa.pdnd.interop.uservice.catalogmanagement.model.CatalogItem
+import it.pagopa.pdnd.interop.uservice.catalogmanagement.model.{CatalogDescriptor, CatalogItem}
 
 import java.time.temporal.ChronoUnit
+import java.util.UUID
 import scala.concurrent.duration.{DurationInt, DurationLong}
 import scala.language.postfixOps
 
@@ -51,6 +53,22 @@ object CatalogPersistentBehavior {
             Effect.none[CatalogItemUpdated, State]
           }
 
+      case DeleteCatalogItemWithDescriptor(deletedCatalogItem, descriptorId, replyTo) =>
+        val descriptorToDelete: Option[CatalogDescriptor] =
+          state.items.get(deletedCatalogItem.id.toString)
+            .flatMap(_.descriptors.find(_.id == UUID.fromString(descriptorId)))
+
+        descriptorToDelete
+          .map { _ =>
+            Effect
+              .persist(CatalogItemDeleted(deletedCatalogItem, descriptorId))
+              .thenRun((_: State) => replyTo ! StatusReply.Success(Done))
+          }
+          .getOrElse {
+            replyTo ! StatusReply.Error[Done](s"Draft version not found.")
+            Effect.none[CatalogItemDeleted, State]
+          }
+
       case GetCatalogItem(itemId, replyTo) =>
         val catalogItem: Option[CatalogItem] = state.items.get(itemId)
         replyTo ! catalogItem
@@ -80,6 +98,7 @@ object CatalogPersistentBehavior {
     event match {
       case CatalogItemAdded(catalogItem)   => state.add(catalogItem)
       case CatalogItemUpdated(catalogItem) => state.update(catalogItem)
+      case CatalogItemDeleted(catalogItem, descriptorId) => state.delete(catalogItem, descriptorId)
     }
 
   val TypeKey: EntityTypeKey[Command] =

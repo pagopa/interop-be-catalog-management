@@ -23,6 +23,8 @@ trait FileManager {
 
   def get(id: UUID, producerId: String): File
 
+  def delete(filePath: String): Future[Boolean]
+
   def verify(fileParts: (FileInfo, File), catalogItem: CatalogItem, descriptorId: String, isInterface: Boolean)(implicit
     ec: ExecutionContext
   ): Future[CatalogItem] = for {

@@ -7,7 +7,7 @@ import it.pagopa.pdnd.interop.uservice.catalogmanagement.model.CatalogDocument
 import it.pagopa.pdnd.interop.uservice.catalogmanagement.service.FileManager
 import software.amazon.awssdk.core.sync.RequestBody
 import software.amazon.awssdk.services.s3.S3Client
-import software.amazon.awssdk.services.s3.model.PutObjectRequest
+import software.amazon.awssdk.services.s3.model.{DeleteObjectRequest, PutObjectRequest}
 
 import java.io.File
 import java.nio.file.Paths
@@ -47,11 +47,22 @@ class S3ManagerImpl(s3Client: S3Client) extends FileManager {
         uploadDate = OffsetDateTime.now()
       )
     }
-
   }
 
   private def createS3Key(eServiceId: String, descriptorId: String, id: String, fileInfo: FileInfo): String =
     s"e-services/docs/${eServiceId}/${descriptorId}/${id}/${fileInfo.getFieldName}/${fileInfo.getContentType.toString}/${fileInfo.getFileName}"
 
   override def get(id: UUID, producerId: String): File = ???
+
+  override def delete(path: String) = {
+    Try {
+      s3Client.deleteObject(
+        DeleteObjectRequest.builder
+          .bucket(bucketName)
+          .key(path)
+          .build()
+      )
+    }.fold(error => Future.failed[Boolean](error), _ => Future.successful(true))
+  }
+
 }

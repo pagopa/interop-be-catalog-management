@@ -6,3 +6,4 @@ sealed trait Event extends Persistable
 
 final case class CatalogItemAdded(catalogItem: CatalogItem)   extends Event
 final case class CatalogItemUpdated(catalogItem: CatalogItem) extends Event
+final case class CatalogItemDeleted(catalogItem: CatalogItem, descriptorId: String) extends Event

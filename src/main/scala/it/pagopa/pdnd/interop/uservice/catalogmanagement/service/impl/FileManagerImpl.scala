@@ -45,6 +45,8 @@ class FileManagerImpl extends FileManager {
 
   def get(id: UUID, producerId: String): File = ???
 
+  override def delete(filePath: String): Future[Boolean] = ???
+
   private def createPath(producerId: String, descriptorId: String, id: String, fileInfo: FileInfo): String = {
 
     val docsPath: Path = Paths.get(

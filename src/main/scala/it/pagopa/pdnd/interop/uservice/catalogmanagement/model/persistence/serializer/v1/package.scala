@@ -4,7 +4,7 @@ import cats.implicits._
 import it.pagopa.pdnd.interop.uservice.catalogmanagement.model._
 import it.pagopa.pdnd.interop.uservice.catalogmanagement.model.persistence._
 import it.pagopa.pdnd.interop.uservice.catalogmanagement.model.persistence.serializer.v1.catalog_item.CatalogItemV1
-import it.pagopa.pdnd.interop.uservice.catalogmanagement.model.persistence.serializer.v1.events.CatalogItemV1AddedV1
+import it.pagopa.pdnd.interop.uservice.catalogmanagement.model.persistence.serializer.v1.events.{CatalogItemV1AddedV1, CatalogItemV1DeletedV1}
 import it.pagopa.pdnd.interop.uservice.catalogmanagement.model.persistence.serializer.v1.state.{CatalogItemsV1, StateV1}
 import it.pagopa.pdnd.interop.uservice.catalogmanagement.model.persistence.serializer.v1.utils._
 
@@ -102,6 +102,52 @@ package object v1 {
             attributes = attributes,
             descriptors = descriptors
           )
+        )
+    }
+
+  implicit def catalogItemV1DeletedV1PersistEventDeserializer
+  : PersistEventDeserializer[CatalogItemV1DeletedV1, CatalogItemDeleted] =
+    event => {
+      for {
+        attributes  <- convertAttributesFromV1(event.catalogItem.attributes)
+        descriptors <- convertDescriptorsFromV1(event.catalogItem.descriptors)
+      } yield CatalogItemDeleted(catalogItem =
+        CatalogItem(
+          id = UUID.fromString(event.catalogItem.id),
+          producerId = UUID.fromString(event.catalogItem.producerId),
+          name = event.catalogItem.name,
+          description = event.catalogItem.description,
+          audience = event.catalogItem.audience,
+          technology = event.catalogItem.technology,
+          voucherLifespan = event.catalogItem.voucherLifespan,
+          attributes = attributes,
+          descriptors = descriptors
+        ),
+        descriptorId = event.descriptorId
+      )
+
+    }
+
+  implicit def catalogItemV1DeletedV1PersistEventSerializer
+  : PersistEventSerializer[CatalogItemDeleted, CatalogItemV1DeletedV1] =
+    event => {
+      for {
+        attributes  <- convertAttributesToV1(event.catalogItem.attributes)
+        descriptors <- convertDescriptorsToV1(event.catalogItem.descriptors)
+      } yield CatalogItemV1DeletedV1
+        .of(
+          CatalogItemV1(
+            id = event.catalogItem.id.toString,
+            producerId = event.catalogItem.producerId.toString,
+            name = event.catalogItem.name,
+            description = event.catalogItem.description,
+            audience = event.catalogItem.audience,
+            technology = event.catalogItem.technology,
+            voucherLifespan = event.catalogItem.voucherLifespan,
+            attributes = attributes,
+            descriptors = descriptors
+          ),
+          descriptorId = event.descriptorId
         )
     }
 

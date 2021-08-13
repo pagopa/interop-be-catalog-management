@@ -60,6 +60,19 @@ final case class CatalogItem(
     copy(descriptors = updated)
   }
 
+  def getInterfacePath(descriptorId: String): Option[String] = {
+    for {
+      doc       <- descriptors.find(_.id == UUID.fromString(descriptorId))
+      interface <- doc.interface
+    } yield interface.path
+  }
+
+  def getDocumentPaths(descriptorId: String): Option[Seq[String]] = {
+    for {
+      documents <- descriptors.find(_.id == UUID.fromString(descriptorId))
+    } yield documents.docs.map(_.path)
+  }
+
 }
 
 object CatalogItem {

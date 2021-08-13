@@ -1,5 +1,6 @@
 package it.pagopa.pdnd.interop.uservice.catalogmanagement.model.persistence
 
+import akka.Done
 import akka.actor.typed.ActorRef
 import akka.pattern.StatusReply
 import it.pagopa.pdnd.interop.uservice.catalogmanagement.model.CatalogItem
@@ -11,6 +12,8 @@ case object Idle extends Command
 final case class AddCatalogItem(catalogItem: CatalogItem, replyTo: ActorRef[StatusReply[CatalogItem]]) extends Command
 
 final case class UpdateCatalogItem(catalogItem: CatalogItem, replyTo: ActorRef[Option[CatalogItem]]) extends Command
+
+final case class DeleteCatalogItemWithDescriptor(catalogItem: CatalogItem, descriptorId: String, replyTo: ActorRef[StatusReply[Done]]) extends Command
 
 final case class GetCatalogItem(catalogItemId: String, replyTo: ActorRef[Option[CatalogItem]]) extends Command
 
