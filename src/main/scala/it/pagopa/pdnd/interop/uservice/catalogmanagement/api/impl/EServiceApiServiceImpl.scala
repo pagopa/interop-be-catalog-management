@@ -13,6 +13,7 @@ import akka.pattern.StatusReply
 import it.pagopa.pdnd.interop.uservice.catalogmanagement.api.EServiceApiService
 import it.pagopa.pdnd.interop.uservice.catalogmanagement.common._
 import it.pagopa.pdnd.interop.uservice.catalogmanagement.common.system._
+import it.pagopa.pdnd.interop.uservice.catalogmanagement.error.{EServiceDescriptorNotFoundError, EServiceNotFoundError}
 import it.pagopa.pdnd.interop.uservice.catalogmanagement.model._
 import it.pagopa.pdnd.interop.uservice.catalogmanagement.model.persistence._
 import it.pagopa.pdnd.interop.uservice.catalogmanagement.service.{FileManager, UUIDSupplier}
@@ -263,6 +264,83 @@ class EServiceApiServiceImpl(
     }
   }
 
+  /** Code: 200, Message: EService Descriptor published, DataType: EService
+    * Code: 400, Message: Invalid input, DataType: Problem
+    * Code: 404, Message: Not found, DataType: Problem
+    */
+  override def updateDescriptor(
+    eServiceId: String,
+    descriptorId: String,
+    eServiceDescriptorSeed: EServiceDescriptorSeed
+  )(implicit
+    toEntityMarshallerProblem: ToEntityMarshaller[Problem],
+    toEntityMarshallerEService: ToEntityMarshaller[EService],
+    contexts: Seq[(String, String)]
+  ): Route = {
+    val shard: String = getShard(eServiceId)
+
+    val commander: EntityRef[Command] = getCommander(shard)
+
+    def mergeChanges(
+      descriptor: CatalogDescriptor,
+      eServiceDescriptorSeed: EServiceDescriptorSeed
+    ): CatalogDescriptor = {
+      val newStatus =
+        for {
+          seedStatus <- eServiceDescriptorSeed.status
+          // TODO Status value should be enforced in validator
+          newStatus <- CatalogDescriptorStatus.fromText(seedStatus).toOption
+        } yield newStatus
+
+      descriptor.copy(
+        description = eServiceDescriptorSeed.description.orElse(descriptor.description),
+        status = newStatus.getOrElse(descriptor.status)
+      )
+    }
+
+    val result: Future[Option[CatalogItem]] = for {
+      retrieved <- commander.ask(ref => GetCatalogItem(eServiceId, ref))
+      current   <- retrieved.toFuture(EServiceNotFoundError(eServiceId))
+      toUpdateDescriptor <- current.descriptors
+        .find(_.id.toString == descriptorId)
+        .toFuture(EServiceDescriptorNotFoundError(eServiceId, descriptorId))
+      updatedDescriptor = mergeChanges(toUpdateDescriptor, eServiceDescriptorSeed)
+      updatedItem = current.copy(descriptors =
+        current.descriptors.filter(_.id.toString != descriptorId) :+ updatedDescriptor
+      )
+      updated <- commander.ask(ref => UpdateCatalogItem(updatedItem, ref))
+    } yield updated
+
+    onComplete(result) {
+      case Success(catalogItem) =>
+        catalogItem.fold(
+          updateDescriptor500(
+            Problem(None, status = 500, s"Error on update of descriptor $descriptorId on E-Service $eServiceId")
+          )
+        )(ci => updateDescriptor200(ci.toApi))
+      case Failure(exception) =>
+        exception match {
+          case ex @ (_: EServiceNotFoundError | _: EServiceDescriptorNotFoundError) =>
+            updateDescriptor404(
+              Problem(
+                Option(ex.getMessage),
+                status = 404,
+                s"Error on update of descriptor $descriptorId on E-Service $eServiceId"
+              )
+            )
+          case ex =>
+            updateDescriptor400(
+              Problem(
+                Option(ex.getMessage),
+                status = 400,
+                s"Error on update of descriptor $descriptorId on E-Service $eServiceId"
+              )
+            )
+        }
+
+    }
+  }
+
   private def descriptorDeletable(catalogItem: CatalogItem, descriptorId: String): Future[Boolean] = {
     if (catalogItem.descriptors.exists(descriptor => descriptor.id.toString == descriptorId && descriptor.isDraft))
       Future.successful(true)
@@ -279,5 +357,4 @@ class EServiceApiServiceImpl(
       current   <- retrieved.toFuture(new RuntimeException("EService non found"))
     } yield current
   }
-
 }

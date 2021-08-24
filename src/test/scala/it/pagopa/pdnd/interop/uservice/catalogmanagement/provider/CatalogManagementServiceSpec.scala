@@ -9,17 +9,20 @@ import akka.http.scaladsl.Http
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.model.headers.OAuth2BearerToken
 import akka.http.scaladsl.server.directives.{AuthenticationDirective, SecurityDirectives}
+import akka.http.scaladsl.unmarshalling.Unmarshal
 import com.itv.scalapact.ScalaPactVerify._
 import com.itv.scalapact.shared.ProviderStateResult
 import com.typesafe.config.ConfigFactory
 import it.pagopa.pdnd.interop.uservice.catalogmanagement.api.impl.{EServiceApiMarshallerImpl, EServiceApiServiceImpl}
 import it.pagopa.pdnd.interop.uservice.catalogmanagement.api.{EServiceApi, EServiceApiMarshaller}
 import it.pagopa.pdnd.interop.uservice.catalogmanagement.common.system.Authenticator
+import it.pagopa.pdnd.interop.uservice.catalogmanagement.model.EService
 import it.pagopa.pdnd.interop.uservice.catalogmanagement.server.Controller
 import it.pagopa.pdnd.interop.uservice.catalogmanagement.server.impl.Main
 import it.pagopa.pdnd.interop.uservice.catalogmanagement.service.{FileManager, UUIDSupplier}
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.wordspec.AnyWordSpecLike
+import it.pagopa.pdnd.interop.uservice.catalogmanagement.api.impl._
 
 import java.util.UUID
 import scala.concurrent.duration.{Duration, DurationInt}
@@ -30,6 +33,7 @@ object CatalogManagementServiceSpec extends MockFactory {
   System.setProperty("AWS_ACCESS_KEY_ID", "foo")
   System.setProperty("AWS_SECRET_ACCESS_KEY", "bar")
 
+  val url = "http://localhost:18088/pdnd-interop-uservice-catalog-management/0.0.1"
 
   val testData = ConfigFactory.parseString(s"""
       akka.actor.provider = cluster
@@ -123,17 +127,91 @@ class CatalogManagementServiceSpec
         .withPactSource(loadFromLocal("src/test/resources/pacts"))
         .setupProviderState("given") {
           case "e-service id" =>
-            prepareState()
+            createEService("24772a3d-e6f2-47f2-96e5-4cbd1e4e8c84")
             val newHeader = "Content-Type" -> "application/json"
             ProviderStateResult(true, req => req.copy(headers = Option(req.headers.fold(Map(newHeader))(_ + newHeader))))
         }
         .runVerificationAgainst("localhost", 18088, 10.seconds)
     }
+
+    "update existing descriptor" in {
+
+      val eServiceUuid = "24772a3d-e6f2-47f2-96e5-4cbd1e4e8c85"
+      val eService = createEService(eServiceUuid)
+      val descriptor = eService.descriptors.head
+
+      val data =
+        """{
+          |  "description": "NewDescription",
+          |  "status": "archived"
+          |}""".stripMargin
+
+      val response = Await.result(
+        Http().singleRequest(
+          HttpRequest(uri = s"$url/eservices/${eService.id.toString}/descriptors/${descriptor.id.toString}",
+            method = HttpMethods.PATCH,
+            entity = HttpEntity(ContentTypes.`application/json`, data),
+            headers = Seq(headers.Authorization(OAuth2BearerToken("1234")))
+          )),
+        Duration.Inf)
+
+      response.status shouldBe StatusCodes.OK
+
+      val updatedEService = retrieveEService(eServiceUuid)
+
+      updatedEService.descriptors.size shouldBe 1
+      val updatedDescriptor = updatedEService.descriptors.head
+      updatedDescriptor.description shouldBe Some("NewDescription")
+      updatedDescriptor.status shouldBe "archived"
+    }
+
+    "fail with 404 code when updating a non-existing descriptor of existing eservice" in {
+
+      val newEService = createEService("24772a3d-e6f2-47f2-96e5-4cbd1e4e8c84")
+
+      val data =
+        """{
+          |  "description": "NewDescription",
+          |  "status": "draft"
+          |}""".stripMargin
+
+      val response = Await.result(
+        Http().singleRequest(
+          HttpRequest(uri = s"$url/eservices/${newEService.id.toString}/descriptors/2",
+            method = HttpMethods.PATCH,
+            entity = HttpEntity(ContentTypes.`application/json`, data),
+            headers = Seq(headers.Authorization(OAuth2BearerToken("1234")))
+          )),
+        Duration.Inf)
+
+      response.status shouldBe StatusCodes.NotFound
+    }
+
+    "fail with 404 code when updating a descriptor of non-existing eservice" in {
+
+      val data =
+        """{
+          |  "description": "NewDescription",
+          |  "status": "draft"
+          |}""".stripMargin
+
+      val response = Await.result(
+        Http().singleRequest(
+          HttpRequest(uri = s"$url/eservices/1/descriptors/2",
+            method = HttpMethods.PATCH,
+            entity = HttpEntity(ContentTypes.`application/json`, data),
+            headers = Seq(headers.Authorization(OAuth2BearerToken("1234")))
+          )),
+        Duration.Inf)
+
+      response.status shouldBe StatusCodes.NotFound
+
+    }
   }
 
-  private def prepareState() = {
+  private def createEService(uuid: String): EService = {
     //mocking id twice since UUID supplier is invoked two times in the flow
-    (() => mockUUIDSupplier.get).expects().returning(UUID.fromString("24772a3d-e6f2-47f2-96e5-4cbd1e4e8c84")).twice()
+    (() => mockUUIDSupplier.get).expects().returning(UUID.fromString(uuid)).twice()
 
     val data =
       """
@@ -169,8 +247,6 @@ class CatalogManagementServiceSpec
         |        }
         |""".stripMargin
 
-    val url = "http://localhost:18088/pdnd-interop-uservice-catalog-management/0.0.1"
-
     val response = Await.result(
       Http().singleRequest(
         HttpRequest(uri = s"$url/eservices",
@@ -181,6 +257,23 @@ class CatalogManagementServiceSpec
       Duration.Inf)
 
     response.status shouldBe StatusCodes.OK
+
+    Await.result(Unmarshal(response).to[EService], Duration.Inf)
+  }
+
+  private def retrieveEService(uuid: String): EService = {
+
+    val response = Await.result(
+      Http().singleRequest(
+        HttpRequest(uri = s"$url/eservices/$uuid",
+          method = HttpMethods.GET,
+          headers = Seq(headers.Authorization(OAuth2BearerToken("1234")))
+        )),
+      Duration.Inf)
+
+    response.status shouldBe StatusCodes.OK
+
+    Await.result(Unmarshal(response).to[EService], Duration.Inf)
   }
 
 }
