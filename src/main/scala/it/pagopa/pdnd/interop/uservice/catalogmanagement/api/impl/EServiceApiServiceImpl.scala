@@ -10,10 +10,15 @@ import akka.http.scaladsl.server.Directives.{complete, onComplete, onSuccess}
 import akka.http.scaladsl.server.Route
 import akka.http.scaladsl.server.directives.FileInfo
 import akka.pattern.StatusReply
+import cats.data.Validated.{Invalid, Valid}
 import it.pagopa.pdnd.interop.uservice.catalogmanagement.api.EServiceApiService
 import it.pagopa.pdnd.interop.uservice.catalogmanagement.common._
 import it.pagopa.pdnd.interop.uservice.catalogmanagement.common.system._
-import it.pagopa.pdnd.interop.uservice.catalogmanagement.error.{EServiceDescriptorNotFoundError, EServiceNotFoundError}
+import it.pagopa.pdnd.interop.uservice.catalogmanagement.error.{
+  EServiceDescriptorNotFoundError,
+  EServiceNotFoundError,
+  ValidationError
+}
 import it.pagopa.pdnd.interop.uservice.catalogmanagement.model._
 import it.pagopa.pdnd.interop.uservice.catalogmanagement.model.persistence._
 import it.pagopa.pdnd.interop.uservice.catalogmanagement.service.{FileManager, UUIDSupplier}
@@ -39,7 +44,8 @@ class EServiceApiServiceImpl(
   uuidSupplier: UUIDSupplier,
   fileManager: FileManager
 )(implicit ec: ExecutionContext)
-    extends EServiceApiService {
+    extends EServiceApiService
+    with Validation {
 
   private val settings: ClusterShardingSettings = entity.settings match {
     case None    => ClusterShardingSettings(system)
@@ -277,6 +283,7 @@ class EServiceApiServiceImpl(
     toEntityMarshallerEService: ToEntityMarshaller[EService],
     contexts: Seq[(String, String)]
   ): Route = {
+
     val shard: String = getShard(eServiceId)
 
     val commander: EntityRef[Command] = getCommander(shard)
@@ -284,18 +291,20 @@ class EServiceApiServiceImpl(
     def mergeChanges(
       descriptor: CatalogDescriptor,
       eServiceDescriptorSeed: EServiceDescriptorSeed
-    ): CatalogDescriptor = {
-      val newStatus =
-        for {
-          seedStatus <- eServiceDescriptorSeed.status
-          // TODO Status value should be enforced in validator
-          newStatus <- CatalogDescriptorStatus.fromText(seedStatus).toOption
-        } yield newStatus
+    ): Either[ValidationError, CatalogDescriptor] = {
+      val newStatus = eServiceDescriptorSeed.status.map(validateDescriptorStatus)
 
-      descriptor.copy(
-        description = eServiceDescriptorSeed.description.orElse(descriptor.description),
-        status = newStatus.getOrElse(descriptor.status)
-      )
+      newStatus match {
+        case Some(Invalid(nel)) => Left(ValidationError(nel.toList))
+        case Some(Valid(status)) =>
+          Right(
+            descriptor
+              .copy(description = eServiceDescriptorSeed.description.orElse(descriptor.description), status = status)
+          )
+        case None =>
+          Right(descriptor.copy(description = eServiceDescriptorSeed.description.orElse(descriptor.description)))
+      }
+
     }
 
     val result: Future[Option[CatalogItem]] = for {
@@ -304,7 +313,7 @@ class EServiceApiServiceImpl(
       toUpdateDescriptor <- current.descriptors
         .find(_.id.toString == descriptorId)
         .toFuture(EServiceDescriptorNotFoundError(eServiceId, descriptorId))
-      updatedDescriptor = mergeChanges(toUpdateDescriptor, eServiceDescriptorSeed)
+      updatedDescriptor <- mergeChanges(toUpdateDescriptor, eServiceDescriptorSeed).toFuture
       updatedItem = current.copy(descriptors =
         current.descriptors.filter(_.id.toString != descriptorId) :+ updatedDescriptor
       )

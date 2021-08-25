@@ -190,6 +190,33 @@ class CatalogManagementServiceSpec
       )
 
       response.status shouldBe StatusCodes.NotFound
+    }
+
+    "fail with 400 code on wrong status value" in {
+
+      val eServiceUuid = "24772a3d-e6f2-47f2-96e5-4cbd1e4e8c01"
+      val eService     = createEService(eServiceUuid)
+      val descriptor   = eService.descriptors.head
+
+      val data =
+        """{
+          |  "description": "NewDescription",
+          |  "status": "not_existing_status"
+          |}""".stripMargin
+
+      val response = Await.result(
+        Http().singleRequest(
+          HttpRequest(
+            uri = s"$serviceURL/eservices/${eService.id.toString}/descriptors/${descriptor.id.toString}",
+            method = HttpMethods.PATCH,
+            entity = HttpEntity(ContentTypes.`application/json`, data),
+            headers = Seq(headers.Authorization(OAuth2BearerToken("1234")))
+          )
+        ),
+        Duration.Inf
+      )
+
+      response.status shouldBe StatusCodes.BadRequest
 
     }
   }
