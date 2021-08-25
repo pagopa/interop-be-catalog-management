@@ -22,16 +22,8 @@ final case class CatalogDescriptor(
     )
   }
 
-  def isPublishable: Boolean = {
-    interface.isDefined && status == Draft
-  }
-
   def isDraft: Boolean = {
     status == Draft
-  }
-
-  def publish: CatalogDescriptor = {
-    copy(status = Published)
   }
 
 }

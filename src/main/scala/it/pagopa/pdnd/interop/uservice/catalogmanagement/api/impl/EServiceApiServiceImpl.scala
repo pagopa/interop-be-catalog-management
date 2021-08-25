@@ -130,41 +130,6 @@ class EServiceApiServiceImpl(
     }
   }
 
-  /** Code: 200, Message: EService Descriptor published, DataType: EService
-    * Code: 400, Message: Invalid input, DataType: Problem
-    */
-  override def publishDescriptor(eServiceId: String, descriptorId: String)(implicit
-    toEntityMarshallerProblem: ToEntityMarshaller[Problem],
-    toEntityMarshallerEService: ToEntityMarshaller[EService],
-    contexts: Seq[(String, String)]
-  ): Route = {
-
-    val shard: String = getShard(eServiceId)
-
-    val commander: EntityRef[Command] = getCommander(shard)
-
-    val result: Future[Option[CatalogItem]] = for {
-      retrieved <- commander.ask(ref => GetCatalogItem(eServiceId, ref))
-      current   <- retrieved.toFuture(new RuntimeException("EService non found"))
-      publishable = current.descriptors.exists(descriptor =>
-        descriptor.id.toString == descriptorId && descriptor.isPublishable
-      )
-      updated <-
-        if (publishable) commander.ask(ref => UpdateCatalogItem(current.publish(descriptorId), ref))
-        else Future.failed(new RuntimeException(s"Descriptor $descriptorId cannot be published"))
-    } yield updated
-
-    onComplete(result) {
-      case Success(catalogItem) =>
-        catalogItem.fold(publishDescriptor404(Problem(None, status = 404, "some error")))(ci =>
-          publishDescriptor200(ci.toApi)
-        )
-      case Failure(exception) =>
-        publishDescriptor400(Problem(Option(exception.getMessage), status = 400, "some error"))
-    }
-
-  }
-
   /** Code: 200, Message: EService retrieved, DataType: EService
     * Code: 404, Message: EService not found, DataType: Problem
     * Code: 400, Message: Bad request, DataType: Problem
