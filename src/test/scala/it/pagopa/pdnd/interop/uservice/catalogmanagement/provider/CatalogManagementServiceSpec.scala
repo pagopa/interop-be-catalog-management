@@ -127,7 +127,7 @@ class CatalogManagementServiceSpec
           HttpRequest(
             uri = s"$serviceURL/eservices/${eService.id.toString}/descriptors/${descriptor.id.toString}",
             method = HttpMethods.PATCH,
-            entity = HttpEntity(ContentTypes.`application/json`, data),
+            entity = HttpEntity(ContentType(MediaTypes.`application/json-patch+json`), data),
             headers = Seq(headers.Authorization(OAuth2BearerToken("1234")))
           )
         ),
@@ -159,7 +159,7 @@ class CatalogManagementServiceSpec
           HttpRequest(
             uri = s"$serviceURL/eservices/${newEService.id.toString}/descriptors/2",
             method = HttpMethods.PATCH,
-            entity = HttpEntity(ContentTypes.`application/json`, data),
+            entity = HttpEntity(ContentType(MediaTypes.`application/json-patch+json`), data),
             headers = Seq(headers.Authorization(OAuth2BearerToken("1234")))
           )
         ),
@@ -182,7 +182,7 @@ class CatalogManagementServiceSpec
           HttpRequest(
             uri = s"$serviceURL/eservices/1/descriptors/2",
             method = HttpMethods.PATCH,
-            entity = HttpEntity(ContentTypes.`application/json`, data),
+            entity = HttpEntity(ContentType(MediaTypes.`application/json-patch+json`), data),
             headers = Seq(headers.Authorization(OAuth2BearerToken("1234")))
           )
         ),
@@ -209,7 +209,7 @@ class CatalogManagementServiceSpec
           HttpRequest(
             uri = s"$serviceURL/eservices/${eService.id.toString}/descriptors/${descriptor.id.toString}",
             method = HttpMethods.PATCH,
-            entity = HttpEntity(ContentTypes.`application/json`, data),
+            entity = HttpEntity(ContentType(MediaTypes.`application/json-patch+json`), data),
             headers = Seq(headers.Authorization(OAuth2BearerToken("1234")))
           )
         ),
