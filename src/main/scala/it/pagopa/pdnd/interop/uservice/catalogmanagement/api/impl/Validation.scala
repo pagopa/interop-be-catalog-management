@@ -8,8 +8,8 @@ trait Validation {
 
   def validateDescriptorStatus(status: String): ValidatedNel[String, CatalogDescriptorStatus] = {
     CatalogDescriptorStatus.fromText(status) match {
-      case Right(s) => s.validNel
-      case Left(ex) => ex.getMessage.invalidNel
+      case Right(s) => s.validNel[String]
+      case Left(ex) => ex.getMessage.invalidNel[CatalogDescriptorStatus]
     }
   }
 }
