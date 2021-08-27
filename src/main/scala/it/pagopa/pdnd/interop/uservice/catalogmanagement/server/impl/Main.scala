@@ -93,19 +93,19 @@ object Main extends App {
         val controller = new Controller(
           eServiceApi,
           validationExceptionToRoute = Some(e => {
-            val results = e.results()
-            results.crumbs().asScala.foreach { crumb =>
+            val results = Option(e.results())
+            results.foreach(_.crumbs().asScala.foreach { crumb =>
               println(crumb.crumb())
-            }
-            results.items().asScala.foreach { item =>
+            })
+            results.foreach(_.items().asScala.foreach { item =>
               println(item.dataCrumbs())
               println(item.dataJsonPointer())
               println(item.schemaCrumbs())
               println(item.message())
               println(item.severity())
-            }
+            })
             val message =
-              Problem(Some(e.results().items().asScala.map(_.message()).mkString("\n")), 400, "some error").toJson
+              Problem(results.map(_.items().asScala.map(_.message()).mkString("\n")), 400, "some error").toJson
             complete((400, message))
           })
         )
