@@ -52,14 +52,6 @@ final case class CatalogItem(
     copy(descriptors = updated)
   }
 
-  def publish(descriptorId: String): CatalogItem = {
-    val updated: Seq[CatalogDescriptor] = descriptors.map {
-      case descriptor if descriptor.id == UUID.fromString(descriptorId) => descriptor.publish
-      case descriptor                                                   => descriptor
-    }
-    copy(descriptors = updated)
-  }
-
   def getInterfacePath(descriptorId: String): Option[String] = {
     for {
       doc       <- descriptors.find(_.id == UUID.fromString(descriptorId))
