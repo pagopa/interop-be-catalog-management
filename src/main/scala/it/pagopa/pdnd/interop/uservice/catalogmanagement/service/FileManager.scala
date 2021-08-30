@@ -55,7 +55,8 @@ trait FileManager {
   private def verifyTechnology(fileParts: (FileInfo, File), catalogItem: CatalogItem): Future[CatalogItem] = {
     val restContentTypes: Set[MediaType] = Set(
       MediaType.textWithFixedCharset("yaml", HttpCharsets.`UTF-8`, "yaml", "yml"),
-      MediaType.applicationWithFixedCharset("yaml", HttpCharsets.`UTF-8`, "yaml", "yml")
+      MediaType.applicationWithFixedCharset("yaml", HttpCharsets.`UTF-8`, "yaml", "yml"),
+      MediaType.applicationWithFixedCharset("x-yaml", HttpCharsets.`UTF-8`, "yaml", "yml")
     )
 
     val soapContentTypes: Set[MediaType] = Set(MediaTypes.`application/soap+xml`)
