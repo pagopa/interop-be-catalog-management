@@ -56,7 +56,8 @@ trait FileManager {
     val restContentTypes: Set[MediaType] = Set(
       MediaType.textWithFixedCharset("yaml", HttpCharsets.`UTF-8`, "yaml", "yml"),
       MediaType.applicationWithFixedCharset("yaml", HttpCharsets.`UTF-8`, "yaml", "yml"),
-      MediaType.applicationWithFixedCharset("x-yaml", HttpCharsets.`UTF-8`, "yaml", "yml")
+      MediaType.applicationWithFixedCharset("x-yaml", HttpCharsets.`UTF-8`, "yaml", "yml"),
+      MediaTypes.`application/octet-stream`
     )
 
     val soapContentTypes: Set[MediaType] = Set(MediaTypes.`application/soap+xml`)
