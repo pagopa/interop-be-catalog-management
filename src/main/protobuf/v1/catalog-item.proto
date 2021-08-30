@@ -16,6 +16,7 @@ message CatalogItemV1 {
   required int32 voucherLifespan = 7;
   required CatalogAttributesV1  attributes = 8;
   repeated CatalogDescriptorV1 descriptors = 9;
+  required bool forcedVerification = 10;
 }
 
 message CatalogAttributesV1 {

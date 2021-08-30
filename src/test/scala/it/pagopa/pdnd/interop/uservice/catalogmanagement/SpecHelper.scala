@@ -51,7 +51,8 @@ trait SpecHelper extends SpecConfiguration with AnyWordSpecLike with MockFactory
         |                ]
         |              }
         |            ]
-        |          }
+        |          },
+        |          "forcedVerification" : false
         |        }
         |""".stripMargin
 
