@@ -30,7 +30,7 @@ package object v1 {
           technology = itemsV1.value.technology,
           voucherLifespan = itemsV1.value.voucherLifespan,
           attributes = attributes,
-          forcedVerification = itemsV1.value.forcedVerification,
+          explicitAttributesVerification = itemsV1.value.explicitAttributesVerification,
           descriptors = descriptors
         )
       }
@@ -56,7 +56,7 @@ package object v1 {
               technology = catalogItem.technology,
               voucherLifespan = catalogItem.voucherLifespan,
               attributes = attributes,
-              forcedVerification = catalogItem.forcedVerification,
+              explicitAttributesVerification = catalogItem.explicitAttributesVerification,
               descriptors = descriptors
             )
           )
@@ -82,7 +82,7 @@ package object v1 {
           technology = event.catalogItem.technology,
           voucherLifespan = event.catalogItem.voucherLifespan,
           attributes = attributes,
-          forcedVerification = event.catalogItem.forcedVerification,
+          explicitAttributesVerification = event.catalogItem.explicitAttributesVerification,
           descriptors = descriptors
         )
       )
@@ -105,7 +105,7 @@ package object v1 {
             audience = event.catalogItem.audience,
             technology = event.catalogItem.technology,
             voucherLifespan = event.catalogItem.voucherLifespan,
-            forcedVerification = event.catalogItem.forcedVerification,
+            explicitAttributesVerification = event.catalogItem.explicitAttributesVerification,
             attributes = attributes,
             descriptors = descriptors
           )
@@ -128,7 +128,7 @@ package object v1 {
           technology = event.catalogItem.technology,
           voucherLifespan = event.catalogItem.voucherLifespan,
           attributes = attributes,
-          forcedVerification = event.catalogItem.forcedVerification,
+          explicitAttributesVerification = event.catalogItem.explicitAttributesVerification,
           descriptors = descriptors
         ),
         descriptorId = event.descriptorId
@@ -153,7 +153,7 @@ package object v1 {
             technology = event.catalogItem.technology,
             voucherLifespan = event.catalogItem.voucherLifespan,
             attributes = attributes,
-            forcedVerification = event.catalogItem.forcedVerification,
+            explicitAttributesVerification = event.catalogItem.explicitAttributesVerification,
             descriptors = descriptors
           ),
           descriptorId = event.descriptorId

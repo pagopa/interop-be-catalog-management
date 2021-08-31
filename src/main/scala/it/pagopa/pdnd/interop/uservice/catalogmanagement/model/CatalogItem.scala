@@ -17,7 +17,7 @@ final case class CatalogItem(
   technology: String,
   voucherLifespan: Int,
   attributes: CatalogAttributes,
-  forcedVerification: Boolean,
+  explicitAttributesVerification: Boolean,
   descriptors: Seq[CatalogDescriptor]
 ) extends Convertable[EService] {
   def toApi: EService = {
@@ -30,7 +30,7 @@ final case class CatalogItem(
       technology = technology,
       voucherLifespan = voucherLifespan,
       attributes = attributes.toApi,
-      forcedVerification = forcedVerification,
+      explicitAttributesVerification = explicitAttributesVerification,
       descriptors = descriptors.map(_.toApi)
     )
   }
@@ -88,7 +88,7 @@ object CatalogItem {
         technology = seed.technology,
         voucherLifespan = seed.voucherLifespan,
         attributes = attributes,
-        forcedVerification = seed.forcedVerification,
+        explicitAttributesVerification = seed.explicitAttributesVerification,
         descriptors = Seq(
           CatalogDescriptor(
             id = uuidSupplier.get,
