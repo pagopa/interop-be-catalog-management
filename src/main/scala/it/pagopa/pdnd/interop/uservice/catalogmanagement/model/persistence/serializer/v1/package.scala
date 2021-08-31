@@ -4,7 +4,10 @@ import cats.implicits._
 import it.pagopa.pdnd.interop.uservice.catalogmanagement.model._
 import it.pagopa.pdnd.interop.uservice.catalogmanagement.model.persistence._
 import it.pagopa.pdnd.interop.uservice.catalogmanagement.model.persistence.serializer.v1.catalog_item.CatalogItemV1
-import it.pagopa.pdnd.interop.uservice.catalogmanagement.model.persistence.serializer.v1.events.{CatalogItemV1AddedV1, CatalogItemV1DeletedV1}
+import it.pagopa.pdnd.interop.uservice.catalogmanagement.model.persistence.serializer.v1.events.{
+  CatalogItemV1AddedV1,
+  CatalogItemV1DeletedV1
+}
 import it.pagopa.pdnd.interop.uservice.catalogmanagement.model.persistence.serializer.v1.state.{CatalogItemsV1, StateV1}
 import it.pagopa.pdnd.interop.uservice.catalogmanagement.model.persistence.serializer.v1.utils._
 
@@ -27,6 +30,7 @@ package object v1 {
           technology = itemsV1.value.technology,
           voucherLifespan = itemsV1.value.voucherLifespan,
           attributes = attributes,
+          explicitAttributesVerification = itemsV1.value.explicitAttributesVerification,
           descriptors = descriptors
         )
       }
@@ -52,6 +56,7 @@ package object v1 {
               technology = catalogItem.technology,
               voucherLifespan = catalogItem.voucherLifespan,
               attributes = attributes,
+              explicitAttributesVerification = catalogItem.explicitAttributesVerification,
               descriptors = descriptors
             )
           )
@@ -77,6 +82,7 @@ package object v1 {
           technology = event.catalogItem.technology,
           voucherLifespan = event.catalogItem.voucherLifespan,
           attributes = attributes,
+          explicitAttributesVerification = event.catalogItem.explicitAttributesVerification,
           descriptors = descriptors
         )
       )
@@ -99,6 +105,7 @@ package object v1 {
             audience = event.catalogItem.audience,
             technology = event.catalogItem.technology,
             voucherLifespan = event.catalogItem.voucherLifespan,
+            explicitAttributesVerification = event.catalogItem.explicitAttributesVerification,
             attributes = attributes,
             descriptors = descriptors
           )
@@ -106,13 +113,13 @@ package object v1 {
     }
 
   implicit def catalogItemV1DeletedV1PersistEventDeserializer
-  : PersistEventDeserializer[CatalogItemV1DeletedV1, CatalogItemDeleted] =
+    : PersistEventDeserializer[CatalogItemV1DeletedV1, CatalogItemDeleted] =
     event => {
       for {
         attributes  <- convertAttributesFromV1(event.catalogItem.attributes)
         descriptors <- convertDescriptorsFromV1(event.catalogItem.descriptors)
-      } yield CatalogItemDeleted(catalogItem =
-        CatalogItem(
+      } yield CatalogItemDeleted(
+        catalogItem = CatalogItem(
           id = UUID.fromString(event.catalogItem.id),
           producerId = UUID.fromString(event.catalogItem.producerId),
           name = event.catalogItem.name,
@@ -121,6 +128,7 @@ package object v1 {
           technology = event.catalogItem.technology,
           voucherLifespan = event.catalogItem.voucherLifespan,
           attributes = attributes,
+          explicitAttributesVerification = event.catalogItem.explicitAttributesVerification,
           descriptors = descriptors
         ),
         descriptorId = event.descriptorId
@@ -129,7 +137,7 @@ package object v1 {
     }
 
   implicit def catalogItemV1DeletedV1PersistEventSerializer
-  : PersistEventSerializer[CatalogItemDeleted, CatalogItemV1DeletedV1] =
+    : PersistEventSerializer[CatalogItemDeleted, CatalogItemV1DeletedV1] =
     event => {
       for {
         attributes  <- convertAttributesToV1(event.catalogItem.attributes)
@@ -145,6 +153,7 @@ package object v1 {
             technology = event.catalogItem.technology,
             voucherLifespan = event.catalogItem.voucherLifespan,
             attributes = attributes,
+            explicitAttributesVerification = event.catalogItem.explicitAttributesVerification,
             descriptors = descriptors
           ),
           descriptorId = event.descriptorId
