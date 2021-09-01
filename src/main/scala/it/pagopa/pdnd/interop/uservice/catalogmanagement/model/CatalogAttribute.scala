@@ -4,31 +4,32 @@ import scala.util.{Failure, Success, Try}
 
 sealed trait CatalogAttribute extends Convertable[Attribute] {
   override def toApi: Attribute = this match {
-    case SimpleAttribute(id) => Attribute(simple = Some(id), group = None)
-    case GroupAttribute(ids) => Attribute(simple = None, group = Some(ids))
+    case SingleAttribute(id) => Attribute(single = Some(id.toApi), group = None)
+    case GroupAttribute(ids) => Attribute(single = None, group = Some(ids.map(_.toApi)))
   }
 }
 
-final case class SimpleAttribute(id: String)      extends CatalogAttribute
-final case class GroupAttribute(ids: Seq[String]) extends CatalogAttribute
+final case class SingleAttribute(id: CatalogAttributeValue)      extends CatalogAttribute
+final case class GroupAttribute(ids: Seq[CatalogAttributeValue]) extends CatalogAttribute
 
 object CatalogAttribute {
-  def fromApi(attribute: Attribute): Try[CatalogAttribute] = {
-    val simple = attribute.simple.map(SimpleAttribute)
-    val group  = attribute.group.map(GroupAttribute)
 
-    (simple, group) match {
-      case (Some(attr), None) => Success[CatalogAttribute](attr)
-      case (None, Some(attr)) => Success[CatalogAttribute](attr)
+  def fromApi(attribute: Attribute): Try[CatalogAttribute] = {
+
+    val single: Option[CatalogAttributeValue]     = attribute.single.map(CatalogAttributeValue.fromApi)
+    val group: Option[Seq[CatalogAttributeValue]] = attribute.group.map(_.map(CatalogAttributeValue.fromApi))
+
+    (single, group) match {
+      case (Some(attr), None)  => Success[CatalogAttribute](SingleAttribute(attr))
+      case (None, Some(attrs)) => Success[CatalogAttribute](GroupAttribute(attrs))
       case _ =>
         Failure[CatalogAttribute] {
           new RuntimeException(s"""
-                                  |Invalid attribute: 
-                                  |- simple:${attribute.simple.getOrElse("None")} 
-                                  |- group:${attribute.group.map(_.mkString(", ")).getOrElse("None")}
+                                  |Invalid attribute:
+                                  |- single:${attribute.single.map(_.id).getOrElse("None")}
+                                  |- group:${attribute.group.map(_.map(_.id).mkString(", ")).getOrElse("None")}
                                   |""".stripMargin)
         }
     }
-
   }
 }

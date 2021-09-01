@@ -1,25 +1,8 @@
 package it.pagopa.pdnd.interop.uservice.catalogmanagement.model.persistence.serializer.v1
 
 import cats.implicits.toTraverseOps
-import it.pagopa.pdnd.interop.uservice.catalogmanagement.model.{
-  CatalogAttribute,
-  CatalogAttributes,
-  CatalogDescriptor,
-  CatalogDescriptorStatus,
-  CatalogDocument,
-  GroupAttribute,
-  SimpleAttribute
-}
-import it.pagopa.pdnd.interop.uservice.catalogmanagement.model.persistence.serializer.v1.catalog_item.CatalogAttributeV1.Empty
-import it.pagopa.pdnd.interop.uservice.catalogmanagement.model.persistence.serializer.v1.catalog_item.{
-  CatalogAttributeV1,
-  CatalogAttributesV1,
-  CatalogDescriptorStatusV1,
-  CatalogDescriptorV1,
-  CatalogDocumentV1,
-  GroupAttributeV1,
-  SimpleAttributeV1
-}
+import it.pagopa.pdnd.interop.uservice.catalogmanagement.model._
+import it.pagopa.pdnd.interop.uservice.catalogmanagement.model.persistence.serializer.v1.catalog_item._
 
 import java.time.OffsetDateTime
 import java.time.format.DateTimeFormatter
@@ -28,27 +11,44 @@ import java.util.UUID
 @SuppressWarnings(Array("org.wartremover.warts.Nothing", "org.wartremover.warts.Any"))
 object utils {
 
-  def convertAttributeToV1(catalogAttribute: CatalogAttribute): Either[RuntimeException, CatalogAttributeV1] =
+  def convertAttributeValueToV1(catalogAttributeValue: CatalogAttributeValue): CatalogAttributeValueV1 =
+    CatalogAttributeValueV1(catalogAttributeValue.id, catalogAttributeValue.explicitAttributeVerification)
+
+  def convertAttributeToV1(catalogAttribute: CatalogAttribute): CatalogAttributeV1 =
     catalogAttribute match {
-      case s: SimpleAttribute => Right(SimpleAttributeV1(s.id))
-      case g: GroupAttribute  => Right(GroupAttributeV1(g.ids))
+      case s: SingleAttribute =>
+        CatalogAttributeV1(Some(convertAttributeValueToV1(s.id)), Seq.empty[CatalogAttributeValueV1])
+      case g: GroupAttribute => CatalogAttributeV1(None, g.ids.map(convertAttributeValueToV1))
     }
 
-  def convertAttributesToV1(attributes: CatalogAttributes): Either[RuntimeException, CatalogAttributesV1] = {
-    for {
-      certified <- attributes.certified.traverse(convertAttributeToV1)
-      declared  <- attributes.declared.traverse(convertAttributeToV1)
-      verified  <- attributes.verified.traverse(convertAttributeToV1)
-    } yield CatalogAttributesV1(certified = certified, declared = declared, verified = verified)
+  def convertAttributesToV1(attributes: CatalogAttributes): CatalogAttributesV1 = {
+    CatalogAttributesV1(
+      certified = attributes.certified.map(convertAttributeToV1),
+      declared = attributes.declared.map(convertAttributeToV1),
+      verified = attributes.verified.map(convertAttributeToV1)
+    )
 
   }
 
-  def convertAttributeFromV1(catalogAttributeV1: CatalogAttributeV1): Either[RuntimeException, CatalogAttribute] =
-    catalogAttributeV1 match {
-      case s: SimpleAttributeV1 => Right(SimpleAttribute(s.id))
-      case g: GroupAttributeV1  => Right(GroupAttribute(g.ids))
-      case Empty                => Left(new RuntimeException("Deserialization from protobuf failed"))
+  def convertAttributeFromV1(catalogAttributeV1: CatalogAttributeV1): Either[RuntimeException, CatalogAttribute] = {
+    val singleAttribute: Option[SingleAttribute] = catalogAttributeV1.single.map(attr =>
+      SingleAttribute(CatalogAttributeValue(attr.id, attr.explicitAttributeVerification))
+    )
+
+    val groupAttribute: Option[GroupAttribute] = {
+      val attributes: Seq[CatalogAttributeValue] =
+        catalogAttributeV1.group.map(attr => CatalogAttributeValue(attr.id, attr.explicitAttributeVerification))
+
+      Option(attributes).filter(_.nonEmpty).map(GroupAttribute)
     }
+
+    (singleAttribute, groupAttribute) match {
+      case (Some(attr), None) => Right(attr)
+      case (None, Some(attr)) => Right(attr)
+      case _                  => Left(new RuntimeException("Deserialization from protobuf failed"))
+    }
+
+  }
 
   def convertAttributesFromV1(attributes: CatalogAttributesV1): Either[RuntimeException, CatalogAttributes] = {
     for {

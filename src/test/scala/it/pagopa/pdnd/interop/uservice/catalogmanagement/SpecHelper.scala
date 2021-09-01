@@ -24,36 +24,40 @@ trait SpecHelper extends SpecConfiguration with AnyWordSpecLike with MockFactory
     val data =
       """
         |{
-        |          "producerId" : "24772a3d-e6f2-47f2-96e5-4cbd1e4e9999",
-        |          "name" : "string",
-        |          "description" : "string",
-        |          "audience" : [
-        |            "pippo"
-        |          ],
-        |          "technology" : "REST",
-        |          "voucherLifespan" : 124,
-        |          "attributes" : {
-        |            "certified" : [
-        |              {
-        |                "simple" : "1234"
-        |              }
-        |            ],
-        |            "declared" : [
-        |              {
-        |                "simple" : "1234"
-        |              }
-        |            ],
-        |            "verified" : [
-        |              {
-        |                "group" : [
-        |                  "1234",
-        |                  "5555"
-        |                ]
-        |              }
-        |            ]
-        |          },
-        |          "explicitAttributesVerification" : false
-        |        }
+        |	"producerId": "24772a3d-e6f2-47f2-96e5-4cbd1e4e9999",
+        |	"name": "string",
+        |	"description": "string",
+        |	"audience": [
+        |		"pippo"
+        |	],
+        |	"technology": "REST",
+        |	"voucherLifespan": 124,
+        |	"attributes": {
+        |		"certified": [{
+        |			"single": {
+        |				"id": "1234",
+        |				"explicitAttributeVerification" : false
+        |			}
+        |		}],
+        |		"declared": [{
+        |			"single": {
+        |				"id": "1234",
+        |				"explicitAttributeVerification": false
+        |			}
+        |		}],
+        |		"verified": [{
+        |			"group": [{
+        |					"id": "1234",
+        |					"explicitAttributeVerification": false
+        |				},
+        |				{
+        |					"id": "5555",
+        |					"explicitAttributeVerification": false
+        |				}
+        |			]
+        |		}]
+        |	}
+        |}
         |""".stripMargin
 
     val response = Await.result(

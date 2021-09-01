@@ -16,28 +16,22 @@ message CatalogItemV1 {
   required int32 voucherLifespan = 7;
   required CatalogAttributesV1  attributes = 8;
   repeated CatalogDescriptorV1 descriptors = 9;
-  required bool explicitAttributesVerification = 10;
+}
+
+message CatalogAttributeValueV1 {
+  required string id = 1;
+  required bool explicitAttributeVerification = 2;
+}
+
+message CatalogAttributeV1 {
+  optional CatalogAttributeValueV1 single = 1;
+  repeated CatalogAttributeValueV1 group = 2;
 }
 
 message CatalogAttributesV1 {
   repeated CatalogAttributeV1 certified = 1;
   repeated CatalogAttributeV1 declared = 2;
   repeated CatalogAttributeV1 verified = 3;
-}
-
-message SimpleAttributeV1 {
-  required string id = 1;
-}
-
-message GroupAttributeV1 {
-  repeated string ids = 1;
-}
-
-message CatalogAttributeV1 {
-  oneof sealed_value {
-    SimpleAttributeV1 simpleAttribute = 1;
-    GroupAttributeV1 groupAttribute = 2;
-  }
 }
 
 message CatalogDescriptorV1 {
