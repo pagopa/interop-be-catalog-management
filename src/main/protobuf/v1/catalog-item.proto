@@ -24,7 +24,7 @@ message CatalogAttributeIdV1 {
 }
 
 message CatalogAttributeV1 {
-  optional CatalogAttributeIdV1 simple = 1;
+  optional CatalogAttributeIdV1 single = 1;
   repeated CatalogAttributeIdV1 group = 2;
 }
 

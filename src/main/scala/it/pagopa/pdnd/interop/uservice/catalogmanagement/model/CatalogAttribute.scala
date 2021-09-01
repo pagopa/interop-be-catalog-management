@@ -16,17 +16,17 @@ object CatalogAttribute {
 
   def fromApi(attribute: Attribute): Try[CatalogAttribute] = {
 
-    val simple: Option[CatalogAttributeId]     = attribute.single.map(CatalogAttributeId.fromApi)
+    val single: Option[CatalogAttributeId]     = attribute.single.map(CatalogAttributeId.fromApi)
     val group: Option[Seq[CatalogAttributeId]] = attribute.group.map(_.map(CatalogAttributeId.fromApi))
 
-    (simple, group) match {
+    (single, group) match {
       case (Some(attr), None)  => Success[CatalogAttribute](SingleAttribute(attr))
       case (None, Some(attrs)) => Success[CatalogAttribute](GroupAttribute(attrs))
       case _ =>
         Failure[CatalogAttribute] {
           new RuntimeException(s"""
                                   |Invalid attribute:
-                                  |- simple:${attribute.single.map(_.id).getOrElse("None")}
+                                  |- single:${attribute.single.map(_.id).getOrElse("None")}
                                   |- group:${attribute.group.map(_.map(_.id).mkString(", ")).getOrElse("None")}
                                   |""".stripMargin)
         }

@@ -37,7 +37,7 @@ object utils {
   }
 
   def convertAttributeFromV1(catalogAttributeV1: CatalogAttributeV1): Either[RuntimeException, CatalogAttribute] = {
-    val singleAttribute: Option[SingleAttribute] = catalogAttributeV1.simple.map(attr =>
+    val singleAttribute: Option[SingleAttribute] = catalogAttributeV1.single.map(attr =>
       SingleAttribute(CatalogAttributeId(attr.id, attr.explicitAttributeVerification))
     )
 
