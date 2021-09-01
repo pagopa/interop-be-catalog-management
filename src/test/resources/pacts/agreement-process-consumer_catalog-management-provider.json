@@ -34,19 +34,31 @@
           "attributes" : {
             "certified" : [
               {
-                "simple" : "1234"
+                "single" : {
+                  "id": "1234",
+                  "explicitAttributeVerification" : false
+                }
               }
             ],
             "declared" : [
               {
-                "simple" : "1234"
+                "single" : {
+                  "id": "1234",
+                  "explicitAttributeVerification" : false
+                }
               }
             ],
             "verified" : [
               {
                 "group" : [
-                  "1234",
-                  "5555"
+                  {
+                    "id": "1234",
+                    "explicitAttributeVerification" : false
+                  },
+                  {
+                    "id": "5555",
+                    "explicitAttributeVerification" : false
+                  }
                 ]
               }
             ]

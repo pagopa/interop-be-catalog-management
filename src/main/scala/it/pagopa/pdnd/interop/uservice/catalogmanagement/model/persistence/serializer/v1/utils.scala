@@ -1,25 +1,15 @@
 package it.pagopa.pdnd.interop.uservice.catalogmanagement.model.persistence.serializer.v1
 
 import cats.implicits.toTraverseOps
-import it.pagopa.pdnd.interop.uservice.catalogmanagement.model.{
-  CatalogAttribute,
-  CatalogAttributes,
-  CatalogDescriptor,
-  CatalogDescriptorStatus,
-  CatalogDocument,
-  GroupAttribute,
-  SimpleAttribute
-}
-import it.pagopa.pdnd.interop.uservice.catalogmanagement.model.persistence.serializer.v1.catalog_item.CatalogAttributeV1.Empty
 import it.pagopa.pdnd.interop.uservice.catalogmanagement.model.persistence.serializer.v1.catalog_item.{
+  CatalogAttributeIdV1,
   CatalogAttributeV1,
   CatalogAttributesV1,
   CatalogDescriptorStatusV1,
   CatalogDescriptorV1,
-  CatalogDocumentV1,
-  GroupAttributeV1,
-  SimpleAttributeV1
+  CatalogDocumentV1
 }
+import it.pagopa.pdnd.interop.uservice.catalogmanagement.model._
 
 import java.time.OffsetDateTime
 import java.time.format.DateTimeFormatter
@@ -28,10 +18,14 @@ import java.util.UUID
 @SuppressWarnings(Array("org.wartremover.warts.Nothing", "org.wartremover.warts.Any"))
 object utils {
 
+  def convertAttributeIdToV1(catalogAttributeId: CatalogAttributeId): CatalogAttributeIdV1 =
+    CatalogAttributeIdV1(catalogAttributeId.id, catalogAttributeId.explicitAttributeVerification)
+
   def convertAttributeToV1(catalogAttribute: CatalogAttribute): Either[RuntimeException, CatalogAttributeV1] =
     catalogAttribute match {
-      case s: SimpleAttribute => Right(SimpleAttributeV1(s.id))
-      case g: GroupAttribute  => Right(GroupAttributeV1(g.ids))
+      case s: SingleAttribute =>
+        Right(CatalogAttributeV1(Some(convertAttributeIdToV1(s.id)), Seq.empty[CatalogAttributeIdV1]))
+      case g: GroupAttribute => Right(CatalogAttributeV1(None, g.ids.map(convertAttributeIdToV1)))
     }
 
   def convertAttributesToV1(attributes: CatalogAttributes): Either[RuntimeException, CatalogAttributesV1] = {
@@ -43,12 +37,25 @@ object utils {
 
   }
 
-  def convertAttributeFromV1(catalogAttributeV1: CatalogAttributeV1): Either[RuntimeException, CatalogAttribute] =
-    catalogAttributeV1 match {
-      case s: SimpleAttributeV1 => Right(SimpleAttribute(s.id))
-      case g: GroupAttributeV1  => Right(GroupAttribute(g.ids))
-      case Empty                => Left(new RuntimeException("Deserialization from protobuf failed"))
+  def convertAttributeFromV1(catalogAttributeV1: CatalogAttributeV1): Either[RuntimeException, CatalogAttribute] = {
+    val singleAttribute: Option[SingleAttribute] = catalogAttributeV1.simple.map(attr =>
+      SingleAttribute(CatalogAttributeId(attr.id, attr.explicitAttributeVerification))
+    )
+
+    val groupAttribute: Option[GroupAttribute] = {
+      val attributes: Seq[CatalogAttributeId] =
+        catalogAttributeV1.group.map(attr => CatalogAttributeId(attr.id, attr.explicitAttributeVerification))
+
+      Option(attributes).filter(_.nonEmpty).map(GroupAttribute)
     }
+
+    (singleAttribute, groupAttribute) match {
+      case (Some(attr), None) => Right(attr)
+      case (None, Some(attr)) => Right(attr)
+      case _                  => Left(new RuntimeException("Deserialization from protobuf failed"))
+    }
+
+  }
 
   def convertAttributesFromV1(attributes: CatalogAttributesV1): Either[RuntimeException, CatalogAttributes] = {
     for {
