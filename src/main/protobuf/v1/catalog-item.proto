@@ -18,14 +18,14 @@ message CatalogItemV1 {
   repeated CatalogDescriptorV1 descriptors = 9;
 }
 
-message CatalogAttributeIdV1 {
+message CatalogAttributeValueV1 {
   required string id = 1;
   required bool explicitAttributeVerification = 2;
 }
 
 message CatalogAttributeV1 {
-  optional CatalogAttributeIdV1 single = 1;
-  repeated CatalogAttributeIdV1 group = 2;
+  optional CatalogAttributeValueV1 single = 1;
+  repeated CatalogAttributeValueV1 group = 2;
 }
 
 message CatalogAttributesV1 {

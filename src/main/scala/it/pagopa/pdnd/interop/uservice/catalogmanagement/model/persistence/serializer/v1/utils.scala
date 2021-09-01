@@ -1,15 +1,8 @@
 package it.pagopa.pdnd.interop.uservice.catalogmanagement.model.persistence.serializer.v1
 
 import cats.implicits.toTraverseOps
-import it.pagopa.pdnd.interop.uservice.catalogmanagement.model.persistence.serializer.v1.catalog_item.{
-  CatalogAttributeIdV1,
-  CatalogAttributeV1,
-  CatalogAttributesV1,
-  CatalogDescriptorStatusV1,
-  CatalogDescriptorV1,
-  CatalogDocumentV1
-}
 import it.pagopa.pdnd.interop.uservice.catalogmanagement.model._
+import it.pagopa.pdnd.interop.uservice.catalogmanagement.model.persistence.serializer.v1.catalog_item._
 
 import java.time.OffsetDateTime
 import java.time.format.DateTimeFormatter
@@ -18,13 +11,14 @@ import java.util.UUID
 @SuppressWarnings(Array("org.wartremover.warts.Nothing", "org.wartremover.warts.Any"))
 object utils {
 
-  def convertAttributeIdToV1(catalogAttributeId: CatalogAttributeId): CatalogAttributeIdV1 =
-    CatalogAttributeIdV1(catalogAttributeId.id, catalogAttributeId.explicitAttributeVerification)
+  def convertAttributeValueToV1(catalogAttributeValue: CatalogAttributeValue): CatalogAttributeValueV1 =
+    CatalogAttributeValueV1(catalogAttributeValue.id, catalogAttributeValue.explicitAttributeVerification)
 
   def convertAttributeToV1(catalogAttribute: CatalogAttribute): CatalogAttributeV1 =
     catalogAttribute match {
-      case s: SingleAttribute => CatalogAttributeV1(Some(convertAttributeIdToV1(s.id)), Seq.empty[CatalogAttributeIdV1])
-      case g: GroupAttribute  => CatalogAttributeV1(None, g.ids.map(convertAttributeIdToV1))
+      case s: SingleAttribute =>
+        CatalogAttributeV1(Some(convertAttributeValueToV1(s.id)), Seq.empty[CatalogAttributeValueV1])
+      case g: GroupAttribute => CatalogAttributeV1(None, g.ids.map(convertAttributeValueToV1))
     }
 
   def convertAttributesToV1(attributes: CatalogAttributes): CatalogAttributesV1 = {
@@ -38,12 +32,12 @@ object utils {
 
   def convertAttributeFromV1(catalogAttributeV1: CatalogAttributeV1): Either[RuntimeException, CatalogAttribute] = {
     val singleAttribute: Option[SingleAttribute] = catalogAttributeV1.single.map(attr =>
-      SingleAttribute(CatalogAttributeId(attr.id, attr.explicitAttributeVerification))
+      SingleAttribute(CatalogAttributeValue(attr.id, attr.explicitAttributeVerification))
     )
 
     val groupAttribute: Option[GroupAttribute] = {
-      val attributes: Seq[CatalogAttributeId] =
-        catalogAttributeV1.group.map(attr => CatalogAttributeId(attr.id, attr.explicitAttributeVerification))
+      val attributes: Seq[CatalogAttributeValue] =
+        catalogAttributeV1.group.map(attr => CatalogAttributeValue(attr.id, attr.explicitAttributeVerification))
 
       Option(attributes).filter(_.nonEmpty).map(GroupAttribute)
     }

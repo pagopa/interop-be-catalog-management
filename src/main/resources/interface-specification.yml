@@ -428,7 +428,7 @@ components:
         status:
           type: string
           enum: [ 'draft', 'published', 'deprecated', 'archived' ]
-    AttributeId:
+    AttributeValue:
       type: object
       properties:
         id:
@@ -442,11 +442,11 @@ components:
       type: object
       properties:
         single:
-          $ref: '#/components/schemas/AttributeId'
+          $ref: '#/components/schemas/AttributeValue'
         group:
           type: array
           items:
-            $ref: '#/components/schemas/AttributeId'
+            $ref: '#/components/schemas/AttributeValue'
     Attributes:
       properties:
         certified:

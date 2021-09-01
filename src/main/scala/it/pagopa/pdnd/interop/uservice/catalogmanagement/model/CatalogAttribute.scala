@@ -9,15 +9,15 @@ sealed trait CatalogAttribute extends Convertable[Attribute] {
   }
 }
 
-final case class SingleAttribute(id: CatalogAttributeId)      extends CatalogAttribute
-final case class GroupAttribute(ids: Seq[CatalogAttributeId]) extends CatalogAttribute
+final case class SingleAttribute(id: CatalogAttributeValue)      extends CatalogAttribute
+final case class GroupAttribute(ids: Seq[CatalogAttributeValue]) extends CatalogAttribute
 
 object CatalogAttribute {
 
   def fromApi(attribute: Attribute): Try[CatalogAttribute] = {
 
-    val single: Option[CatalogAttributeId]     = attribute.single.map(CatalogAttributeId.fromApi)
-    val group: Option[Seq[CatalogAttributeId]] = attribute.group.map(_.map(CatalogAttributeId.fromApi))
+    val single: Option[CatalogAttributeValue]     = attribute.single.map(CatalogAttributeValue.fromApi)
+    val group: Option[Seq[CatalogAttributeValue]] = attribute.group.map(_.map(CatalogAttributeValue.fromApi))
 
     (single, group) match {
       case (Some(attr), None)  => Success[CatalogAttribute](SingleAttribute(attr))
