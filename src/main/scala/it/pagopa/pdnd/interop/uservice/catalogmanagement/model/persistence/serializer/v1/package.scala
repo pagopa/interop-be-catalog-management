@@ -42,7 +42,6 @@ package object v1 {
       val itemsV1: Either[RuntimeException, Seq[CatalogItemsV1]] = state.items.toSeq.traverse {
         case (key, catalogItem) =>
           for {
-            attributes  <- convertAttributesToV1(catalogItem.attributes)
             descriptors <- convertDescriptorsToV1(catalogItem.descriptors)
           } yield CatalogItemsV1(
             key,
@@ -54,7 +53,7 @@ package object v1 {
               audience = catalogItem.audience,
               technology = catalogItem.technology,
               voucherLifespan = catalogItem.voucherLifespan,
-              attributes = attributes,
+              attributes = convertAttributesToV1(catalogItem.attributes),
               descriptors = descriptors
             )
           )
@@ -90,7 +89,6 @@ package object v1 {
     : PersistEventSerializer[CatalogItemAdded, CatalogItemV1AddedV1] =
     event => {
       for {
-        attributes  <- convertAttributesToV1(event.catalogItem.attributes)
         descriptors <- convertDescriptorsToV1(event.catalogItem.descriptors)
       } yield CatalogItemV1AddedV1
         .of(
@@ -102,7 +100,7 @@ package object v1 {
             audience = event.catalogItem.audience,
             technology = event.catalogItem.technology,
             voucherLifespan = event.catalogItem.voucherLifespan,
-            attributes = attributes,
+            attributes = convertAttributesToV1(event.catalogItem.attributes),
             descriptors = descriptors
           )
         )
@@ -135,7 +133,6 @@ package object v1 {
     : PersistEventSerializer[CatalogItemDeleted, CatalogItemV1DeletedV1] =
     event => {
       for {
-        attributes  <- convertAttributesToV1(event.catalogItem.attributes)
         descriptors <- convertDescriptorsToV1(event.catalogItem.descriptors)
       } yield CatalogItemV1DeletedV1
         .of(
@@ -147,7 +144,7 @@ package object v1 {
             audience = event.catalogItem.audience,
             technology = event.catalogItem.technology,
             voucherLifespan = event.catalogItem.voucherLifespan,
-            attributes = attributes,
+            attributes = convertAttributesToV1(event.catalogItem.attributes),
             descriptors = descriptors
           ),
           descriptorId = event.descriptorId

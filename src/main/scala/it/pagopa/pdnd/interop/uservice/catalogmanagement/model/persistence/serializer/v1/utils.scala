@@ -21,19 +21,18 @@ object utils {
   def convertAttributeIdToV1(catalogAttributeId: CatalogAttributeId): CatalogAttributeIdV1 =
     CatalogAttributeIdV1(catalogAttributeId.id, catalogAttributeId.explicitAttributeVerification)
 
-  def convertAttributeToV1(catalogAttribute: CatalogAttribute): Either[RuntimeException, CatalogAttributeV1] =
+  def convertAttributeToV1(catalogAttribute: CatalogAttribute): CatalogAttributeV1 =
     catalogAttribute match {
-      case s: SingleAttribute =>
-        Right(CatalogAttributeV1(Some(convertAttributeIdToV1(s.id)), Seq.empty[CatalogAttributeIdV1]))
-      case g: GroupAttribute => Right(CatalogAttributeV1(None, g.ids.map(convertAttributeIdToV1)))
+      case s: SingleAttribute => CatalogAttributeV1(Some(convertAttributeIdToV1(s.id)), Seq.empty[CatalogAttributeIdV1])
+      case g: GroupAttribute  => CatalogAttributeV1(None, g.ids.map(convertAttributeIdToV1))
     }
 
-  def convertAttributesToV1(attributes: CatalogAttributes): Either[RuntimeException, CatalogAttributesV1] = {
-    for {
-      certified <- attributes.certified.traverse(convertAttributeToV1)
-      declared  <- attributes.declared.traverse(convertAttributeToV1)
-      verified  <- attributes.verified.traverse(convertAttributeToV1)
-    } yield CatalogAttributesV1(certified = certified, declared = declared, verified = verified)
+  def convertAttributesToV1(attributes: CatalogAttributes): CatalogAttributesV1 = {
+    CatalogAttributesV1(
+      certified = attributes.certified.map(convertAttributeToV1),
+      declared = attributes.declared.map(convertAttributeToV1),
+      verified = attributes.verified.map(convertAttributeToV1)
+    )
 
   }
 
