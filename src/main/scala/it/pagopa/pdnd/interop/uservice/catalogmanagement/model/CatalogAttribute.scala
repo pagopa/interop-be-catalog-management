@@ -4,8 +4,8 @@ import scala.util.{Failure, Success, Try}
 
 sealed trait CatalogAttribute extends Convertable[Attribute] {
   override def toApi: Attribute = this match {
-    case attr: SingleAttribute => Attribute(single = Some(attr.id.toApi), group = None)
-    case attr: GroupAttribute  => Attribute(single = None, group = Some(attr.ids.map(_.toApi)))
+    case SingleAttribute(id) => Attribute(single = Some(id.toApi), group = None)
+    case GroupAttribute(ids) => Attribute(single = None, group = Some(ids.map(_.toApi)))
   }
 }
 
