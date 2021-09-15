@@ -113,6 +113,47 @@ paths:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/Problem'
+  /eservices/{eServiceId}/update:
+    put:
+      security:
+        - bearerAuth: [ ]
+      tags:
+        - e_service
+      summary: Updates e-service general information
+      operationId: updateEServiceById
+      parameters:
+        - name: eServiceId
+          in: path
+          description: The E-Service id to update
+          required: true
+          schema:
+            type: string
+      requestBody:
+        description: A E-Service update seed containing the possible updatable fields
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateEServiceSeed'
+      responses:
+        "200":
+          description: E-Service updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EService'
+        '404':
+          description: E-Service not found
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '400':
+          description: Bad request
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
   /eservices/{eServiceId}/descriptors/{descriptorId}:
     patch:
       security:
@@ -347,9 +388,7 @@ components:
         - producerId
         - name
         - description
-        - audience
         - technology
-        - voucherLifespan
         - attributes
         - descriptors
       properties:
@@ -363,15 +402,8 @@ components:
           type: string
         description:
           type: string
-        audience:
-          type: array
-          items:
-            type: string
         technology:
           type: string
-        voucherLifespan:
-          type: integer
-          format: int32
         attributes:
           $ref: '#/components/schemas/Attributes'
         descriptors:
@@ -403,6 +435,8 @@ components:
         - docs
         - status
         - creationDate
+        - audience
+        - voucherLifespan
       properties:
         id:
           type: string
@@ -411,6 +445,13 @@ components:
           type: string
         description:
           type: string
+        audience:
+          type: array
+          items:
+            type: string
+        voucherLifespan:
+          type: integer
+          format: int32
         interface:
           $ref: '#/components/schemas/EServiceDoc'
         docs:
@@ -428,6 +469,13 @@ components:
         status:
           type: string
           enum: [ 'draft', 'published', 'deprecated', 'archived' ]
+        audience:
+          type: array
+          items:
+            type: string
+        voucherLifespan:
+          type: integer
+          format: int32
     AttributeValue:
       type: object
       properties:
@@ -469,6 +517,23 @@ components:
       type: array
       items:
         $ref: '#/components/schemas/EService'
+    UpdateEServiceSeed:
+      type: object
+      required:
+        - name
+        - description
+        - technology
+        - attributes
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        technology:
+          type: string
+          enum: [ 'REST', 'SOAP' ]
+        attributes:
+          $ref: '#/components/schemas/Attributes'
     Problem:
       properties:
         detail:

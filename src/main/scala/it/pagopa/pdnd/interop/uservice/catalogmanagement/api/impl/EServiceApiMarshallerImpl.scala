@@ -6,7 +6,7 @@ import akka.http.scaladsl.model.ContentTypes
 import akka.http.scaladsl.model.MediaTypes.{`application/json-patch+json`, `application/json`}
 import akka.http.scaladsl.unmarshalling.{FromEntityUnmarshaller, Unmarshaller}
 import it.pagopa.pdnd.interop.uservice.catalogmanagement.api.EServiceApiMarshaller
-import it.pagopa.pdnd.interop.uservice.catalogmanagement.model.{EService, EServiceDescriptorSeed, EServiceSeed, Problem}
+import it.pagopa.pdnd.interop.uservice.catalogmanagement.model.{EService, EServiceDescriptorSeed, EServiceSeed, Problem, UpdateEServiceSeed}
 import spray.json._
 
 import java.io.File
@@ -39,4 +39,6 @@ class EServiceApiMarshallerImpl extends EServiceApiMarshaller with SprayJsonSupp
       .forContentTypes(`application/json`, `application/json-patch+json`)
       .andThen(sprayJsValueByteStringUnmarshaller)
       .map(jsonReader[EServiceDescriptorSeed].read)
+
+  override implicit def fromEntityUnmarshallerUpdateEServiceSeed: FromEntityUnmarshaller[UpdateEServiceSeed] = sprayJsonUnmarshaller[UpdateEServiceSeed]
 }

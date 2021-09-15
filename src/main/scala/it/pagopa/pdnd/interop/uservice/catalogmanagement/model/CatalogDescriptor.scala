@@ -9,7 +9,9 @@ final case class CatalogDescriptor(
   description: Option[String],
   interface: Option[CatalogDocument],
   docs: Seq[CatalogDocument],
-  status: CatalogDescriptorStatus
+  status: CatalogDescriptorStatus,
+  audience: Seq[String],
+  voucherLifespan: Int
 ) extends Convertable[EServiceDescriptor] {
   def toApi: EServiceDescriptor = {
     EServiceDescriptor(
@@ -18,12 +20,13 @@ final case class CatalogDescriptor(
       description = description,
       interface = interface.map(_.toApi),
       docs = docs.map(_.toApi),
-      status = status.stringify
+      status = status.stringify,
+      audience = audience,
+      voucherLifespan = voucherLifespan
     )
   }
 
   def isDraft: Boolean = {
     status == Draft
   }
-
 }

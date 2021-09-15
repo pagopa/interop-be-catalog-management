@@ -14,14 +14,11 @@ import cats.data.Validated.{Invalid, Valid}
 import it.pagopa.pdnd.interop.uservice.catalogmanagement.api.EServiceApiService
 import it.pagopa.pdnd.interop.uservice.catalogmanagement.common._
 import it.pagopa.pdnd.interop.uservice.catalogmanagement.common.system._
-import it.pagopa.pdnd.interop.uservice.catalogmanagement.error.{
-  EServiceDescriptorNotFoundError,
-  EServiceNotFoundError,
-  ValidationError
-}
+import it.pagopa.pdnd.interop.uservice.catalogmanagement.error.{EServiceDescriptorNotFoundError, EServiceNotFoundError, ValidationError}
 import it.pagopa.pdnd.interop.uservice.catalogmanagement.model._
 import it.pagopa.pdnd.interop.uservice.catalogmanagement.model.persistence._
 import it.pagopa.pdnd.interop.uservice.catalogmanagement.service.{FileManager, UUIDSupplier}
+import org.slf4j.{Logger, LoggerFactory}
 
 import java.io.File
 import scala.concurrent.duration.Duration
@@ -46,6 +43,8 @@ class EServiceApiServiceImpl(
 )(implicit ec: ExecutionContext)
     extends EServiceApiService
     with Validation {
+
+  private val logger: Logger = LoggerFactory.getLogger(this.getClass)
 
   private val settings: ClusterShardingSettings = entity.settings match {
     case None    => ClusterShardingSettings(system)
@@ -264,10 +263,18 @@ class EServiceApiServiceImpl(
         case Some(Valid(status)) =>
           Right(
             descriptor
-              .copy(description = eServiceDescriptorSeed.description.orElse(descriptor.description), status = status)
+              .copy(
+                description = eServiceDescriptorSeed.description.orElse(descriptor.description),
+                audience = eServiceDescriptorSeed.audience.getOrElse(descriptor.audience),
+                voucherLifespan = eServiceDescriptorSeed.voucherLifespan.getOrElse(descriptor.voucherLifespan),
+                status = status
+              )
           )
         case None =>
-          Right(descriptor.copy(description = eServiceDescriptorSeed.description.orElse(descriptor.description)))
+          Right(descriptor.copy(
+            description = eServiceDescriptorSeed.description.orElse(descriptor.description),
+            audience = eServiceDescriptorSeed.audience.getOrElse(descriptor.audience),
+            voucherLifespan = eServiceDescriptorSeed.voucherLifespan.getOrElse(descriptor.voucherLifespan)))
       }
 
     }
@@ -312,6 +319,35 @@ class EServiceApiServiceImpl(
             )
         }
 
+    }
+  }
+
+  /** Code: 200, Message: E-Service updated, DataType: EService
+    * Code: 404, Message: E-Service not found, DataType: Problem
+    * Code: 400, Message: Bad request, DataType: Problem
+    */
+  override def updateEServiceById(eServiceId: String, updateEServiceSeed: UpdateEServiceSeed)(implicit
+    toEntityMarshallerProblem: ToEntityMarshaller[Problem],
+    toEntityMarshallerEService: ToEntityMarshaller[EService],
+    contexts: Seq[(String, String)]
+  ): Route = {
+    val shard: String = getShard(eServiceId)
+
+    val commander: EntityRef[Command] = getCommander(shard)
+
+    val result: Future[Option[CatalogItem]] = for {
+      current         <- retrieveCatalogItem(commander, eServiceId)
+      updated         <- current.mergeWithSeed(updateEServiceSeed)
+      updatedResponse <- commander.ask(ref => UpdateCatalogItem(updated, ref))
+    } yield updatedResponse
+
+    onComplete(result) {
+      case Success(catalogItem) =>
+        catalogItem.fold(updateEServiceById404(Problem(None, status = 404, "some error")))(ci =>
+          updateEServiceById200(ci.toApi)
+        )
+      case Failure(exception) =>
+        updateEServiceById400(Problem(Option(exception.getMessage), status = 400, "some error"))
     }
   }
 
