@@ -44,8 +44,6 @@ class EServiceApiServiceImpl(
     extends EServiceApiService
     with Validation {
 
-  private val logger: Logger = LoggerFactory.getLogger(this.getClass)
-
   private val settings: ClusterShardingSettings = entity.settings match {
     case None    => ClusterShardingSettings(system)
     case Some(s) => s
