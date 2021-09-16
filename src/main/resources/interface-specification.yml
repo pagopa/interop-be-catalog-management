@@ -154,8 +154,55 @@ paths:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/Problem'
+  /eservices/{eServiceId}/descriptors/:
+    post:
+      security:
+        - bearerAuth: [ ]
+      tags:
+        - e_service
+      summary: Add a descriptor to the speficied e-service
+      operationId: createDescriptor
+      parameters:
+        - name: eServiceId
+          in: path
+          description: The E-Service id
+          required: true
+          schema:
+            type: string
+      requestBody:
+        description: A E-Service Descriptor seed
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EServiceDescriptorSeed'
+        required: true
+      responses:
+        "200":
+          description: EService Descriptor created.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EServiceDescriptor'
+        "400":
+          description: Invalid input
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        "404":
+          description: Not found
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        "500":
+          description: Not found
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
   /eservices/{eServiceId}/descriptors/{descriptorId}:
-    patch:
+    put:
       security:
         - bearerAuth: [ ]
       tags:
@@ -178,9 +225,9 @@ paths:
       requestBody:
         description: A E-Service Descriptor seed
         content:
-          application/json-patch+json:
+          application/json:
             schema:
-              $ref: '#/components/schemas/EServiceDescriptorSeed'
+              $ref: '#/components/schemas/UpdateEServiceDescriptorSeed'
         required: true
       responses:
         "200":
@@ -357,10 +404,8 @@ components:
         - producerId
         - name
         - description
-        - audience
         - technology
         - attributes
-        - voucherLifespan
       properties:
         producerId:
           type: string
@@ -369,16 +414,9 @@ components:
           type: string
         description:
           type: string
-        audience:
-          type: array
-          items:
-            type: string
         technology:
           type: string
           enum: [ 'REST', 'SOAP' ]
-        voucherLifespan:
-          type: integer
-          format: int32
         attributes:
           $ref: '#/components/schemas/Attributes'
     EService:
@@ -462,6 +500,25 @@ components:
           type: string
           enum: [ 'draft', 'published','deprecated','archived' ]
     EServiceDescriptorSeed:
+      required:
+        - audience
+        - voucherLifespan
+      type: object
+      properties:
+        description:
+          type: string
+        audience:
+          type: array
+          items:
+            type: string
+        voucherLifespan:
+          type: integer
+          format: int32
+    UpdateEServiceDescriptorSeed:
+      required:
+        - status
+        - audience
+        - voucherLifespan
       type: object
       properties:
         description:

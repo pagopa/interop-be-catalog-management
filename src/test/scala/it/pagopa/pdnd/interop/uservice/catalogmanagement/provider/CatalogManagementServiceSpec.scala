@@ -102,6 +102,7 @@ class CatalogManagementServiceSpec
         .withPactSource(loadFromLocal("src/test/resources/pacts"))
         .setupProviderState("given") { case "e-service id" =>
           createEService("24772a3d-e6f2-47f2-96e5-4cbd1e4e8c84")
+          createEServiceDescriptor("24772a3d-e6f2-47f2-96e5-4cbd1e4e8c84", UUID.fromString("24772a3d-e6f2-47f2-96e5-4cbd1e4e9999"))
           val newHeader = "Content-Type" -> "application/json"
           ProviderStateResult(
             result = true,
@@ -115,7 +116,8 @@ class CatalogManagementServiceSpec
 
       val eServiceUuid = "24772a3d-e6f2-47f2-96e5-4cbd1e4e8c85"
       val eService     = createEService(eServiceUuid)
-      val descriptor   = eService.descriptors.head
+      val descriptorId = UUID.randomUUID()
+      val descriptor   = createEServiceDescriptor(eServiceUuid, descriptorId)
 
       val data =
         """{
@@ -129,8 +131,8 @@ class CatalogManagementServiceSpec
         Http().singleRequest(
           HttpRequest(
             uri = s"$serviceURL/eservices/${eService.id.toString}/descriptors/${descriptor.id.toString}",
-            method = HttpMethods.PATCH,
-            entity = HttpEntity(ContentType(MediaTypes.`application/json-patch+json`), data),
+            method = HttpMethods.PUT,
+            entity = HttpEntity(ContentType(MediaTypes.`application/json`), data),
             headers = Seq(headers.Authorization(OAuth2BearerToken("1234")))
           )
         ),
@@ -152,10 +154,14 @@ class CatalogManagementServiceSpec
     "fail with 404 code when updating a non-existing descriptor of existing eservice" in {
 
       val newEService = createEService("24772a3d-e6f2-47f2-96e5-4cbd1e4e8c00")
+      val descriptorId = UUID.randomUUID()
+      val _ = createEServiceDescriptor(newEService.id.toString, descriptorId)
 
       val data =
         """{
           |  "description": "NewDescription",
+          |  "audience": ["1"],
+          |  "voucherLifespan": 20,
           |  "status": "draft"
           |}""".stripMargin
 
@@ -163,8 +169,8 @@ class CatalogManagementServiceSpec
         Http().singleRequest(
           HttpRequest(
             uri = s"$serviceURL/eservices/${newEService.id.toString}/descriptors/2",
-            method = HttpMethods.PATCH,
-            entity = HttpEntity(ContentType(MediaTypes.`application/json-patch+json`), data),
+            method = HttpMethods.PUT,
+            entity = HttpEntity(ContentType(MediaTypes.`application/json`), data),
             headers = Seq(headers.Authorization(OAuth2BearerToken("1234")))
           )
         ),
@@ -179,6 +185,8 @@ class CatalogManagementServiceSpec
       val data =
         """{
           |  "description": "NewDescription",
+          |  "audience": ["1"],
+          |  "voucherLifespan": 20,
           |  "status": "draft"
           |}""".stripMargin
 
@@ -186,8 +194,8 @@ class CatalogManagementServiceSpec
         Http().singleRequest(
           HttpRequest(
             uri = s"$serviceURL/eservices/1/descriptors/2",
-            method = HttpMethods.PATCH,
-            entity = HttpEntity(ContentType(MediaTypes.`application/json-patch+json`), data),
+            method = HttpMethods.PUT,
+            entity = HttpEntity(ContentType(MediaTypes.`application/json`), data),
             headers = Seq(headers.Authorization(OAuth2BearerToken("1234")))
           )
         ),
@@ -201,20 +209,23 @@ class CatalogManagementServiceSpec
 
       val eServiceUuid = "24772a3d-e6f2-47f2-96e5-4cbd1e4e8c01"
       val eService     = createEService(eServiceUuid)
-      val descriptor   = eService.descriptors.head
+      val descriptorId = UUID.randomUUID()
+      val _ = createEServiceDescriptor(eServiceUuid, descriptorId)
 
       val data =
         """{
           |  "description": "NewDescription",
+          |  "audience": ["1"],
+          |  "voucherLifespan": 20,
           |  "status": "not_existing_status"
           |}""".stripMargin
 
       val response = Await.result(
         Http().singleRequest(
           HttpRequest(
-            uri = s"$serviceURL/eservices/${eService.id.toString}/descriptors/${descriptor.id.toString}",
-            method = HttpMethods.PATCH,
-            entity = HttpEntity(ContentType(MediaTypes.`application/json-patch+json`), data),
+            uri = s"$serviceURL/eservices/${eService.id.toString}/descriptors/${descriptorId.toString}",
+            method = HttpMethods.PUT,
+            entity = HttpEntity(ContentType(MediaTypes.`application/json`), data),
             headers = Seq(headers.Authorization(OAuth2BearerToken("1234")))
           )
         ),

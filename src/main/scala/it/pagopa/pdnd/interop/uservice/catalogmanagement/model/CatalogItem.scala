@@ -65,12 +65,17 @@ final case class CatalogItem(
       )
     }
   }
+
+  def addDescriptor(descriptor: CatalogDescriptor): CatalogItem = {
+    copy(descriptors = descriptor +: descriptors)
+  }
+
+
+  def currentVersion: Option[String] = descriptors.maxByOption(_.version).map(_.version)
 }
 
 object CatalogItem {
   def create(seed: EServiceSeed, uuidSupplier: UUIDSupplier): Future[CatalogItem] = {
-
-    val firstVersion: String = "1"
 
     val id: UUID = uuidSupplier.get
 
@@ -84,18 +89,7 @@ object CatalogItem {
         description = seed.description,
         technology = seed.technology,
         attributes = attributes,
-        descriptors = Seq(
-          CatalogDescriptor(
-            id = uuidSupplier.get,
-            description = None,
-            version = firstVersion,
-            interface = None,
-            docs = Seq.empty[CatalogDocument],
-            status = Draft,
-            voucherLifespan = seed.voucherLifespan,
-            audience = seed.audience
-          )
-        )
+        descriptors = Seq.empty[CatalogDescriptor]
       )
     }
   }

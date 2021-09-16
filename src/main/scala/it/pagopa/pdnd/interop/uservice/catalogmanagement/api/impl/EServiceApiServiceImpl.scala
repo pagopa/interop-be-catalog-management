@@ -17,7 +17,7 @@ import it.pagopa.pdnd.interop.uservice.catalogmanagement.common.system._
 import it.pagopa.pdnd.interop.uservice.catalogmanagement.error._
 import it.pagopa.pdnd.interop.uservice.catalogmanagement.model._
 import it.pagopa.pdnd.interop.uservice.catalogmanagement.model.persistence._
-import it.pagopa.pdnd.interop.uservice.catalogmanagement.service.{FileManager, UUIDSupplier}
+import it.pagopa.pdnd.interop.uservice.catalogmanagement.service.{FileManager, UUIDSupplier, VersionGenerator}
 
 import java.io.{ByteArrayOutputStream, File}
 import java.nio.file.Paths
@@ -254,51 +254,41 @@ class EServiceApiServiceImpl(
   }
 
   /** Code: 200, Message: EService Descriptor published, DataType: EService
-    * Code: 400, Message: Invalid input, DataType: Problem
-    * Code: 404, Message: Not found, DataType: Problem
-    */
+   * Code: 400, Message: Invalid input, DataType: Problem
+   * Code: 404, Message: Not found, DataType: Problem
+   */
   override def updateDescriptor(
-    eServiceId: String,
-    descriptorId: String,
-    eServiceDescriptorSeed: EServiceDescriptorSeed
-  )(implicit
-    toEntityMarshallerProblem: ToEntityMarshaller[Problem],
-    toEntityMarshallerEService: ToEntityMarshaller[EService],
-    contexts: Seq[(String, String)]
-  ): Route = {
+                                 eServiceId: String,
+                                 descriptorId: String,
+                                 eServiceDescriptorSeed: UpdateEServiceDescriptorSeed
+                               )(implicit
+                                 toEntityMarshallerProblem: ToEntityMarshaller[Problem],
+                                 toEntityMarshallerEService: ToEntityMarshaller[EService],
+                                 contexts: Seq[(String, String)]
+                               ): Route = {
 
     val shard: String = getShard(eServiceId)
 
     val commander: EntityRef[Command] = getCommander(shard)
 
     def mergeChanges(
-      descriptor: CatalogDescriptor,
-      eServiceDescriptorSeed: EServiceDescriptorSeed
-    ): Either[ValidationError, CatalogDescriptor] = {
-      val newStatus = eServiceDescriptorSeed.status.map(validateDescriptorStatus)
-
+                      descriptor: CatalogDescriptor,
+                      eServiceDescriptorSeed: UpdateEServiceDescriptorSeed
+                    ): Either[ValidationError, CatalogDescriptor] = {
+      val newStatus = validateDescriptorStatus(eServiceDescriptorSeed.status)
       newStatus match {
-        case Some(Invalid(nel)) => Left(ValidationError(nel.toList))
-        case Some(Valid(status)) =>
+        case Invalid(nel) => Left(ValidationError(nel.toList))
+        case Valid(status) =>
           Right(
             descriptor
               .copy(
-                description = eServiceDescriptorSeed.description.orElse(descriptor.description),
-                audience = eServiceDescriptorSeed.audience.getOrElse(descriptor.audience),
-                voucherLifespan = eServiceDescriptorSeed.voucherLifespan.getOrElse(descriptor.voucherLifespan),
+                description = eServiceDescriptorSeed.description,
+                audience = eServiceDescriptorSeed.audience,
+                voucherLifespan = eServiceDescriptorSeed.voucherLifespan,
                 status = status
               )
           )
-        case None =>
-          Right(
-            descriptor.copy(
-              description = eServiceDescriptorSeed.description.orElse(descriptor.description),
-              audience = eServiceDescriptorSeed.audience.getOrElse(descriptor.audience),
-              voucherLifespan = eServiceDescriptorSeed.voucherLifespan.getOrElse(descriptor.voucherLifespan)
-            )
-          )
       }
-
     }
 
     val result: Future[Option[CatalogItem]] = for {
@@ -345,13 +335,13 @@ class EServiceApiServiceImpl(
   }
 
   /** Code: 200, Message: E-Service updated, DataType: EService
-    * Code: 404, Message: E-Service not found, DataType: Problem
-    * Code: 400, Message: Bad request, DataType: Problem
-    */
+   * Code: 404, Message: E-Service not found, DataType: Problem
+   * Code: 400, Message: Bad request, DataType: Problem
+   */
   override def updateEServiceById(eServiceId: String, updateEServiceSeed: UpdateEServiceSeed)(implicit
-    toEntityMarshallerProblem: ToEntityMarshaller[Problem],
-    toEntityMarshallerEService: ToEntityMarshaller[EService],
-    contexts: Seq[(String, String)]
+                                                                                              toEntityMarshallerProblem: ToEntityMarshaller[Problem],
+                                                                                              toEntityMarshallerEService: ToEntityMarshaller[EService],
+                                                                                              contexts: Seq[(String, String)]
   ): Route = {
     val shard: String = getShard(eServiceId)
 
@@ -388,5 +378,42 @@ class EServiceApiServiceImpl(
       retrieved <- commander.ask(ref => GetCatalogItem(eServiceId, ref))
       current   <- retrieved.toFuture(new RuntimeException("EService non found"))
     } yield current
+  }
+
+  /**
+   * Code: 201, Message: EService Descriptor created., DataType: EServiceDescriptor
+   * Code: 400, Message: Invalid input, DataType: Problem
+   * Code: 404, Message: Not found, DataType: Problem
+   * Code: 500, Message: Not found, DataType: Problem
+   */
+  override def createDescriptor(eServiceId: String, eServiceDescriptorSeed: EServiceDescriptorSeed)
+                               (implicit toEntityMarshallerEServiceDescriptor:
+                               ToEntityMarshaller[EServiceDescriptor],
+                                toEntityMarshallerProblem: ToEntityMarshaller[Problem],
+                                contexts: Seq[(String, String)]): Route = {
+    val shard: String = getShard(eServiceId)
+
+    val commander: EntityRef[Command] = getCommander(shard)
+
+    val result: Future[CatalogDescriptor] = for {
+      current         <- retrieveCatalogItem(commander, eServiceId)
+      createdCatalogDescriptor = CatalogDescriptor(
+        id = uuidSupplier.get,
+        description = eServiceDescriptorSeed.description,
+        version = VersionGenerator.generate(current.currentVersion),
+        interface = None,
+        docs = Seq.empty[CatalogDocument],
+        status = Draft,
+        voucherLifespan = eServiceDescriptorSeed.voucherLifespan,
+        audience = eServiceDescriptorSeed.audience
+      )
+      _ <- commander.ask(ref => UpdateCatalogItem(current.addDescriptor(createdCatalogDescriptor), ref))
+    } yield createdCatalogDescriptor
+
+    onComplete(result) {
+      case Success(descriptor) => createDescriptor200(descriptor.toApi)
+      case Failure(exception) =>
+        createDescriptor400(Problem(Option(exception.getMessage), status = 400, "some error"))
+    }
   }
 }
