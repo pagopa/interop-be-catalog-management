@@ -30,12 +30,12 @@ final case class CatalogItem(
     )
   }
 
-  def extractFile(descriptorId: String, documentId: String): Option[(ContentType, Path)] = for {
+  def extractFile(descriptorId: String, documentId: String): Option[(String,ContentType, Path)] = for {
     doc <- descriptors
       .find(_.id == UUID.fromString(descriptorId))
       .flatMap(_.docs.find(_.id == UUID.fromString(documentId)))
     contentType <- ContentType.parse(doc.contentType).toOption //TODO: improve
-  } yield (contentType, Paths.get(doc.path))
+  } yield (doc.name,contentType, Paths.get(doc.path))
 
   def updateFile(descriptorId: String, document: CatalogDocument, isInterface: Boolean): CatalogItem = {
     val uuid: UUID = UUID.fromString(descriptorId)

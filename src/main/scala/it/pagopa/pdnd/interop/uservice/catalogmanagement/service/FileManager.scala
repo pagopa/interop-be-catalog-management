@@ -5,11 +5,11 @@ import akka.http.scaladsl.server.directives.FileInfo
 import it.pagopa.pdnd.interop.uservice.catalogmanagement.common.Digester
 import it.pagopa.pdnd.interop.uservice.catalogmanagement.model.{CatalogDocument, CatalogItem}
 
-import java.io.File
+import java.io.{ByteArrayOutputStream, File}
 import java.util.UUID
 import scala.concurrent.{ExecutionContext, Future}
 
-@SuppressWarnings(Array("org.wartremover.warts.Equals", "org.wartremover.warts.ImplicitParameter"))
+
 trait FileManager {
 
   def store(
@@ -21,10 +21,14 @@ trait FileManager {
     fileParts: (FileInfo, File)
   ): Future[CatalogDocument]
 
-  def get(id: UUID, producerId: String): File
+  def get(filePath: String): Future[ByteArrayOutputStream]
 
   def delete(filePath: String): Future[Boolean]
 
+}
+
+@SuppressWarnings(Array("org.wartremover.warts.Equals", "org.wartremover.warts.ImplicitParameter"))
+object FileManager {
   def verify(fileParts: (FileInfo, File), catalogItem: CatalogItem, descriptorId: String, isInterface: Boolean)(implicit
     ec: ExecutionContext
   ): Future[CatalogItem] = for {
@@ -77,5 +81,4 @@ trait FileManager {
         )
       )
   }
-
 }

@@ -5,11 +5,17 @@ import it.pagopa.pdnd.interop.uservice.catalogmanagement.common.Digester
 import it.pagopa.pdnd.interop.uservice.catalogmanagement.common.system.ApplicationConfiguration.bucketName
 import it.pagopa.pdnd.interop.uservice.catalogmanagement.model.CatalogDocument
 import it.pagopa.pdnd.interop.uservice.catalogmanagement.service.FileManager
-import software.amazon.awssdk.core.sync.RequestBody
+import software.amazon.awssdk.core.ResponseBytes
+import software.amazon.awssdk.core.sync.{RequestBody, ResponseTransformer}
 import software.amazon.awssdk.services.s3.S3Client
-import software.amazon.awssdk.services.s3.model.{DeleteObjectRequest, PutObjectRequest}
+import software.amazon.awssdk.services.s3.model.{
+  DeleteObjectRequest,
+  GetObjectRequest,
+  GetObjectResponse,
+  PutObjectRequest
+}
 
-import java.io.File
+import java.io.{ByteArrayOutputStream, File, InputStream}
 import java.nio.file.Paths
 import java.time.OffsetDateTime
 import java.util.UUID
@@ -50,11 +56,20 @@ class S3ManagerImpl(s3Client: S3Client) extends FileManager {
   }
 
   private def createS3Key(eServiceId: String, descriptorId: String, id: String, fileInfo: FileInfo): String =
-    s"e-services/docs/${eServiceId}/${descriptorId}/${id}/${fileInfo.getFieldName}/${fileInfo.getContentType.toString}/${fileInfo.getFileName}"
+    s"e-services/docs/$eServiceId/$descriptorId/$id/${fileInfo.getFieldName}/${fileInfo.getContentType.toString}/${fileInfo.getFileName}"
 
-  override def get(id: UUID, producerId: String): File = ???
+  override def get(filePath: String): Future[ByteArrayOutputStream] = Future.fromTry {
+    Try {
+      val getObjectRequest: GetObjectRequest         = GetObjectRequest.builder.bucket(bucketName).key(filePath).build
+      val s3Object: ResponseBytes[GetObjectResponse] = s3Client.getObject(getObjectRequest, ResponseTransformer.toBytes)
+      val inputStream: InputStream                   = s3Object.asInputStream()
+      val outputStream: ByteArrayOutputStream        = new ByteArrayOutputStream()
+      val _ = inputStream.transferTo(outputStream)
+      outputStream
+    }
+  }
 
-  override def delete(path: String) = {
+  override def delete(path: String): Future[Boolean] = {
     Try {
       s3Client.deleteObject(
         DeleteObjectRequest.builder
