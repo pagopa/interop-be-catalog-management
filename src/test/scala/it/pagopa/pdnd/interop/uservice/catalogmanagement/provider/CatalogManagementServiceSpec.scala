@@ -244,7 +244,7 @@ class CatalogManagementServiceSpec
           Http().singleRequest(
             HttpRequest(
               uri = s"$serviceURL/eservices/${eService.id.toString}/update",
-              method = HttpMethods.PUT,
+              method = HttpMethods.POST,
               entity = HttpEntity(ContentType(MediaTypes.`application/json`), data),
               headers = Seq(headers.Authorization(OAuth2BearerToken("1234")))
             )

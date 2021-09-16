@@ -18,7 +18,6 @@ import it.pagopa.pdnd.interop.uservice.catalogmanagement.error.{EServiceDescript
 import it.pagopa.pdnd.interop.uservice.catalogmanagement.model._
 import it.pagopa.pdnd.interop.uservice.catalogmanagement.model.persistence._
 import it.pagopa.pdnd.interop.uservice.catalogmanagement.service.{FileManager, UUIDSupplier}
-import org.slf4j.{Logger, LoggerFactory}
 
 import java.io.File
 import scala.concurrent.duration.Duration
