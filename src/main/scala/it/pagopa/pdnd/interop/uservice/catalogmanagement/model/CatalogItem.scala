@@ -70,8 +70,7 @@ final case class CatalogItem(
     copy(descriptors = descriptor +: descriptors)
   }
 
-
-  def currentVersion: Option[String] = descriptors.maxByOption(_.version).map(_.version)
+  def currentVersion: Option[String] = descriptors.flatMap(_.version.toLongOption).maxOption.map(_.toString)
 }
 
 object CatalogItem {

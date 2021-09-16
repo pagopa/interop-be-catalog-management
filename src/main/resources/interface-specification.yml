@@ -154,13 +154,13 @@ paths:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/Problem'
-  /eservices/{eServiceId}/descriptors/:
+  /eservices/{eServiceId}/descriptors:
     post:
       security:
         - bearerAuth: [ ]
       tags:
         - e_service
-      summary: Add a descriptor to the speficied e-service
+      summary: Adds a descriptor to the specified e-service
       operationId: createDescriptor
       parameters:
         - name: eServiceId

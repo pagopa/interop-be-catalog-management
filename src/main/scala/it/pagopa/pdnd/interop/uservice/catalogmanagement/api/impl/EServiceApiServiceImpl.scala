@@ -254,27 +254,27 @@ class EServiceApiServiceImpl(
   }
 
   /** Code: 200, Message: EService Descriptor published, DataType: EService
-   * Code: 400, Message: Invalid input, DataType: Problem
-   * Code: 404, Message: Not found, DataType: Problem
-   */
+    * Code: 400, Message: Invalid input, DataType: Problem
+    * Code: 404, Message: Not found, DataType: Problem
+    */
   override def updateDescriptor(
-                                 eServiceId: String,
-                                 descriptorId: String,
-                                 eServiceDescriptorSeed: UpdateEServiceDescriptorSeed
-                               )(implicit
-                                 toEntityMarshallerProblem: ToEntityMarshaller[Problem],
-                                 toEntityMarshallerEService: ToEntityMarshaller[EService],
-                                 contexts: Seq[(String, String)]
-                               ): Route = {
+    eServiceId: String,
+    descriptorId: String,
+    eServiceDescriptorSeed: UpdateEServiceDescriptorSeed
+  )(implicit
+    toEntityMarshallerProblem: ToEntityMarshaller[Problem],
+    toEntityMarshallerEService: ToEntityMarshaller[EService],
+    contexts: Seq[(String, String)]
+  ): Route = {
 
     val shard: String = getShard(eServiceId)
 
     val commander: EntityRef[Command] = getCommander(shard)
 
     def mergeChanges(
-                      descriptor: CatalogDescriptor,
-                      eServiceDescriptorSeed: UpdateEServiceDescriptorSeed
-                    ): Either[ValidationError, CatalogDescriptor] = {
+      descriptor: CatalogDescriptor,
+      eServiceDescriptorSeed: UpdateEServiceDescriptorSeed
+    ): Either[ValidationError, CatalogDescriptor] = {
       val newStatus = validateDescriptorStatus(eServiceDescriptorSeed.status)
       newStatus match {
         case Invalid(nel) => Left(ValidationError(nel.toList))
@@ -335,13 +335,13 @@ class EServiceApiServiceImpl(
   }
 
   /** Code: 200, Message: E-Service updated, DataType: EService
-   * Code: 404, Message: E-Service not found, DataType: Problem
-   * Code: 400, Message: Bad request, DataType: Problem
-   */
+    * Code: 404, Message: E-Service not found, DataType: Problem
+    * Code: 400, Message: Bad request, DataType: Problem
+    */
   override def updateEServiceById(eServiceId: String, updateEServiceSeed: UpdateEServiceSeed)(implicit
-                                                                                              toEntityMarshallerProblem: ToEntityMarshaller[Problem],
-                                                                                              toEntityMarshallerEService: ToEntityMarshaller[EService],
-                                                                                              contexts: Seq[(String, String)]
+    toEntityMarshallerProblem: ToEntityMarshaller[Problem],
+    toEntityMarshallerEService: ToEntityMarshaller[EService],
+    contexts: Seq[(String, String)]
   ): Route = {
     val shard: String = getShard(eServiceId)
 
@@ -380,27 +380,27 @@ class EServiceApiServiceImpl(
     } yield current
   }
 
-  /**
-   * Code: 201, Message: EService Descriptor created., DataType: EServiceDescriptor
-   * Code: 400, Message: Invalid input, DataType: Problem
-   * Code: 404, Message: Not found, DataType: Problem
-   * Code: 500, Message: Not found, DataType: Problem
-   */
-  override def createDescriptor(eServiceId: String, eServiceDescriptorSeed: EServiceDescriptorSeed)
-                               (implicit toEntityMarshallerEServiceDescriptor:
-                               ToEntityMarshaller[EServiceDescriptor],
-                                toEntityMarshallerProblem: ToEntityMarshaller[Problem],
-                                contexts: Seq[(String, String)]): Route = {
+  /** Code: 201, Message: EService Descriptor created., DataType: EServiceDescriptor
+    * Code: 400, Message: Invalid input, DataType: Problem
+    * Code: 404, Message: Not found, DataType: Problem
+    * Code: 500, Message: Not found, DataType: Problem
+    */
+  override def createDescriptor(eServiceId: String, eServiceDescriptorSeed: EServiceDescriptorSeed)(implicit
+    toEntityMarshallerEServiceDescriptor: ToEntityMarshaller[EServiceDescriptor],
+    toEntityMarshallerProblem: ToEntityMarshaller[Problem],
+    contexts: Seq[(String, String)]
+  ): Route = {
     val shard: String = getShard(eServiceId)
 
     val commander: EntityRef[Command] = getCommander(shard)
 
     val result: Future[CatalogDescriptor] = for {
-      current         <- retrieveCatalogItem(commander, eServiceId)
+      current     <- retrieveCatalogItem(commander, eServiceId)
+      nextVersion <- VersionGenerator.next(current.currentVersion).toFuture
       createdCatalogDescriptor = CatalogDescriptor(
         id = uuidSupplier.get,
         description = eServiceDescriptorSeed.description,
-        version = VersionGenerator.generate(current.currentVersion),
+        version = nextVersion,
         interface = None,
         docs = Seq.empty[CatalogDocument],
         status = Draft,
