@@ -14,16 +14,14 @@ import cats.data.Validated.{Invalid, Valid}
 import it.pagopa.pdnd.interop.uservice.catalogmanagement.api.EServiceApiService
 import it.pagopa.pdnd.interop.uservice.catalogmanagement.common._
 import it.pagopa.pdnd.interop.uservice.catalogmanagement.common.system._
-import it.pagopa.pdnd.interop.uservice.catalogmanagement.error.{
-  EServiceDescriptorNotFoundError,
-  EServiceNotFoundError,
-  ValidationError
-}
+import it.pagopa.pdnd.interop.uservice.catalogmanagement.error._
 import it.pagopa.pdnd.interop.uservice.catalogmanagement.model._
 import it.pagopa.pdnd.interop.uservice.catalogmanagement.model.persistence._
 import it.pagopa.pdnd.interop.uservice.catalogmanagement.service.{FileManager, UUIDSupplier}
 
 import java.io.{ByteArrayOutputStream, File}
+import java.nio.file.Paths
+import java.util.UUID
 import scala.concurrent.duration.Duration
 import scala.concurrent.{Await, ExecutionContext, Future}
 import scala.util.{Failure, Success}
@@ -193,13 +191,12 @@ class EServiceApiServiceImpl(
 
     val result: Future[(ContentType, ByteArrayOutputStream)] =
       for {
-        found       <- commander.ask(ref => GetCatalogItem(eServiceId, ref))
-        catalogItem <- found.toFuture(new RuntimeException(""))
-        fileInfo <- catalogItem
-          .extractFile(descriptorId = descriptorId, documentId = documentId)
-          .toFuture(new RuntimeException(""))
-        outputStream <- fileManager.get(fileInfo._3.toString)
-      } yield (fileInfo._2, outputStream)
+        found         <- commander.ask(ref => GetCatalogItem(eServiceId, ref))
+        catalogItem   <- found.toFuture(EServiceNotFoundError(eServiceId))
+        document      <- extractDocument(catalogItem, descriptorId, documentId)
+        extractedFile <- extractFile(document)
+        outputStream  <- fileManager.get(extractedFile.path.toString)
+      } yield (extractedFile.contentType, outputStream)
 
     onComplete(result) {
       case Success(tuple) =>
@@ -207,6 +204,24 @@ class EServiceApiServiceImpl(
       case Failure(exception) =>
         getEService400(Problem(Option(exception.getMessage), status = 400, s"EService $eServiceId not found"))
     }
+  }
+
+  private def extractDocument(
+    catalogItem: CatalogItem,
+    descriptorId: String,
+    documentId: String
+  ): Future[CatalogDocument] = {
+    catalogItem.descriptors
+      .find(_.id == UUID.fromString(descriptorId))
+      .flatMap(_.docs.find(_.id == UUID.fromString(documentId)))
+      .toFuture(DocumentNotFoundError(catalogItem.id.toString, descriptorId, documentId))
+  }
+  private def extractFile(catalogDocument: CatalogDocument)(implicit ec: ExecutionContext): Future[ExtractedFile] = {
+    val contentType: Future[ContentType] = ContentType
+      .parse(catalogDocument.contentType)
+      .fold(ex => Future.failed(ContentTypeParsingError(catalogDocument, ex)), Future.successful)
+
+    contentType.map(ExtractedFile(_, Paths.get(catalogDocument.path)))
   }
 
   override def deleteDraft(eServiceId: String, descriptorId: String)(implicit
