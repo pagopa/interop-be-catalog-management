@@ -13,21 +13,18 @@ final case class CatalogItem(
   producerId: UUID,
   name: String,
   description: String,
-  audience: Seq[String],
   technology: String,
-  voucherLifespan: Int,
   attributes: CatalogAttributes,
   descriptors: Seq[CatalogDescriptor]
 ) extends Convertable[EService] {
+
   def toApi: EService = {
     EService(
       id = id,
       producerId = producerId,
       name = name,
       description = description,
-      audience = audience,
       technology = technology,
-      voucherLifespan = voucherLifespan,
       attributes = attributes.toApi,
       descriptors = descriptors.map(_.toApi)
     )
@@ -65,6 +62,18 @@ final case class CatalogItem(
     } yield documents.docs.map(_.path)
   }
 
+  def mergeWithSeed(updateEServiceSeed: UpdateEServiceSeed): Future[CatalogItem] = {
+    Future.fromTry {
+      for {
+        attributes <- CatalogAttributes.fromApi(updateEServiceSeed.attributes)
+      } yield copy(
+        name = updateEServiceSeed.name,
+        description = updateEServiceSeed.description,
+        technology = updateEServiceSeed.technology,
+        attributes = attributes
+      )
+    }
+  }
 }
 
 object CatalogItem {
@@ -82,9 +91,7 @@ object CatalogItem {
         producerId = seed.producerId,
         name = seed.name,
         description = seed.description,
-        audience = seed.audience,
         technology = seed.technology,
-        voucherLifespan = seed.voucherLifespan,
         attributes = attributes,
         descriptors = Seq(
           CatalogDescriptor(
@@ -93,7 +100,9 @@ object CatalogItem {
             version = firstVersion,
             interface = None,
             docs = Seq.empty[CatalogDocument],
-            status = Draft
+            status = Draft,
+            voucherLifespan = seed.voucherLifespan,
+            audience = seed.audience
           )
         )
       )

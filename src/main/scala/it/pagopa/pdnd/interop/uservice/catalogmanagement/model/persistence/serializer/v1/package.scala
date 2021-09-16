@@ -26,9 +26,7 @@ package object v1 {
           producerId = UUID.fromString(itemsV1.value.producerId),
           name = itemsV1.value.name,
           description = itemsV1.value.description,
-          audience = itemsV1.value.audience,
           technology = itemsV1.value.technology,
-          voucherLifespan = itemsV1.value.voucherLifespan,
           attributes = attributes,
           descriptors = descriptors
         )
@@ -50,9 +48,7 @@ package object v1 {
               producerId = catalogItem.producerId.toString,
               name = catalogItem.name,
               description = catalogItem.description,
-              audience = catalogItem.audience,
               technology = catalogItem.technology,
-              voucherLifespan = catalogItem.voucherLifespan,
               attributes = convertAttributesToV1(catalogItem.attributes),
               descriptors = descriptors
             )
@@ -75,9 +71,7 @@ package object v1 {
           producerId = UUID.fromString(event.catalogItem.producerId),
           name = event.catalogItem.name,
           description = event.catalogItem.description,
-          audience = event.catalogItem.audience,
           technology = event.catalogItem.technology,
-          voucherLifespan = event.catalogItem.voucherLifespan,
           attributes = attributes,
           descriptors = descriptors
         )
@@ -97,9 +91,7 @@ package object v1 {
             producerId = event.catalogItem.producerId.toString,
             name = event.catalogItem.name,
             description = event.catalogItem.description,
-            audience = event.catalogItem.audience,
             technology = event.catalogItem.technology,
-            voucherLifespan = event.catalogItem.voucherLifespan,
             attributes = convertAttributesToV1(event.catalogItem.attributes),
             descriptors = descriptors
           )
@@ -118,9 +110,7 @@ package object v1 {
           producerId = UUID.fromString(event.catalogItem.producerId),
           name = event.catalogItem.name,
           description = event.catalogItem.description,
-          audience = event.catalogItem.audience,
           technology = event.catalogItem.technology,
-          voucherLifespan = event.catalogItem.voucherLifespan,
           attributes = attributes,
           descriptors = descriptors
         ),
@@ -141,9 +131,7 @@ package object v1 {
             producerId = event.catalogItem.producerId.toString,
             name = event.catalogItem.name,
             description = event.catalogItem.description,
-            audience = event.catalogItem.audience,
             technology = event.catalogItem.technology,
-            voucherLifespan = event.catalogItem.voucherLifespan,
             attributes = convertAttributesToV1(event.catalogItem.attributes),
             descriptors = descriptors
           ),

@@ -22,6 +22,7 @@ import it.pagopa.pdnd.interop.uservice.catalogmanagement.{SpecConfiguration, Spe
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.wordspec.AnyWordSpecLike
 
+import java.util.UUID
 import scala.concurrent.duration.{Duration, DurationInt}
 import scala.concurrent.{Await, ExecutionContextExecutor, Future}
 
@@ -118,8 +119,10 @@ class CatalogManagementServiceSpec
 
       val data =
         """{
-          |  "description": "NewDescription",
-          |  "status": "archived"
+          |     "description": "NewDescription"
+          |   , "voucherLifespan": 30
+          |   , "audience": ["a", "b", "c"]
+          |   , "status": "archived"
           |}""".stripMargin
 
       val response = Await.result(
@@ -141,6 +144,8 @@ class CatalogManagementServiceSpec
       updatedEService.descriptors.size shouldBe 1
       val updatedDescriptor = updatedEService.descriptors.head
       updatedDescriptor.description shouldBe Some("NewDescription")
+      updatedDescriptor.voucherLifespan shouldBe 30
+      updatedDescriptor.audience shouldBe Seq("a", "b", "c")
       updatedDescriptor.status shouldBe "archived"
     }
 
@@ -218,6 +223,45 @@ class CatalogManagementServiceSpec
 
       response.status shouldBe StatusCodes.BadRequest
 
+    }
+  }
+
+  "Update an e-service" should {
+    "return a modified set of e-service information" in {
+        //given an e-service
+        val eServiceUuid = UUID.randomUUID().toString
+        val eService     = createEService(eServiceUuid)
+
+      //when updated with the following data
+        val data =
+          """{
+            |     "name": "TestName"
+            |   , "description": "howdy!"
+            |   , "technology": "SOAP"
+            |   , "attributes": {"verified": [], "certified": [], "declared": []}
+            |}""".stripMargin
+        val response = Await.result(
+          Http().singleRequest(
+            HttpRequest(
+              uri = s"$serviceURL/eservices/${eService.id.toString}/update",
+              method = HttpMethods.POST,
+              entity = HttpEntity(ContentType(MediaTypes.`application/json`), data),
+              headers = Seq(headers.Authorization(OAuth2BearerToken("1234")))
+            )
+          ),
+          Duration.Inf
+        )
+
+        //then
+        response.status shouldBe StatusCodes.OK
+        val updatedEService = retrieveEService(eServiceUuid)
+
+        updatedEService.name shouldBe "TestName"
+        updatedEService.description shouldBe "howdy!"
+        updatedEService.technology shouldBe "SOAP"
+        updatedEService.attributes.certified.size shouldBe 0
+        updatedEService.attributes.declared.size shouldBe 0
+        updatedEService.attributes.verified.size shouldBe 0
     }
   }
 

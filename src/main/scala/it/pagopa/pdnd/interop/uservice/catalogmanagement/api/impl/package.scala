@@ -26,15 +26,16 @@ package object impl extends SprayJsonSupport with DefaultJsonProtocol {
     }
 
   implicit val eServiceDocFormat: RootJsonFormat[EServiceDoc] = jsonFormat4(EServiceDoc)
-  implicit val eServiceDescriptorSeedFormat: RootJsonFormat[EServiceDescriptorSeed] = jsonFormat2(
+  implicit val eServiceDescriptorSeedFormat: RootJsonFormat[EServiceDescriptorSeed] = jsonFormat4(
     EServiceDescriptorSeed
   )
-  implicit val eServiceDescriptorFormat: RootJsonFormat[EServiceDescriptor] = jsonFormat6(EServiceDescriptor)
+  implicit val eServiceDescriptorFormat: RootJsonFormat[EServiceDescriptor] = jsonFormat8(EServiceDescriptor)
   implicit val attributeValueFormat: RootJsonFormat[AttributeValue]         = jsonFormat2(AttributeValue)
   implicit val attributeFormat: RootJsonFormat[Attribute]                   = jsonFormat2(Attribute)
   implicit val attributesFormat: RootJsonFormat[Attributes]                 = jsonFormat3(Attributes)
   implicit val eServiceSeedFormat: RootJsonFormat[EServiceSeed]             = jsonFormat7(EServiceSeed)
-  implicit val eServiceFormat: RootJsonFormat[EService]                     = jsonFormat9(EService)
+  implicit val updateEServiceSeedFormat: RootJsonFormat[UpdateEServiceSeed] = jsonFormat4(UpdateEServiceSeed)
+  implicit val eServiceFormat: RootJsonFormat[EService]                     = jsonFormat7(EService)
   implicit val problemFormat: RootJsonFormat[Problem]                       = jsonFormat3(Problem)
 
 }

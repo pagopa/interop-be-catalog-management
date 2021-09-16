@@ -82,7 +82,9 @@ object utils {
                 uploadDate = doc.uploadDate.format(DateTimeFormatter.ISO_DATE_TIME)
               )
             },
-            status = status
+            status = status,
+            audience = ver.audience,
+            voucherLifespan = ver.voucherLifespan
           )
         }
 
@@ -118,7 +120,9 @@ object utils {
               uploadDate = OffsetDateTime.parse(doc.uploadDate, DateTimeFormatter.ISO_DATE_TIME)
             )
           },
-          status = status
+          status = status,
+          audience = ver1.audience,
+          voucherLifespan = ver1.voucherLifespan
         )
       }
     )
