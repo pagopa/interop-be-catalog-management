@@ -43,7 +43,6 @@ object Main extends App {
 
   Kamon.init()
 
-
   locally {
     val _ = ActorSystem[Nothing](
       Behaviors.setup[Nothing] { context =>

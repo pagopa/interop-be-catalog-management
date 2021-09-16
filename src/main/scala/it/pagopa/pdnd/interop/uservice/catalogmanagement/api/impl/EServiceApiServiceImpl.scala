@@ -5,7 +5,7 @@ import akka.actor.typed.ActorSystem
 import akka.cluster.sharding.typed.scaladsl.{ClusterSharding, Entity, EntityRef}
 import akka.cluster.sharding.typed.{ClusterShardingSettings, ShardingEnvelope}
 import akka.http.scaladsl.marshalling.ToEntityMarshaller
-import akka.http.scaladsl.model.HttpEntity
+import akka.http.scaladsl.model.{ContentType, HttpEntity}
 import akka.http.scaladsl.server.Directives.{complete, onComplete, onSuccess}
 import akka.http.scaladsl.server.Route
 import akka.http.scaladsl.server.directives.FileInfo
@@ -14,12 +14,14 @@ import cats.data.Validated.{Invalid, Valid}
 import it.pagopa.pdnd.interop.uservice.catalogmanagement.api.EServiceApiService
 import it.pagopa.pdnd.interop.uservice.catalogmanagement.common._
 import it.pagopa.pdnd.interop.uservice.catalogmanagement.common.system._
-import it.pagopa.pdnd.interop.uservice.catalogmanagement.error.{EServiceDescriptorNotFoundError, EServiceNotFoundError, ValidationError}
+import it.pagopa.pdnd.interop.uservice.catalogmanagement.error._
 import it.pagopa.pdnd.interop.uservice.catalogmanagement.model._
 import it.pagopa.pdnd.interop.uservice.catalogmanagement.model.persistence._
 import it.pagopa.pdnd.interop.uservice.catalogmanagement.service.{FileManager, UUIDSupplier}
 
-import java.io.File
+import java.io.{ByteArrayOutputStream, File}
+import java.nio.file.Paths
+import java.util.UUID
 import scala.concurrent.duration.Duration
 import scala.concurrent.{Await, ExecutionContext, Future}
 import scala.util.{Failure, Success}
@@ -27,6 +29,7 @@ import scala.util.{Failure, Success}
 @SuppressWarnings(
   Array(
     "org.wartremover.warts.ImplicitParameter",
+    "org.wartremover.warts.ToString",
     "org.wartremover.warts.Any",
     "org.wartremover.warts.Nothing",
     "org.wartremover.warts.Recursion",
@@ -102,7 +105,7 @@ class EServiceApiServiceImpl(
 
     val result: Future[Option[CatalogItem]] = for {
       current  <- retrieveCatalogItem(commander, eServiceId)
-      verified <- fileManager.verify(doc, current, descriptorId, isInterface)
+      verified <- FileManager.verify(doc, current, descriptorId, isInterface)
       openapiDoc <- fileManager.store(
         id = uuidSupplier.get,
         eServiceId = eServiceId,
@@ -186,18 +189,39 @@ class EServiceApiServiceImpl(
 
     val commander: EntityRef[Command] = getCommander(shard)
 
-    val result: Future[Option[CatalogItem]] = commander.ask(ref => GetCatalogItem(eServiceId, ref))
+    val result: Future[(ContentType, ByteArrayOutputStream)] =
+      for {
+        found         <- commander.ask(ref => GetCatalogItem(eServiceId, ref))
+        catalogItem   <- found.toFuture(EServiceNotFoundError(eServiceId))
+        document      <- extractDocument(catalogItem, descriptorId, documentId)
+        extractedFile <- extractFile(document)
+        outputStream  <- fileManager.get(extractedFile.path.toString)
+      } yield (extractedFile.contentType, outputStream)
 
-    onSuccess(result) {
-      case Some(catalogItem) =>
-        val fileInfo = catalogItem.extractFile(descriptorId = descriptorId, documentId = documentId)
-
-        fileInfo.fold(getEServiceDocument404(Problem(None, status = 404, s"Document $documentId not found"))) {
-          case (contentType, file) =>
-            complete(HttpEntity.fromFile(contentType, file.toFile))
-        }
-      case None => getEService400(Problem(None, status = 400, s"EService $eServiceId not found"))
+    onComplete(result) {
+      case Success(tuple) =>
+        complete(HttpEntity(tuple._1, tuple._2.toByteArray))
+      case Failure(exception) =>
+        getEService400(Problem(Option(exception.getMessage), status = 400, s"EService $eServiceId not found"))
     }
+  }
+
+  private def extractDocument(
+    catalogItem: CatalogItem,
+    descriptorId: String,
+    documentId: String
+  ): Future[CatalogDocument] = {
+    catalogItem.descriptors
+      .find(_.id == UUID.fromString(descriptorId))
+      .flatMap(_.docs.find(_.id == UUID.fromString(documentId)))
+      .toFuture(DocumentNotFoundError(catalogItem.id.toString, descriptorId, documentId))
+  }
+  private def extractFile(catalogDocument: CatalogDocument)(implicit ec: ExecutionContext): Future[ExtractedFile] = {
+    val contentType: Future[ContentType] = ContentType
+      .parse(catalogDocument.contentType)
+      .fold(ex => Future.failed(ContentTypeParsingError(catalogDocument, ex)), Future.successful)
+
+    contentType.map(ExtractedFile(_, Paths.get(catalogDocument.path)))
   }
 
   override def deleteDraft(eServiceId: String, descriptorId: String)(implicit
@@ -216,16 +240,14 @@ class EServiceApiServiceImpl(
       _         <- current.getInterfacePath(descriptorId).fold(Future.successful(true))(path => fileManager.delete(path))
       _ <- current
         .getDocumentPaths(descriptorId)
-        .fold(Future.successful(Seq.empty[Boolean]))(path => Future.traverse(path)(fileManager.delete(_)))
+        .fold(Future.successful(Seq.empty[Boolean]))(path => Future.traverse(path)(fileManager.delete))
       deleted <- commander.ask(ref => DeleteCatalogItemWithDescriptor(current, descriptorId, ref))
     } yield deleted
 
     onComplete(result) {
-      case Success(statusReply) => {
+      case Success(statusReply) =>
         if (statusReply.isSuccess) deleteDraft204
-        else
-          deleteDraft400(Problem(Option(statusReply.getError.getMessage), status = 400, "some error"))
-      }
+        else deleteDraft400(Problem(Option(statusReply.getError.getMessage), status = 400, "some error"))
       case Failure(exception) =>
         deleteDraft400(Problem(Option(exception.getMessage), status = 400, "some error"))
     }
@@ -268,10 +290,13 @@ class EServiceApiServiceImpl(
               )
           )
         case None =>
-          Right(descriptor.copy(
-            description = eServiceDescriptorSeed.description.orElse(descriptor.description),
-            audience = eServiceDescriptorSeed.audience.getOrElse(descriptor.audience),
-            voucherLifespan = eServiceDescriptorSeed.voucherLifespan.getOrElse(descriptor.voucherLifespan)))
+          Right(
+            descriptor.copy(
+              description = eServiceDescriptorSeed.description.orElse(descriptor.description),
+              audience = eServiceDescriptorSeed.audience.getOrElse(descriptor.audience),
+              voucherLifespan = eServiceDescriptorSeed.voucherLifespan.getOrElse(descriptor.voucherLifespan)
+            )
+          )
       }
 
     }

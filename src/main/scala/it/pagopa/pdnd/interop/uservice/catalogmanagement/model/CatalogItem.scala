@@ -1,9 +1,7 @@
 package it.pagopa.pdnd.interop.uservice.catalogmanagement.model
 
-import akka.http.scaladsl.model.ContentType
 import it.pagopa.pdnd.interop.uservice.catalogmanagement.service.UUIDSupplier
 
-import java.nio.file.{Path, Paths}
 import java.util.UUID
 import scala.concurrent.Future
 
@@ -29,13 +27,6 @@ final case class CatalogItem(
       descriptors = descriptors.map(_.toApi)
     )
   }
-
-  def extractFile(descriptorId: String, documentId: String): Option[(ContentType, Path)] = for {
-    doc <- descriptors
-      .find(_.id == UUID.fromString(descriptorId))
-      .flatMap(_.docs.find(_.id == UUID.fromString(documentId)))
-    contentType <- ContentType.parse(doc.contentType).toOption //TODO: improve
-  } yield (contentType, Paths.get(doc.path))
 
   def updateFile(descriptorId: String, document: CatalogDocument, isInterface: Boolean): CatalogItem = {
     val uuid: UUID = UUID.fromString(descriptorId)

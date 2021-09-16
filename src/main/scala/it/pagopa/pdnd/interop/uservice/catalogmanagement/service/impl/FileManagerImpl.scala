@@ -5,7 +5,7 @@ import it.pagopa.pdnd.interop.uservice.catalogmanagement.common.Digester
 import it.pagopa.pdnd.interop.uservice.catalogmanagement.model.CatalogDocument
 import it.pagopa.pdnd.interop.uservice.catalogmanagement.service.FileManager
 
-import java.io.File
+import java.io.{ByteArrayOutputStream, File, FileInputStream, InputStream}
 import java.nio.file.{Files, Path, Paths, StandardCopyOption}
 import java.time.OffsetDateTime
 import java.util.UUID
@@ -43,9 +43,21 @@ class FileManagerImpl extends FileManager {
       }
     }
 
-  def get(id: UUID, producerId: String): File = ???
+  def get(filePath: String): Future[ByteArrayOutputStream] = Future.fromTry {
+    Try {
+      val inputStream: InputStream            = new FileInputStream(filePath)
+      val outputStream: ByteArrayOutputStream = new ByteArrayOutputStream()
+      val _                                   = inputStream.transferTo(outputStream)
+      outputStream
+    }
+  }
 
-  override def delete(filePath: String): Future[Boolean] = ???
+  override def delete(filePath: String): Future[Boolean] = Future.fromTry {
+    Try {
+      val file: File = Paths.get(filePath).toFile
+      file.delete()
+    }
+  }
 
   private def createPath(producerId: String, descriptorId: String, id: String, fileInfo: FileInfo): String = {
 
