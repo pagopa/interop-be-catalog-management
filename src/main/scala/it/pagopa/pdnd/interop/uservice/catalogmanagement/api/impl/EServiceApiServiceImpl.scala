@@ -583,9 +583,7 @@ class EServiceApiServiceImpl(
     }
   }
 
-  /** Code: 204, Message: EService Descriptor status updated
-    * Code: 400, Message: Invalid input, DataType: Problem
-    * Code: 404, Message: Not found, DataType: Problem
+  /* utility method for descriptor status updates
     */
   private def updateDescriptorStatus(
     eServiceId: String,
