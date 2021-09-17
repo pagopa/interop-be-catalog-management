@@ -207,7 +207,7 @@ paths:
         - bearerAuth: [ ]
       tags:
         - e_service
-      summary: Update a descriptors
+      summary: Updates a descriptor
       operationId: updateDescriptor
       parameters:
         - name: eServiceId
