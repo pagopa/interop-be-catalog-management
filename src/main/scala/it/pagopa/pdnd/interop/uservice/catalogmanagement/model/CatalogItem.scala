@@ -66,7 +66,7 @@ final case class CatalogItem(
 
   def getInterfacePath(descriptorId: String): Option[String] = {
     for {
-      doc       <- descriptors.find(_.id == UUID.fromString(descriptorId))
+      doc       <- descriptors.find(_.id.toString == descriptorId)
       interface <- doc.interface
     } yield interface.path
   }
