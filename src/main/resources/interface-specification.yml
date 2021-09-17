@@ -194,14 +194,14 @@ paths:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/Problem'
-  /eservices/{eServiceId}/descriptors/{descriptorId}/status:
-    put:
+  /eservices/{eServiceId}/descriptors/{descriptorId}/publish:
+    post:
       security:
         - bearerAuth: [ ]
       tags:
         - e_service
-      summary: Updates a descriptor status
-      operationId: updateDescriptorStatus
+      summary: Publishes a descriptor
+      operationId: publishDescriptor
       parameters:
         - name: eServiceId
           in: path
@@ -215,16 +215,117 @@ paths:
           required: true
           schema:
             type: string
-      requestBody:
-        description: A E-Service Descriptor status to be updated
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/UpdateEServiceDescriptorStatus'
-        required: true
       responses:
         "204":
-          description: EService Descriptor status updated
+          description: EService Descriptor status published.
+        "400":
+          description: Invalid input
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        "404":
+          description: Not found
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+  /eservices/{eServiceId}/descriptors/{descriptorId}/draft:
+    post:
+      security:
+        - bearerAuth: [ ]
+      tags:
+        - e_service
+      summary: Moves a descriptor in draft state
+      operationId: draftDescriptor
+      parameters:
+        - name: eServiceId
+          in: path
+          description: The E-Service id
+          required: true
+          schema:
+            type: string
+        - name: descriptorId
+          in: path
+          description: The Descriptor Id
+          required: true
+          schema:
+            type: string
+      responses:
+        "204":
+          description: EService Descriptor status changed in draft
+        "400":
+          description: Invalid input
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        "404":
+          description: Not found
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+  /eservices/{eServiceId}/descriptors/{descriptorId}/archive:
+    post:
+      security:
+        - bearerAuth: [ ]
+      tags:
+        - e_service
+      summary: Archive a descriptor
+      operationId: archiveDescriptor
+      parameters:
+        - name: eServiceId
+          in: path
+          description: The E-Service id
+          required: true
+          schema:
+            type: string
+        - name: descriptorId
+          in: path
+          description: The Descriptor Id
+          required: true
+          schema:
+            type: string
+      responses:
+        "204":
+          description: EService Descriptor status archived
+        "400":
+          description: Invalid input
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        "404":
+          description: Not found
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+  /eservices/{eServiceId}/descriptors/{descriptorId}/deprecate:
+    post:
+      security:
+        - bearerAuth: [ ]
+      tags:
+        - e_service
+      summary: Deprecates a descriptor
+      operationId: deprecateDescriptor
+      parameters:
+        - name: eServiceId
+          in: path
+          description: The E-Service id
+          required: true
+          schema:
+            type: string
+        - name: descriptorId
+          in: path
+          description: The Descriptor Id
+          required: true
+          schema:
+            type: string
+      responses:
+        "204":
+          description: EService Descriptor status deprecated
         "400":
           description: Invalid input
           content:
@@ -585,14 +686,6 @@ components:
         voucherLifespan:
           type: integer
           format: int32
-    UpdateEServiceDescriptorStatus:
-      required:
-        - status
-      type: object
-      properties:
-        status:
-          type: string
-          enum: [ 'draft', 'published', 'deprecated', 'archived' ]
     UpdateEServiceDescriptorSeed:
       required:
         - status

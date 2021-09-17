@@ -478,70 +478,143 @@ class EServiceApiServiceImpl(
     }
   }
 
+  /** Code: 204, Message: EService Descriptor status archived
+    * Code: 400, Message: Invalid input, DataType: Problem
+    * Code: 404, Message: Not found, DataType: Problem
+    */
+  override def archiveDescriptor(eServiceId: String, descriptorId: String)(implicit
+    toEntityMarshallerProblem: ToEntityMarshaller[Problem],
+    contexts: Seq[(String, String)]
+  ): Route = {
+    val result = updateDescriptorStatus(eServiceId, descriptorId, Archived)
+    onComplete(result) {
+      case Success(catalogItem) =>
+        catalogItem.fold(
+          archiveDescriptor400(
+            Problem(None, status = 404, s"Error on archiving of $descriptorId on E-Service $eServiceId")
+          )
+        )(_ => archiveDescriptor204)
+      case Failure(ex) =>
+        archiveDescriptor400(
+          Problem(Option(ex.getMessage), status = 400, s"Error on archiving of $descriptorId on E-Service $eServiceId")
+        )
+    }
+  }
+
+  /** Code: 204, Message: EService Descriptor status deprecated
+    * Code: 400, Message: Invalid input, DataType: Problem
+    * Code: 404, Message: Not found, DataType: Problem
+    */
+  override def deprecateDescriptor(eServiceId: String, descriptorId: String)(implicit
+    toEntityMarshallerProblem: ToEntityMarshaller[Problem],
+    contexts: Seq[(String, String)]
+  ): Route = {
+    val result = updateDescriptorStatus(eServiceId, descriptorId, Deprecated)
+    onComplete(result) {
+      case Success(catalogItem) =>
+        catalogItem.fold(
+          deprecateDescriptor400(
+            Problem(None, status = 404, s"Error on deprecating of $descriptorId on E-Service $eServiceId")
+          )
+        )(_ => deprecateDescriptor204)
+      case Failure(ex) =>
+        deprecateDescriptor400(
+          Problem(
+            Option(ex.getMessage),
+            status = 400,
+            s"Error on deprecating of $descriptorId on E-Service $eServiceId"
+          )
+        )
+    }
+  }
+
+  /** Code: 204, Message: EService Descriptor status changed in draft
+    * Code: 400, Message: Invalid input, DataType: Problem
+    * Code: 404, Message: Not found, DataType: Problem
+    */
+  override def draftDescriptor(eServiceId: String, descriptorId: String)(implicit
+    toEntityMarshallerProblem: ToEntityMarshaller[Problem],
+    contexts: Seq[(String, String)]
+  ): Route = {
+    val result = updateDescriptorStatus(eServiceId, descriptorId, Draft)
+    onComplete(result) {
+      case Success(catalogItem) =>
+        catalogItem.fold(
+          draftDescriptor400(
+            Problem(None, status = 404, s"Error on change state to draft of $descriptorId on E-Service $eServiceId")
+          )
+        )(_ => draftDescriptor204)
+      case Failure(ex) =>
+        draftDescriptor400(
+          Problem(
+            Option(ex.getMessage),
+            status = 400,
+            s"Error on change state to draft of $descriptorId on E-Service $eServiceId"
+          )
+        )
+    }
+  }
+
+  /** Code: 204, Message: EService Descriptor status published.
+    * Code: 400, Message: Invalid input, DataType: Problem
+    * Code: 404, Message: Not found, DataType: Problem
+    */
+  override def publishDescriptor(eServiceId: String, descriptorId: String)(implicit
+    toEntityMarshallerProblem: ToEntityMarshaller[Problem],
+    contexts: Seq[(String, String)]
+  ): Route = {
+    val result = updateDescriptorStatus(eServiceId, descriptorId, Published)
+
+    onComplete(result) {
+      case Success(catalogItem) =>
+        catalogItem.fold(
+          publishDescriptor400(
+            Problem(None, status = 404, s"Error on publication of $descriptorId on E-Service $eServiceId")
+          )
+        )(_ => publishDescriptor204)
+      case Failure(ex) =>
+        publishDescriptor400(
+          Problem(
+            Option(ex.getMessage),
+            status = 400,
+            s"Error on publication of $descriptorId on E-Service $eServiceId"
+          )
+        )
+    }
+  }
+
   /** Code: 204, Message: EService Descriptor status updated
     * Code: 400, Message: Invalid input, DataType: Problem
     * Code: 404, Message: Not found, DataType: Problem
     */
-  override def updateDescriptorStatus(
+  private def updateDescriptorStatus(
     eServiceId: String,
     descriptorId: String,
-    updateEServiceDescriptorStatus: UpdateEServiceDescriptorStatus
-  )(implicit toEntityMarshallerProblem: ToEntityMarshaller[Problem], contexts: Seq[(String, String)]): Route = {
+    status: CatalogDescriptorStatus
+  ): Future[Option[CatalogItem]] = {
 
     val shard: String = getShard(eServiceId)
 
     val commander: EntityRef[Command] = getCommander(shard)
 
     def mergeChanges(
-                      descriptor: CatalogDescriptor,
-                      updateEServiceDescriptorStatus: UpdateEServiceDescriptorStatus
-                    ): Either[ValidationError, CatalogDescriptor] = {
-      val newStatus = validateDescriptorStatus(updateEServiceDescriptorStatus.status)
-      newStatus match {
-        case Invalid(nel) => Left(ValidationError(nel.toList))
-        case Valid(status) => Right(descriptor.copy(status = status))
-      }
+      descriptor: CatalogDescriptor,
+      updateEServiceDescriptorStatus: CatalogDescriptorStatus
+    ): Either[ValidationError, CatalogDescriptor] = {
+      Right(descriptor.copy(status = updateEServiceDescriptorStatus))
     }
 
-    val result: Future[Option[CatalogItem]] = for {
+    for {
       retrieved <- commander.ask(ref => GetCatalogItem(eServiceId, ref))
       current   <- retrieved.toFuture(EServiceNotFoundError(eServiceId))
       toUpdateDescriptor <- current.descriptors
         .find(_.id.toString == descriptorId)
         .toFuture(EServiceDescriptorNotFoundError(eServiceId, descriptorId))
-      updatedDescriptor <- mergeChanges(toUpdateDescriptor, updateEServiceDescriptorStatus).toFuture
+      updatedDescriptor <- mergeChanges(toUpdateDescriptor, status).toFuture
       updatedItem = current.copy(descriptors =
         current.descriptors.filter(_.id.toString != descriptorId) :+ updatedDescriptor
       )
       updated <- commander.ask(ref => UpdateCatalogItem(updatedItem, ref))
     } yield updated
-
-    onComplete(result) {
-      case Success(catalogItem) =>
-        catalogItem.fold(
-          updateDescriptorStatus400(
-            Problem(None, status = 500, s"Error on update of descriptor $descriptorId on E-Service $eServiceId")
-          )
-        )(_ => updateDescriptorStatus204)
-      case Failure(exception) =>
-        exception match {
-          case ex @ (_: EServiceNotFoundError | _: EServiceDescriptorNotFoundError) =>
-            updateDescriptorStatus404(
-              Problem(
-                Option(ex.getMessage),
-                status = 404,
-                s"Error on update of descriptor $descriptorId on E-Service $eServiceId"
-              )
-            )
-          case ex =>
-            updateDescriptorStatus400(
-              Problem(
-                Option(ex.getMessage),
-                status = 400,
-                s"Error on update of descriptor $descriptorId on E-Service $eServiceId"
-              )
-            )
-        }
-    }
   }
 }
