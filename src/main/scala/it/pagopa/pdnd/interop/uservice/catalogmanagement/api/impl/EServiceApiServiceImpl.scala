@@ -313,7 +313,7 @@ class EServiceApiServiceImpl(
     onComplete(result) {
       case Success(catalogItem) =>
         catalogItem.fold(
-          updateDescriptor500(
+          updateDescriptor400(
             Problem(None, status = 500, s"Error on update of descriptor $descriptorId on E-Service $eServiceId")
           )
         )(ci => updateDescriptor200(ci.toApi))
