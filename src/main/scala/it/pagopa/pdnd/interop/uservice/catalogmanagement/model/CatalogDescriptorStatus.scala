@@ -14,7 +14,7 @@ case object Published  extends CatalogDescriptorStatus
 case object Deprecated extends CatalogDescriptorStatus
 case object Archived   extends CatalogDescriptorStatus
 
-object CatalogDescriptorStatus {
+object  CatalogDescriptorStatus {
 
   def fromText(str: String): Either[Throwable, CatalogDescriptorStatus] = str match {
     case "draft"      => Right[Throwable, CatalogDescriptorStatus](Draft)
