@@ -113,8 +113,7 @@ paths:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/Problem'
-  /eservices/{eServiceId}/update:
-    post:
+    put:
       security:
         - bearerAuth: [ ]
       tags:

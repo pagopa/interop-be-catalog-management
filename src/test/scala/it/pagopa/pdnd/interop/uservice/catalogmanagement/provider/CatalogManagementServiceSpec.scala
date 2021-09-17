@@ -254,8 +254,8 @@ class CatalogManagementServiceSpec
         val response = Await.result(
           Http().singleRequest(
             HttpRequest(
-              uri = s"$serviceURL/eservices/${eService.id.toString}/update",
-              method = HttpMethods.POST,
+              uri = s"$serviceURL/eservices/${eService.id.toString}",
+              method = HttpMethods.PUT,
               entity = HttpEntity(ContentType(MediaTypes.`application/json`), data),
               headers = Seq(headers.Authorization(OAuth2BearerToken("1234")))
             )
