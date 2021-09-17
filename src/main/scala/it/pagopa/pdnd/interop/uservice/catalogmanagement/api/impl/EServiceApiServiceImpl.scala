@@ -17,11 +17,10 @@ import it.pagopa.pdnd.interop.uservice.catalogmanagement.common.system._
 import it.pagopa.pdnd.interop.uservice.catalogmanagement.error._
 import it.pagopa.pdnd.interop.uservice.catalogmanagement.model._
 import it.pagopa.pdnd.interop.uservice.catalogmanagement.model.persistence._
-import it.pagopa.pdnd.interop.uservice.catalogmanagement.service.{FileManager, UUIDSupplier}
+import it.pagopa.pdnd.interop.uservice.catalogmanagement.service.{FileManager, UUIDSupplier, VersionGenerator}
 
 import java.io.{ByteArrayOutputStream, File}
 import java.nio.file.Paths
-import java.util.UUID
 import scala.concurrent.duration.Duration
 import scala.concurrent.{Await, ExecutionContext, Future}
 import scala.util.{Failure, Success}
@@ -211,11 +210,18 @@ class EServiceApiServiceImpl(
     descriptorId: String,
     documentId: String
   ): Future[CatalogDocument] = {
+
+    def lookupDocument(catalogDescriptor: CatalogDescriptor): Option[CatalogDocument] = {
+      val interface = catalogDescriptor.interface.fold(Seq.empty[CatalogDocument])(doc => Seq(doc))
+      (interface ++: catalogDescriptor.docs).find(_.id.toString == documentId)
+    }
+
     catalogItem.descriptors
-      .find(_.id == UUID.fromString(descriptorId))
-      .flatMap(_.docs.find(_.id == UUID.fromString(documentId)))
+      .find(_.id.toString == descriptorId)
+      .flatMap(lookupDocument)
       .toFuture(DocumentNotFoundError(catalogItem.id.toString, descriptorId, documentId))
   }
+
   private def extractFile(catalogDocument: CatalogDocument)(implicit ec: ExecutionContext): Future[ExtractedFile] = {
     val contentType: Future[ContentType] = ContentType
       .parse(catalogDocument.contentType)
@@ -260,7 +266,7 @@ class EServiceApiServiceImpl(
   override def updateDescriptor(
     eServiceId: String,
     descriptorId: String,
-    eServiceDescriptorSeed: EServiceDescriptorSeed
+    eServiceDescriptorSeed: UpdateEServiceDescriptorSeed
   )(implicit
     toEntityMarshallerProblem: ToEntityMarshaller[Problem],
     toEntityMarshallerEService: ToEntityMarshaller[EService],
@@ -273,32 +279,22 @@ class EServiceApiServiceImpl(
 
     def mergeChanges(
       descriptor: CatalogDescriptor,
-      eServiceDescriptorSeed: EServiceDescriptorSeed
+      eServiceDescriptorSeed: UpdateEServiceDescriptorSeed
     ): Either[ValidationError, CatalogDescriptor] = {
-      val newStatus = eServiceDescriptorSeed.status.map(validateDescriptorStatus)
-
+      val newStatus = validateDescriptorStatus(eServiceDescriptorSeed.status)
       newStatus match {
-        case Some(Invalid(nel)) => Left(ValidationError(nel.toList))
-        case Some(Valid(status)) =>
+        case Invalid(nel) => Left(ValidationError(nel.toList))
+        case Valid(status) =>
           Right(
             descriptor
               .copy(
-                description = eServiceDescriptorSeed.description.orElse(descriptor.description),
-                audience = eServiceDescriptorSeed.audience.getOrElse(descriptor.audience),
-                voucherLifespan = eServiceDescriptorSeed.voucherLifespan.getOrElse(descriptor.voucherLifespan),
+                description = eServiceDescriptorSeed.description,
+                audience = eServiceDescriptorSeed.audience,
+                voucherLifespan = eServiceDescriptorSeed.voucherLifespan,
                 status = status
               )
           )
-        case None =>
-          Right(
-            descriptor.copy(
-              description = eServiceDescriptorSeed.description.orElse(descriptor.description),
-              audience = eServiceDescriptorSeed.audience.getOrElse(descriptor.audience),
-              voucherLifespan = eServiceDescriptorSeed.voucherLifespan.getOrElse(descriptor.voucherLifespan)
-            )
-          )
       }
-
     }
 
     val result: Future[Option[CatalogItem]] = for {
@@ -317,7 +313,7 @@ class EServiceApiServiceImpl(
     onComplete(result) {
       case Success(catalogItem) =>
         catalogItem.fold(
-          updateDescriptor500(
+          updateDescriptor400(
             Problem(None, status = 500, s"Error on update of descriptor $descriptorId on E-Service $eServiceId")
           )
         )(ci => updateDescriptor200(ci.toApi))
@@ -388,5 +384,97 @@ class EServiceApiServiceImpl(
       retrieved <- commander.ask(ref => GetCatalogItem(eServiceId, ref))
       current   <- retrieved.toFuture(new RuntimeException("EService non found"))
     } yield current
+  }
+
+  /** Code: 201, Message: EService Descriptor created., DataType: EServiceDescriptor
+    * Code: 400, Message: Invalid input, DataType: Problem
+    * Code: 404, Message: Not found, DataType: Problem
+    * Code: 500, Message: Not found, DataType: Problem
+    */
+  override def createDescriptor(eServiceId: String, eServiceDescriptorSeed: EServiceDescriptorSeed)(implicit
+    toEntityMarshallerEServiceDescriptor: ToEntityMarshaller[EServiceDescriptor],
+    toEntityMarshallerProblem: ToEntityMarshaller[Problem],
+    contexts: Seq[(String, String)]
+  ): Route = {
+    val shard: String = getShard(eServiceId)
+
+    val commander: EntityRef[Command] = getCommander(shard)
+
+    val result: Future[CatalogDescriptor] = for {
+      current     <- retrieveCatalogItem(commander, eServiceId)
+      nextVersion <- VersionGenerator.next(current.currentVersion).toFuture
+      createdCatalogDescriptor = CatalogDescriptor(
+        id = uuidSupplier.get,
+        description = eServiceDescriptorSeed.description,
+        version = nextVersion,
+        interface = None,
+        docs = Seq.empty[CatalogDocument],
+        status = Draft,
+        voucherLifespan = eServiceDescriptorSeed.voucherLifespan,
+        audience = eServiceDescriptorSeed.audience
+      )
+      _ <- commander.ask(ref => UpdateCatalogItem(current.addDescriptor(createdCatalogDescriptor), ref))
+    } yield createdCatalogDescriptor
+
+    onComplete(result) {
+      case Success(descriptor) => createDescriptor200(descriptor.toApi)
+      case Failure(exception) =>
+        createDescriptor400(Problem(Option(exception.getMessage), status = 400, "some error"))
+    }
+  }
+
+  /** Code: 204, Message: Document deleted.
+    * Code: 404, Message: E-Service descriptor document not found, DataType: Problem
+    * Code: 400, Message: Bad request, DataType: Problem
+    */
+  override def deleteEServiceDocument(eServiceId: String, descriptorId: String, documentId: String)(implicit
+    toEntityMarshallerProblem: ToEntityMarshaller[Problem],
+    contexts: Seq[(String, String)]
+  ): Route = {
+    val shard: String = getShard(eServiceId)
+
+    val commander: EntityRef[Command] = getCommander(shard)
+
+    val result: Future[Option[CatalogItem]] = for {
+      found         <- commander.ask(ref => GetCatalogItem(eServiceId, ref))
+      catalogItem   <- found.toFuture(EServiceNotFoundError(eServiceId))
+      document      <- extractDocument(catalogItem, descriptorId, documentId)
+      extractedFile <- extractFile(document)
+      _             <- fileManager.delete(extractedFile.path.toString)
+      updatedEservice = catalogItem.removeDocument(descriptorId, documentId)
+      updated <- commander.ask(ref => UpdateCatalogItem(updatedEservice, ref))
+    } yield updated
+
+    onComplete(result) {
+      case Success(catalogItem) =>
+        catalogItem.fold(
+          deleteEServiceDocument400(
+            Problem(
+              None,
+              status = 404,
+              s"Error on deletion of $documentId on descriptor $descriptorId on E-Service $eServiceId"
+            )
+          )
+        )(_ => deleteEServiceDocument204)
+      case Failure(exception) =>
+        exception match {
+          case ex @ (_: EServiceNotFoundError | _: EServiceDescriptorNotFoundError) =>
+            deleteEServiceDocument404(
+              Problem(
+                Option(ex.getMessage),
+                status = 404,
+                s"$documentId on descriptor $descriptorId on E-Service $eServiceId not found"
+              )
+            )
+          case ex =>
+            deleteEServiceDocument400(
+              Problem(
+                Option(ex.getMessage),
+                status = 400,
+                s"Error on deletion of $documentId on descriptor $descriptorId on E-Service $eServiceId"
+              )
+            )
+        }
+    }
   }
 }

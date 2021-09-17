@@ -6,7 +6,7 @@ import akka.http.scaladsl.model.headers.OAuth2BearerToken
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.unmarshalling.Unmarshal
 import it.pagopa.pdnd.interop.uservice.catalogmanagement.api.impl._
-import it.pagopa.pdnd.interop.uservice.catalogmanagement.model.EService
+import it.pagopa.pdnd.interop.uservice.catalogmanagement.model.{EService, EServiceDescriptor}
 import it.pagopa.pdnd.interop.uservice.catalogmanagement.provider.CatalogManagementServiceSpec.mockUUIDSupplier
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.matchers.should.Matchers._
@@ -17,9 +17,37 @@ import scala.concurrent.Await
 import scala.concurrent.duration.Duration
 
 trait SpecHelper extends SpecConfiguration with AnyWordSpecLike with MockFactory {
+
+  def createEServiceDescriptor(eserviceId: String, descriptorId: UUID)(implicit actorSystem: ActorSystem[_]): EServiceDescriptor = {
+    (() => mockUUIDSupplier.get).expects().returning(descriptorId).once()
+    val data =
+      """
+        |{
+        |	"audience": ["audience"],
+        |	"voucherLifespan": 1984,
+        |	"description": "string"
+        |	}
+        |""".stripMargin
+
+    val response = Await.result(
+      Http().singleRequest(
+        HttpRequest(
+          uri = s"$serviceURL/eservices/${eserviceId}/descriptors",
+          method = HttpMethods.POST,
+          entity = HttpEntity(ContentTypes.`application/json`, data),
+          headers = Seq(headers.Authorization(OAuth2BearerToken("1234")))
+        )
+      ),
+      Duration.Inf
+    )
+
+    response.status shouldBe StatusCodes.OK
+
+    Await.result(Unmarshal(response).to[EServiceDescriptor], Duration.Inf)
+  }
+
   def createEService(uuid: String)(implicit actorSystem: ActorSystem[_]): EService = {
-    //mocking id twice since UUID supplier is invoked two times in the flow
-    (() => mockUUIDSupplier.get).expects().returning(UUID.fromString(uuid)).twice()
+    (() => mockUUIDSupplier.get).expects().returning(UUID.fromString(uuid)).once()
 
     val data =
       """

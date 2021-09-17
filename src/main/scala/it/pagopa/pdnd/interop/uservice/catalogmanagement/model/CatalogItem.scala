@@ -40,9 +40,33 @@ final case class CatalogItem(
     copy(descriptors = updated)
   }
 
+  def removeDocument(descriptorId: String, documentId: String): CatalogItem = {
+
+    def updateDescriptor(descriptor: CatalogDescriptor): CatalogDescriptor = {
+      val interface: Option[CatalogDocument] = descriptor.interface.filter(_.id.toString == documentId)
+      val document: Option[CatalogDocument]  = descriptor.docs.find(_.id.toString == documentId)
+      (interface, document) match {
+        case (Some(_), None) => descriptor.copy(interface = None)
+        case (None, Some(_)) => descriptor.copy(docs = descriptor.docs.filterNot(_.id.toString == documentId))
+        case (None, None)    => descriptor
+        case (Some(_), Some(_)) =>
+          descriptor.copy(interface = None, docs = descriptor.docs.filterNot(_.id.toString == documentId))
+      }
+    }
+
+    this.descriptors.find(_.id.toString == descriptorId) match {
+      case Some(descriptor) =>
+        this.copy(descriptors =
+          descriptors.filterNot(_.id.toString == descriptorId).appended(updateDescriptor(descriptor))
+        )
+      case None => this
+    }
+
+  }
+
   def getInterfacePath(descriptorId: String): Option[String] = {
     for {
-      doc       <- descriptors.find(_.id == UUID.fromString(descriptorId))
+      doc       <- descriptors.find(_.id.toString == descriptorId)
       interface <- doc.interface
     } yield interface.path
   }
@@ -65,12 +89,16 @@ final case class CatalogItem(
       )
     }
   }
+
+  def addDescriptor(descriptor: CatalogDescriptor): CatalogItem = {
+    copy(descriptors = descriptor +: descriptors)
+  }
+
+  def currentVersion: Option[String] = descriptors.flatMap(_.version.toLongOption).maxOption.map(_.toString)
 }
 
 object CatalogItem {
   def create(seed: EServiceSeed, uuidSupplier: UUIDSupplier): Future[CatalogItem] = {
-
-    val firstVersion: String = "1"
 
     val id: UUID = uuidSupplier.get
 
@@ -84,18 +112,7 @@ object CatalogItem {
         description = seed.description,
         technology = seed.technology,
         attributes = attributes,
-        descriptors = Seq(
-          CatalogDescriptor(
-            id = uuidSupplier.get,
-            description = None,
-            version = firstVersion,
-            interface = None,
-            docs = Seq.empty[CatalogDocument],
-            status = Draft,
-            voucherLifespan = seed.voucherLifespan,
-            audience = seed.audience
-          )
-        )
+        descriptors = Seq.empty[CatalogDescriptor]
       )
     }
   }

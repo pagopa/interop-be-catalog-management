@@ -3,10 +3,9 @@ package it.pagopa.pdnd.interop.uservice.catalogmanagement.api.impl
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import akka.http.scaladsl.marshalling.{Marshaller, ToEntityMarshaller}
 import akka.http.scaladsl.model.ContentTypes
-import akka.http.scaladsl.model.MediaTypes.{`application/json-patch+json`, `application/json`}
-import akka.http.scaladsl.unmarshalling.{FromEntityUnmarshaller, Unmarshaller}
+import akka.http.scaladsl.unmarshalling.FromEntityUnmarshaller
 import it.pagopa.pdnd.interop.uservice.catalogmanagement.api.EServiceApiMarshaller
-import it.pagopa.pdnd.interop.uservice.catalogmanagement.model.{EService, EServiceDescriptorSeed, EServiceSeed, Problem, UpdateEServiceSeed}
+import it.pagopa.pdnd.interop.uservice.catalogmanagement.model._
 import spray.json._
 
 import java.io.File
@@ -33,12 +32,15 @@ class EServiceApiMarshallerImpl extends EServiceApiMarshaller with SprayJsonSupp
   override implicit def fromEntityUnmarshallerEServiceSeed: FromEntityUnmarshaller[EServiceSeed] =
     sprayJsonUnmarshaller[EServiceSeed]
 
-  @SuppressWarnings(Array("org.wartremover.warts.Nothing"))
   override implicit def fromEntityUnmarshallerEServiceDescriptorSeed: FromEntityUnmarshaller[EServiceDescriptorSeed] =
-    Unmarshaller.byteStringUnmarshaller
-      .forContentTypes(`application/json`, `application/json-patch+json`)
-      .andThen(sprayJsValueByteStringUnmarshaller)
-      .map(jsonReader[EServiceDescriptorSeed].read)
+    sprayJsonUnmarshaller[EServiceDescriptorSeed]
 
-  override implicit def fromEntityUnmarshallerUpdateEServiceSeed: FromEntityUnmarshaller[UpdateEServiceSeed] = sprayJsonUnmarshaller[UpdateEServiceSeed]
+  override implicit def fromEntityUnmarshallerUpdateEServiceSeed: FromEntityUnmarshaller[UpdateEServiceSeed] =
+    sprayJsonUnmarshaller[UpdateEServiceSeed]
+
+  override implicit def fromEntityUnmarshallerUpdateEServiceDescriptorSeed
+    : FromEntityUnmarshaller[UpdateEServiceDescriptorSeed] = sprayJsonUnmarshaller[UpdateEServiceDescriptorSeed]
+
+  override implicit def toEntityMarshallerEServiceDescriptor: ToEntityMarshaller[EServiceDescriptor] =
+    sprayJsonMarshaller[EServiceDescriptor]
 }
