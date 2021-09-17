@@ -3,6 +3,7 @@ package it.pagopa.pdnd.interop.uservice.catalogmanagement.model
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
 
+import java.time.OffsetDateTime
 import java.util.UUID
 
 class CatalogItemSpec extends AnyWordSpecLike with Matchers {
@@ -13,36 +14,217 @@ class CatalogItemSpec extends AnyWordSpecLike with Matchers {
     name = "String",
     description = "String",
     technology = "String",
-    attributes = CatalogAttributes(
-      certified = Seq.empty,
-      declared = Seq.empty,
-      verified = Seq.empty
-    ),
+    attributes = CatalogAttributes(certified = Seq.empty, declared = Seq.empty, verified = Seq.empty),
     descriptors = descriptors
   )
 
-  private[this] def descriptorGen(version: String) =
-    CatalogDescriptor(id = UUID.randomUUID(),
-    version = version,
-    description = None,
-    interface = None,
-    docs = Seq.empty,
-    status = Draft, audience = Seq("a"), voucherLifespan = 0)
+  private[this] def descriptorGen(
+    version: String,
+    interfaceFile: Option[CatalogDocument] = None,
+    documents: Seq[CatalogDocument] = Seq.empty,
+    descriptorId: UUID = UUID.randomUUID()
+  ) =
+    CatalogDescriptor(
+      id = descriptorId,
+      version = version,
+      description = None,
+      interface = interfaceFile,
+      docs = documents,
+      status = Draft,
+      audience = Seq("a"),
+      voucherLifespan = 0
+    )
 
+  private[this] def descriptorDocumentGen(id: UUID = UUID.randomUUID()) =
+    CatalogDocument(
+      id = id,
+      name = "",
+      contentType = "yaml",
+      path = "",
+      checksum = "",
+      uploadDate = OffsetDateTime.now(),
+      description = "fake"
+    )
 
   "a CatalogItem" should {
 
+    "properly delete a file if found in the documents collection" in {
+      val uuid1           = UUID.randomUUID()
+      val uuid2           = UUID.randomUUID()
+      val uuid3           = UUID.randomUUID()
+      val uuid4           = UUID.randomUUID()
+      val toBeRemovedUUID = UUID.randomUUID()
+      val uuid6           = UUID.randomUUID()
+
+      val documents: Seq[CatalogDocument] = Seq(
+        descriptorDocumentGen(uuid1),
+        descriptorDocumentGen(uuid2),
+        descriptorDocumentGen(uuid3),
+        descriptorDocumentGen(uuid4),
+        descriptorDocumentGen(toBeRemovedUUID),
+        descriptorDocumentGen(uuid6)
+      )
+
+      val descriptorId = UUID.randomUUID()
+      val descriptors: Seq[CatalogDescriptor] = Seq(
+        descriptorGen(
+          "1",
+          documents = documents,
+          descriptorId = descriptorId,
+          interfaceFile = Some(descriptorDocumentGen())
+        )
+      )
+
+      //given a catalog item with 6 documents and an interface
+      val catalogItem = catalogItemGen(descriptors)
+
+      //when we remove one of the documents
+      val updatedItem = catalogItem.removeDocument(descriptorId.toString, toBeRemovedUUID.toString)
+
+      //then
+      updatedItem.descriptors
+        .find(_.id == descriptorId)
+        .get
+        .docs
+        .map(_.id) should contain allOf (uuid1, uuid2, uuid3, uuid4, uuid6)
+      updatedItem.descriptors.find(_.id == descriptorId).get.interface shouldBe a [Some[_]]
+    }
+
+    "properly delete the interface found in the documents collection" in {
+      val uuid1 = UUID.randomUUID()
+      val uuid2 = UUID.randomUUID()
+      val uuid3 = UUID.randomUUID()
+      val uuid4 = UUID.randomUUID()
+      val uuid5 = UUID.randomUUID()
+      val uuid6 = UUID.randomUUID()
+
+      val interfaceId = UUID.randomUUID()
+
+      val documents: Seq[CatalogDocument] = Seq(
+        descriptorDocumentGen(uuid1),
+        descriptorDocumentGen(uuid2),
+        descriptorDocumentGen(uuid3),
+        descriptorDocumentGen(uuid4),
+        descriptorDocumentGen(uuid5),
+        descriptorDocumentGen(uuid6)
+      )
+
+      val descriptorId = UUID.randomUUID()
+      val descriptors: Seq[CatalogDescriptor] = Seq(
+        descriptorGen(
+          "1",
+          documents = documents,
+          descriptorId = descriptorId,
+          interfaceFile = Some(descriptorDocumentGen(interfaceId))
+        )
+      )
+
+      //given a catalog item with 6 documents and an interface
+      val catalogItem = catalogItemGen(descriptors)
+
+      //when we remove the interface
+      val updatedItem = catalogItem.removeDocument(descriptorId.toString, interfaceId.toString)
+      updatedItem.descriptors
+        .find(_.id == descriptorId)
+        .get
+        .docs
+        .map(_.id) should contain allOf (uuid1, uuid2, uuid3, uuid4, uuid5, uuid6)
+      updatedItem.descriptors.find(_.id == descriptorId).get.interface shouldBe None
+    }
+
+    "return the same set of documents when the interface or the document to be deleted is not found in the documents collection" in {
+      val uuid1 = UUID.randomUUID()
+      val uuid2 = UUID.randomUUID()
+      val uuid3 = UUID.randomUUID()
+      val uuid4 = UUID.randomUUID()
+      val uuid5 = UUID.randomUUID()
+      val uuid6 = UUID.randomUUID()
+
+      val interfaceId = UUID.randomUUID()
+
+      val documents: Seq[CatalogDocument] = Seq(
+        descriptorDocumentGen(uuid1),
+        descriptorDocumentGen(uuid2),
+        descriptorDocumentGen(uuid3),
+        descriptorDocumentGen(uuid4),
+        descriptorDocumentGen(uuid5),
+        descriptorDocumentGen(uuid6)
+      )
+
+      val descriptorId = UUID.randomUUID()
+      val descriptors: Seq[CatalogDescriptor] = Seq(
+        descriptorGen(
+          "1",
+          documents = documents,
+          descriptorId = descriptorId,
+          interfaceFile = Some(descriptorDocumentGen(interfaceId))
+        )
+      )
+
+      //given a catalog item with 6 documents and an interface
+      val catalogItem = catalogItemGen(descriptors)
+
+      //when we remove a not existing document
+      val updatedItem = catalogItem.removeDocument(descriptorId.toString, UUID.randomUUID().toString)
+      updatedItem.descriptors
+        .find(_.id == descriptorId)
+        .get
+        .docs
+        .map(_.id) should contain allOf (uuid1, uuid2, uuid3, uuid4, uuid5, uuid6)
+      updatedItem.descriptors.find(_.id == descriptorId).get.interface shouldBe a [Some[_]]
+    }
+
+    "return the same set of documents when the descriptor is not found in the e-service" in {
+      val uuid1 = UUID.randomUUID()
+      val uuid2 = UUID.randomUUID()
+      val uuid3 = UUID.randomUUID()
+      val uuid4 = UUID.randomUUID()
+      val uuid5 = UUID.randomUUID()
+      val uuid6 = UUID.randomUUID()
+
+      val interfaceId = UUID.randomUUID()
+
+      val documents: Seq[CatalogDocument] = Seq(
+        descriptorDocumentGen(uuid1),
+        descriptorDocumentGen(uuid2),
+        descriptorDocumentGen(uuid3),
+        descriptorDocumentGen(uuid4),
+        descriptorDocumentGen(uuid5),
+        descriptorDocumentGen(uuid6)
+      )
+
+      val descriptorId = UUID.randomUUID()
+      val descriptors: Seq[CatalogDescriptor] = Seq(
+        descriptorGen(
+          "1",
+          documents = documents,
+          descriptorId = descriptorId,
+          interfaceFile = Some(descriptorDocumentGen(interfaceId))
+        )
+      )
+
+      //given a catalog item with 6 documents and an interface
+      val catalogItem = catalogItemGen(descriptors)
+
+      //when we remove the interface from a random descriptor
+      val updatedItem = catalogItem.removeDocument(UUID.randomUUID().toString, interfaceId.toString)
+      updatedItem.descriptors
+        .find(_.id == descriptorId)
+        .get
+        .docs
+        .map(_.id) should contain allOf (uuid1, uuid2, uuid3, uuid4, uuid5, uuid6)
+      updatedItem.descriptors.find(_.id == descriptorId).get.interface shouldBe a [Some[_]]
+    }
+
     "return an empty version number since no descriptors has been defined" in {
       val descriptors: Seq[CatalogDescriptor] = Seq.empty
-      val catalogItem = catalogItemGen(descriptors)
+      val catalogItem                         = catalogItemGen(descriptors)
       catalogItem.currentVersion shouldBe None
     }
 
     "return version '1' since version '1' descriptor has been defined" in {
-      val descriptors: Seq[CatalogDescriptor] = Seq(
-        descriptorGen("1")
-      )
-      val catalogItem = catalogItemGen(descriptors)
+      val descriptors: Seq[CatalogDescriptor] = Seq(descriptorGen("1"))
+      val catalogItem                         = catalogItemGen(descriptors)
       catalogItem.currentVersion shouldBe Some("1")
     }
 

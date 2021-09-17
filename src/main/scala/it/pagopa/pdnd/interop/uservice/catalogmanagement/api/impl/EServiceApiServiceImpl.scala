@@ -21,7 +21,6 @@ import it.pagopa.pdnd.interop.uservice.catalogmanagement.service.{FileManager, U
 
 import java.io.{ByteArrayOutputStream, File}
 import java.nio.file.Paths
-import java.util.UUID
 import scala.concurrent.duration.Duration
 import scala.concurrent.{Await, ExecutionContext, Future}
 import scala.util.{Failure, Success}
@@ -211,11 +210,18 @@ class EServiceApiServiceImpl(
     descriptorId: String,
     documentId: String
   ): Future[CatalogDocument] = {
+
+    def lookupDocument(catalogDescriptor: CatalogDescriptor): Option[CatalogDocument] = {
+      val interface = catalogDescriptor.interface.fold(Seq.empty[CatalogDocument])(doc => Seq(doc))
+      (interface ++: catalogDescriptor.docs).find(_.id.toString == documentId)
+    }
+
     catalogItem.descriptors
-      .find(_.id == UUID.fromString(descriptorId))
-      .flatMap(_.docs.find(_.id == UUID.fromString(documentId)))
+      .find(_.id.toString == descriptorId)
+      .flatMap(lookupDocument)
       .toFuture(DocumentNotFoundError(catalogItem.id.toString, descriptorId, documentId))
   }
+
   private def extractFile(catalogDocument: CatalogDocument)(implicit ec: ExecutionContext): Future[ExtractedFile] = {
     val contentType: Future[ContentType] = ContentType
       .parse(catalogDocument.contentType)
@@ -414,6 +420,61 @@ class EServiceApiServiceImpl(
       case Success(descriptor) => createDescriptor200(descriptor.toApi)
       case Failure(exception) =>
         createDescriptor400(Problem(Option(exception.getMessage), status = 400, "some error"))
+    }
+  }
+
+  /** Code: 204, Message: Document deleted.
+    * Code: 404, Message: E-Service descriptor document not found, DataType: Problem
+    * Code: 400, Message: Bad request, DataType: Problem
+    */
+  override def deleteEServiceDocument(eServiceId: String, descriptorId: String, documentId: String)(implicit
+    toEntityMarshallerProblem: ToEntityMarshaller[Problem],
+    contexts: Seq[(String, String)]
+  ): Route = {
+    val shard: String = getShard(eServiceId)
+
+    val commander: EntityRef[Command] = getCommander(shard)
+
+    val result: Future[Option[CatalogItem]] = for {
+      found         <- commander.ask(ref => GetCatalogItem(eServiceId, ref))
+      catalogItem   <- found.toFuture(EServiceNotFoundError(eServiceId))
+      document      <- extractDocument(catalogItem, descriptorId, documentId)
+      extractedFile <- extractFile(document)
+      _             <- fileManager.delete(extractedFile.path.toString)
+      updatedEservice = catalogItem.removeDocument(descriptorId, documentId)
+      updated <- commander.ask(ref => UpdateCatalogItem(updatedEservice, ref))
+    } yield updated
+
+    onComplete(result) {
+      case Success(catalogItem) =>
+        catalogItem.fold(
+          deleteEServiceDocument400(
+            Problem(
+              None,
+              status = 404,
+              s"Error on deletion of $documentId on descriptor $descriptorId on E-Service $eServiceId"
+            )
+          )
+        )(_ => deleteEServiceDocument204)
+      case Failure(exception) =>
+        exception match {
+          case ex @ (_: EServiceNotFoundError | _: EServiceDescriptorNotFoundError) =>
+            deleteEServiceDocument404(
+              Problem(
+                Option(ex.getMessage),
+                status = 404,
+                s"$documentId on descriptor $descriptorId on E-Service $eServiceId not found"
+              )
+            )
+          case ex =>
+            deleteEServiceDocument400(
+              Problem(
+                Option(ex.getMessage),
+                status = 400,
+                s"Error on deletion of $documentId on descriptor $descriptorId on E-Service $eServiceId"
+              )
+            )
+        }
     }
   }
 }

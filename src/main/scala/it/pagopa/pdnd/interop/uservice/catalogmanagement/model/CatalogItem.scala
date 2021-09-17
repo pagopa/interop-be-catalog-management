@@ -40,6 +40,30 @@ final case class CatalogItem(
     copy(descriptors = updated)
   }
 
+  def removeDocument(descriptorId: String, documentId: String): CatalogItem = {
+
+    def updateDescriptor(descriptor: CatalogDescriptor): CatalogDescriptor = {
+      val interface: Option[CatalogDocument] = descriptor.interface.filter(_.id.toString == documentId)
+      val document: Option[CatalogDocument]  = descriptor.docs.find(_.id.toString == documentId)
+      (interface, document) match {
+        case (Some(_), None) => descriptor.copy(interface = None)
+        case (None, Some(_)) => descriptor.copy(docs = descriptor.docs.filterNot(_.id.toString == documentId))
+        case (None, None)    => descriptor
+        case (Some(_), Some(_)) =>
+          descriptor.copy(interface = None, docs = descriptor.docs.filterNot(_.id.toString == documentId))
+      }
+    }
+
+    this.descriptors.find(_.id.toString == descriptorId) match {
+      case Some(descriptor) =>
+        this.copy(descriptors =
+          descriptors.filterNot(_.id.toString == descriptorId).appended(updateDescriptor(descriptor))
+        )
+      case None => this
+    }
+
+  }
+
   def getInterfacePath(descriptorId: String): Option[String] = {
     for {
       doc       <- descriptors.find(_.id == UUID.fromString(descriptorId))
