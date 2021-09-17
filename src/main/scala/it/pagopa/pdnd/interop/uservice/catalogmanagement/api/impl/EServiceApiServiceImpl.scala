@@ -477,4 +477,71 @@ class EServiceApiServiceImpl(
         }
     }
   }
+
+  /** Code: 204, Message: EService Descriptor status updated
+    * Code: 400, Message: Invalid input, DataType: Problem
+    * Code: 404, Message: Not found, DataType: Problem
+    */
+  override def updateDescriptorStatus(
+    eServiceId: String,
+    descriptorId: String,
+    updateEServiceDescriptorStatus: UpdateEServiceDescriptorStatus
+  )(implicit toEntityMarshallerProblem: ToEntityMarshaller[Problem], contexts: Seq[(String, String)]): Route = {
+
+    val shard: String = getShard(eServiceId)
+
+    val commander: EntityRef[Command] = getCommander(shard)
+
+    def mergeChanges(
+                      descriptor: CatalogDescriptor,
+                      updateEServiceDescriptorStatus: UpdateEServiceDescriptorStatus
+                    ): Either[ValidationError, CatalogDescriptor] = {
+      val newStatus = validateDescriptorStatus(updateEServiceDescriptorStatus.status)
+      newStatus match {
+        case Invalid(nel) => Left(ValidationError(nel.toList))
+        case Valid(status) => Right(descriptor.copy(status = status))
+      }
+    }
+
+    val result: Future[Option[CatalogItem]] = for {
+      retrieved <- commander.ask(ref => GetCatalogItem(eServiceId, ref))
+      current   <- retrieved.toFuture(EServiceNotFoundError(eServiceId))
+      toUpdateDescriptor <- current.descriptors
+        .find(_.id.toString == descriptorId)
+        .toFuture(EServiceDescriptorNotFoundError(eServiceId, descriptorId))
+      updatedDescriptor <- mergeChanges(toUpdateDescriptor, updateEServiceDescriptorStatus).toFuture
+      updatedItem = current.copy(descriptors =
+        current.descriptors.filter(_.id.toString != descriptorId) :+ updatedDescriptor
+      )
+      updated <- commander.ask(ref => UpdateCatalogItem(updatedItem, ref))
+    } yield updated
+
+    onComplete(result) {
+      case Success(catalogItem) =>
+        catalogItem.fold(
+          updateDescriptorStatus400(
+            Problem(None, status = 500, s"Error on update of descriptor $descriptorId on E-Service $eServiceId")
+          )
+        )(_ => updateDescriptorStatus204)
+      case Failure(exception) =>
+        exception match {
+          case ex @ (_: EServiceNotFoundError | _: EServiceDescriptorNotFoundError) =>
+            updateDescriptorStatus404(
+              Problem(
+                Option(ex.getMessage),
+                status = 404,
+                s"Error on update of descriptor $descriptorId on E-Service $eServiceId"
+              )
+            )
+          case ex =>
+            updateDescriptorStatus400(
+              Problem(
+                Option(ex.getMessage),
+                status = 400,
+                s"Error on update of descriptor $descriptorId on E-Service $eServiceId"
+              )
+            )
+        }
+    }
+  }
 }
