@@ -7,7 +7,7 @@ import akka.cluster.sharding.typed.scaladsl.{ClusterSharding, EntityTypeKey}
 import akka.pattern.StatusReply
 import akka.persistence.typed.PersistenceId
 import akka.persistence.typed.scaladsl.{Effect, EventSourcedBehavior, RetentionCriteria}
-import it.pagopa.pdnd.interop.uservice.catalogmanagement.model.{CatalogDescriptor, CatalogItem}
+import it.pagopa.pdnd.interop.uservice.catalogmanagement.model.{CatalogDescriptor, CatalogDocument, CatalogItem}
 
 import java.time.temporal.ChronoUnit
 import java.util.UUID
@@ -53,9 +53,31 @@ object CatalogPersistentBehavior {
             Effect.none[CatalogItemUpdated, State]
           }
 
+      case UpdateDocument(eServiceId, descriptorId, documentId, modifiedDocument, replyTo) =>
+        val catalogDocument: Option[CatalogDocument] =
+          for {
+            service    <- state.items.get(eServiceId)
+            descriptor <- service.descriptors.find(_.id.toString == descriptorId)
+            interface = descriptor.interface.fold(Seq.empty[CatalogDocument])(doc => Seq(doc))
+            document <- (interface ++: descriptor.docs).find(_.id.toString == documentId)
+          } yield document
+
+        catalogDocument
+          .map { _ =>
+            Effect
+              .persist(DocumentUpdated(eServiceId, descriptorId, documentId, modifiedDocument))
+              .thenRun((_: State) => replyTo ! Some(modifiedDocument))
+          }
+          .getOrElse {
+            replyTo ! None
+            Effect.none[DocumentUpdated, State]
+          }
+      //
+
       case DeleteCatalogItemWithDescriptor(deletedCatalogItem, descriptorId, replyTo) =>
         val descriptorToDelete: Option[CatalogDescriptor] =
-          state.items.get(deletedCatalogItem.id.toString)
+          state.items
+            .get(deletedCatalogItem.id.toString)
             .flatMap(_.descriptors.find(_.id == UUID.fromString(descriptorId)))
 
         descriptorToDelete
@@ -96,9 +118,10 @@ object CatalogPersistentBehavior {
 
   val eventHandler: (State, Event) => State = (state, event) =>
     event match {
-      case CatalogItemAdded(catalogItem)   => state.add(catalogItem)
-      case CatalogItemUpdated(catalogItem) => state.update(catalogItem)
+      case CatalogItemAdded(catalogItem)                 => state.add(catalogItem)
+      case CatalogItemUpdated(catalogItem)               => state.update(catalogItem)
       case CatalogItemDeleted(catalogItem, descriptorId) => state.delete(catalogItem, descriptorId)
+      case DocumentUpdated(eServiceId, descriptorId, documentId, modifiedDocument) => state.updateDocument(eServiceId, descriptorId, documentId, modifiedDocument)
     }
 
   val TypeKey: EntityTypeKey[Command] =

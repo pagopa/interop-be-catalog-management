@@ -584,7 +584,7 @@ class EServiceApiServiceImpl(
   }
 
   /* utility method for descriptor status updates
-    */
+   */
   private def updateDescriptorStatus(
     eServiceId: String,
     descriptorId: String,
@@ -614,5 +614,72 @@ class EServiceApiServiceImpl(
       )
       updated <- commander.ask(ref => UpdateCatalogItem(updatedItem, ref))
     } yield updated
+  }
+
+  /** Code: 200, Message: Updated EService document, DataType: File
+   * Code: 404, Message: EService not found, DataType: Problem
+   * Code: 400, Message: Bad request, DataType: Problem
+   */
+  override def updateEServiceDocument(
+                                       eServiceId: String,
+                                       descriptorId: String,
+                                       documentId: String,
+                                       updateEServiceDescriptorDocumentSeed: UpdateEServiceDescriptorDocumentSeed
+                                     )(implicit
+                                       toEntityMarshallerEServiceDoc: ToEntityMarshaller[EServiceDoc],
+                                       toEntityMarshallerProblem: ToEntityMarshaller[Problem],
+                                       contexts: Seq[(String, String)]
+                                     ): Route = {
+    val shard: String = getShard(eServiceId)
+
+    val commander: EntityRef[Command] = getCommander(shard)
+
+    val result: Future[Option[CatalogDocument]] = for {
+      found       <- commander.ask(ref => GetCatalogItem(eServiceId, ref))
+      catalogItem <- found.toFuture(EServiceNotFoundError(eServiceId))
+      document    <- extractDocument(catalogItem, descriptorId, documentId)
+      updatedDocument = document.copy(description = updateEServiceDescriptorDocumentSeed.description)
+      updated <- commander.ask(ref =>
+        UpdateDocument(
+          eServiceId = eServiceId,
+          descriptorId = descriptorId,
+          documentId = documentId,
+          updatedDocument,
+          ref
+        )
+      )
+    } yield updated
+
+    onComplete(result) {
+      case Success(document) =>
+        document.fold(
+          updateEServiceDocument404(
+            Problem(
+              None,
+              status = 404,
+              s"Error on update of $documentId on descriptor $descriptorId on E-Service $eServiceId"
+            )
+          )
+        )(catalogDocument => updateEServiceDocument200(catalogDocument.toApi))
+      case Failure(exception) =>
+        exception match {
+          case ex @ (_: EServiceNotFoundError | _: EServiceDescriptorNotFoundError) =>
+            deleteEServiceDocument404(
+              Problem(
+                Option(ex.getMessage),
+                status = 404,
+                s"$documentId on descriptor $descriptorId on E-Service $eServiceId not found"
+              )
+            )
+          case ex =>
+            deleteEServiceDocument400(
+              Problem(
+                Option(ex.getMessage),
+                status = 400,
+                s"Error on deletion of $documentId on descriptor $descriptorId on E-Service $eServiceId"
+              )
+            )
+        }
+    }
   }
 }
