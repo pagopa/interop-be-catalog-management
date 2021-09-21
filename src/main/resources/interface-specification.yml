@@ -516,7 +516,7 @@ paths:
               $ref: '#/components/schemas/UpdateEServiceDescriptorDocumentSeed'
       responses:
         "200":
-          description: EService Descriptor updated.
+          description: EService Descriptor Document updated.
           content:
             application/json:
               schema:
