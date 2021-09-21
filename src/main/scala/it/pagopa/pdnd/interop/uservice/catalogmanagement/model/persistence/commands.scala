@@ -3,7 +3,7 @@ package it.pagopa.pdnd.interop.uservice.catalogmanagement.model.persistence
 import akka.Done
 import akka.actor.typed.ActorRef
 import akka.pattern.StatusReply
-import it.pagopa.pdnd.interop.uservice.catalogmanagement.model.CatalogItem
+import it.pagopa.pdnd.interop.uservice.catalogmanagement.model.{CatalogDocument, CatalogItem}
 
 sealed trait Command
 
@@ -25,3 +25,5 @@ final case class ListCatalogItem(
   status: Option[String],
   replyTo: ActorRef[Seq[CatalogItem]]
 ) extends Command
+
+final case class UpdateDocument(eServiceId: String, descriptorId: String, documentId: String, updateEServiceDescriptorDocumentSeed: CatalogDocument, replyTo: ActorRef[Option[CatalogDocument]]) extends Command

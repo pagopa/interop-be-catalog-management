@@ -43,4 +43,9 @@ class EServiceApiMarshallerImpl extends EServiceApiMarshaller with SprayJsonSupp
 
   override implicit def toEntityMarshallerEServiceDescriptor: ToEntityMarshaller[EServiceDescriptor] =
     sprayJsonMarshaller[EServiceDescriptor]
+
+  override implicit def fromEntityUnmarshallerUpdateEServiceDescriptorDocumentSeed: FromEntityUnmarshaller[UpdateEServiceDescriptorDocumentSeed] =
+    sprayJsonUnmarshaller[UpdateEServiceDescriptorDocumentSeed]
+
+  override implicit def toEntityMarshallerEServiceDoc: ToEntityMarshaller[EServiceDoc] = sprayJsonMarshaller[EServiceDoc]
 }
