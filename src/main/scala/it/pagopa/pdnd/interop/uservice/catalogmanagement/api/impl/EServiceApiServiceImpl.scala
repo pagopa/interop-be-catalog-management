@@ -617,19 +617,19 @@ class EServiceApiServiceImpl(
   }
 
   /** Code: 200, Message: Updated EService document, DataType: File
-   * Code: 404, Message: EService not found, DataType: Problem
-   * Code: 400, Message: Bad request, DataType: Problem
-   */
+    * Code: 404, Message: EService not found, DataType: Problem
+    * Code: 400, Message: Bad request, DataType: Problem
+    */
   override def updateEServiceDocument(
-                                       eServiceId: String,
-                                       descriptorId: String,
-                                       documentId: String,
-                                       updateEServiceDescriptorDocumentSeed: UpdateEServiceDescriptorDocumentSeed
-                                     )(implicit
-                                       toEntityMarshallerEServiceDoc: ToEntityMarshaller[EServiceDoc],
-                                       toEntityMarshallerProblem: ToEntityMarshaller[Problem],
-                                       contexts: Seq[(String, String)]
-                                     ): Route = {
+    eServiceId: String,
+    descriptorId: String,
+    documentId: String,
+    updateEServiceDescriptorDocumentSeed: UpdateEServiceDescriptorDocumentSeed
+  )(implicit
+    toEntityMarshallerEServiceDoc: ToEntityMarshaller[EServiceDoc],
+    toEntityMarshallerProblem: ToEntityMarshaller[Problem],
+    contexts: Seq[(String, String)]
+  ): Route = {
     val shard: String = getShard(eServiceId)
 
     val commander: EntityRef[Command] = getCommander(shard)
