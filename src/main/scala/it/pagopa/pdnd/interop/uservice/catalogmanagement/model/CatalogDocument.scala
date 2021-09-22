@@ -19,14 +19,13 @@ final case class CatalogDocument(
   override def toApi: EServiceDoc =
     EServiceDoc(id = id, name = name, contentType = contentType, description = description)
 
-  /**
-   * clones the current document instance as a new one.
-   * @param fileManager - DI of the fileManager in place
-   * @param clonedDocumentId - new cloned document identifier
-   * @param eServiceId - identifier of the eservice bound to this new cloned document
-   * @param descriptorId - identifier of the descriptor bound to this new cloned document
-   * @return
-   */
+  /** clones the current document instance as a new one.
+    * @param fileManager - DI of the fileManager in place
+    * @param clonedDocumentId - new cloned document identifier
+    * @param eServiceId - identifier of the eservice bound to this new cloned document
+    * @param descriptorId - identifier of the descriptor bound to this new cloned document
+    * @return
+    */
   def cloneDocument(
     fileManager: FileManager
   )(clonedDocumentId: UUID, eServiceId: String, descriptorId: String): Future[CatalogDocument] = {
