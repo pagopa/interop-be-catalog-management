@@ -96,7 +96,20 @@ object CatalogPersistentBehavior {
         descriptorToDelete
           .map { _ =>
             Effect
-              .persist(CatalogItemDeleted(deletedCatalogItem, descriptorId))
+              .persist(CatalogItemWithDescriptorDeleted(deletedCatalogItem, descriptorId))
+              .thenRun((_: State) => replyTo ! StatusReply.Success(Done))
+          }
+          .getOrElse {
+            replyTo ! StatusReply.Error[Done](s"Draft version not found.")
+            Effect.none[CatalogItemWithDescriptorDeleted, State]
+          }
+
+      case DeleteCatalogItem(eServiceId, replyTo) =>
+        val catalogItem: Option[CatalogItem] = state.items.get(eServiceId)
+        catalogItem
+          .map { eService =>
+            Effect
+              .persist(CatalogItemDeleted(eService.id.toString))
               .thenRun((_: State) => replyTo ! StatusReply.Success(Done))
           }
           .getOrElse {
@@ -131,10 +144,11 @@ object CatalogPersistentBehavior {
 
   val eventHandler: (State, Event) => State = (state, event) =>
     event match {
-      case CatalogItemAdded(catalogItem)                 => state.add(catalogItem)
-      case ClonedCatalogItemAdded(catalogItem)           => state.add(catalogItem)
-      case CatalogItemUpdated(catalogItem)               => state.update(catalogItem)
-      case CatalogItemDeleted(catalogItem, descriptorId) => state.delete(catalogItem, descriptorId)
+      case CatalogItemAdded(catalogItem)                               => state.add(catalogItem)
+      case ClonedCatalogItemAdded(catalogItem)                         => state.add(catalogItem)
+      case CatalogItemUpdated(catalogItem)                             => state.update(catalogItem)
+      case CatalogItemWithDescriptorDeleted(catalogItem, descriptorId) => state.delete(catalogItem, descriptorId)
+      case CatalogItemDeleted(catalogItemId)                           => state.deleteEService(catalogItemId)
       case DocumentUpdated(eServiceId, descriptorId, documentId, modifiedDocument) =>
         state.updateDocument(eServiceId, descriptorId, documentId, modifiedDocument)
     }
