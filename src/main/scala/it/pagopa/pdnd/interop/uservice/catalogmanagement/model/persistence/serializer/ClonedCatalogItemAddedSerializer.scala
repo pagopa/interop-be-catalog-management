@@ -20,7 +20,7 @@ class ClonedCatalogItemAddedSerializer extends SerializerWithStringManifest {
 
   override def toBinary(o: AnyRef): Array[Byte] = o match {
     case event: ClonedCatalogItemAdded =>
-      serialize(event, CatalogItemAddedManifest, currentVersion)
+      serialize(event, ClonedCatalogItemAddedManifest, currentVersion)
   }
 
   @SuppressWarnings(Array("org.wartremover.warts.Throw"))
