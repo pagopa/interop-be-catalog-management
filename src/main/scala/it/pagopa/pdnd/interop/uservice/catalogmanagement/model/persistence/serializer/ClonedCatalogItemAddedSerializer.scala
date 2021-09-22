@@ -16,7 +16,7 @@ class ClonedCatalogItemAddedSerializer extends SerializerWithStringManifest {
 
   override def manifest(o: AnyRef): String = s"${o.getClass.getName}|$currentVersion"
 
-  final val CatalogItemAddedManifest: String = classOf[ClonedCatalogItemAdded].getName
+  final val ClonedCatalogItemAddedManifest: String = classOf[ClonedCatalogItemAdded].getName
 
   override def toBinary(o: AnyRef): Array[Byte] = o match {
     case event: ClonedCatalogItemAdded =>
