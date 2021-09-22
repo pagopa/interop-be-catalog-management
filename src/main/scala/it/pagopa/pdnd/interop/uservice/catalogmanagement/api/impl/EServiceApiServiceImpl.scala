@@ -682,4 +682,93 @@ class EServiceApiServiceImpl(
         }
     }
   }
+
+  /** Code: 200, Message: Cloned EService with a new draft descriptor updated., DataType: EService
+    * Code: 400, Message: Invalid input, DataType: Problem
+    * Code: 404, Message: Not found, DataType: Problem
+    * Code: 500, Message: Internal Server Error, DataType: Problem
+    */
+  override def cloneEServiceByDescriptor(eServiceId: String, descriptorId: String)(implicit
+    toEntityMarshallerProblem: ToEntityMarshaller[Problem],
+    toEntityMarshallerEService: ToEntityMarshaller[EService],
+    contexts: Seq[(String, String)]
+  ): Route = {
+    contexts.foreach(println)
+
+    val shard = getShard(eServiceId)
+
+    val result: Future[StatusReply[CatalogItem]] =
+      for {
+        service        <- getCommander(shard).ask(ref => GetCatalogItem(eServiceId, ref))
+        serviceToClone <- service.toFuture(EServiceNotFoundError(eServiceId))
+        descriptorToClone <- serviceToClone.descriptors
+          .find(_.id.toString == descriptorId)
+          .toFuture(EServiceDescriptorNotFoundError(eServiceId, descriptorId))
+        clonedInterface <-
+          descriptorToClone.interface.fold(Future.successful[Option[CatalogDocument]](None))(interface =>
+            interface.cloneDocument(fileManager)(uuidSupplier.get, eServiceId, descriptorId).map(d => Some(d))
+          )
+        clonedDocuments <- Future.traverse(descriptorToClone.docs)(
+          _.cloneDocument(fileManager)(uuidSupplier.get, eServiceId, descriptorId)
+        )
+        clonedService <- cloneItemAsNewDraft(serviceToClone, descriptorToClone, clonedInterface, clonedDocuments)
+        cloned        <- getCommander(getShard(clonedService.id.toString)).ask(ref => AddClonedCatalogItem(clonedService, ref))
+      } yield cloned
+
+    onComplete(result) {
+      case Success(document) =>
+        document match {
+          case statusReply if statusReply.isSuccess =>
+            cloneEServiceByDescriptor200(statusReply.getValue.toApi)
+          case statusReply if statusReply.isError =>
+            cloneEServiceByDescriptor400(Problem(Option(statusReply.getError.getMessage), status = 405, "some error"))
+        }
+
+      case Failure(exception) =>
+        exception match {
+          case ex @ (_: EServiceNotFoundError | _: EServiceDescriptorNotFoundError) =>
+            cloneEServiceByDescriptor404(
+              Problem(Option(ex.getMessage), status = 404, s"$descriptorId on E-Service $eServiceId not found")
+            )
+          case ex =>
+            cloneEServiceByDescriptor400(
+              Problem(
+                Option(ex.getMessage),
+                status = 400,
+                s"Error on cloning descriptor $descriptorId on E-Service $eServiceId"
+              )
+            )
+        }
+    }
+  }
+
+  private def cloneItemAsNewDraft(
+    serviceToClone: CatalogItem,
+    descriptorToClone: CatalogDescriptor,
+    clonedInterface: Option[CatalogDocument],
+    clonedDocuments: Seq[CatalogDocument]
+  ): Future[CatalogItem] = {
+
+    for {
+      version <- VersionGenerator.next(None).toFuture
+      descriptor = CatalogDescriptor(
+        id = uuidSupplier.get,
+        version = version,
+        description = descriptorToClone.description,
+        interface = clonedInterface,
+        docs = clonedDocuments,
+        status = Draft,
+        audience = descriptorToClone.audience,
+        voucherLifespan = descriptorToClone.voucherLifespan
+      )
+    } yield CatalogItem(
+      id = uuidSupplier.get,
+      producerId = serviceToClone.producerId,
+      name = serviceToClone.name,
+      description = serviceToClone.description,
+      technology = serviceToClone.technology,
+      attributes = serviceToClone.attributes,
+      descriptors = Seq(descriptor)
+    )
+  }
 }

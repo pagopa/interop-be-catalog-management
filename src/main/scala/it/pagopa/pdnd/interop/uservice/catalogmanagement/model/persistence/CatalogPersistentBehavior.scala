@@ -39,6 +39,19 @@ object CatalogPersistentBehavior {
               .thenRun((_: State) => replyTo ! StatusReply.Success(newCatalogItem))
           }
 
+      case AddClonedCatalogItem(newCatalogItem, replyTo) =>
+        val catalogItem: Option[CatalogItem] = state.items.get(newCatalogItem.id.toString)
+        catalogItem
+          .map { ci =>
+            replyTo ! StatusReply.Error[CatalogItem](s"E-Service ${ci.id.toString} already exists")
+            Effect.none[ClonedCatalogItemAdded, State]
+          }
+          .getOrElse {
+            Effect
+              .persist(ClonedCatalogItemAdded(newCatalogItem))
+              .thenRun((_: State) => replyTo ! StatusReply.Success(newCatalogItem))
+          }
+
       case UpdateCatalogItem(modifiedCatalogItem, replyTo) =>
         val catalogItem: Option[CatalogItem] = state.items.get(modifiedCatalogItem.id.toString)
 
@@ -119,9 +132,11 @@ object CatalogPersistentBehavior {
   val eventHandler: (State, Event) => State = (state, event) =>
     event match {
       case CatalogItemAdded(catalogItem)                 => state.add(catalogItem)
+      case ClonedCatalogItemAdded(catalogItem)           => state.add(catalogItem)
       case CatalogItemUpdated(catalogItem)               => state.update(catalogItem)
       case CatalogItemDeleted(catalogItem, descriptorId) => state.delete(catalogItem, descriptorId)
-      case DocumentUpdated(eServiceId, descriptorId, documentId, modifiedDocument) => state.updateDocument(eServiceId, descriptorId, documentId, modifiedDocument)
+      case DocumentUpdated(eServiceId, descriptorId, documentId, modifiedDocument) =>
+        state.updateDocument(eServiceId, descriptorId, documentId, modifiedDocument)
     }
 
   val TypeKey: EntityTypeKey[Command] =

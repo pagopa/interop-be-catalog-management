@@ -25,6 +25,16 @@ trait FileManager {
 
   def delete(filePath: String): Future[Boolean]
 
+  def copy(filePathToCopy: String)(
+    documentId: UUID,
+    eServiceId: String,
+    descriptorId: String,
+    description: String,
+    checksum: String,
+    contentType: String,
+    fileName: String
+  ): Future[CatalogDocument]
+
 }
 
 @SuppressWarnings(Array("org.wartremover.warts.Equals", "org.wartremover.warts.ImplicitParameter"))
