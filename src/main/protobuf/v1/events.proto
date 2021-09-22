@@ -19,7 +19,7 @@ message CatalogItemV1UpdatedV1 {
   required CatalogItemV1 catalogItem = 1;
 }
 
-message CatalogItemWithDescriptorDeletedV1 {
+message CatalogItemWithDescriptorsDeletedV1 {
   required CatalogItemV1 catalogItem = 1;
   required string descriptorId = 2;
 }

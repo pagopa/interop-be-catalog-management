@@ -1,7 +1,7 @@
 package it.pagopa.pdnd.interop.uservice.catalogmanagement.model.persistence.serializer
 
 import akka.serialization.SerializerWithStringManifest
-import it.pagopa.pdnd.interop.uservice.catalogmanagement.model.persistence.CatalogItemWithDescriptorDeleted
+import it.pagopa.pdnd.interop.uservice.catalogmanagement.model.persistence.CatalogItemWithDescriptorsDeleted
 import it.pagopa.pdnd.interop.uservice.catalogmanagement.model.persistence.serializer.v1._
 
 import java.io.NotSerializableException
@@ -16,17 +16,17 @@ class CatalogItemWithDescriptorDeletedSerializer extends SerializerWithStringMan
 
   override def manifest(o: AnyRef): String = s"${o.getClass.getName}|$currentVersion"
 
-  final val CatalogItemWithDescriptorDeletedManifest: String = classOf[CatalogItemWithDescriptorDeleted].getName
+  final val CatalogItemWithDescriptorsDeletedManifest: String = classOf[CatalogItemWithDescriptorsDeleted].getName
 
   override def toBinary(o: AnyRef): Array[Byte] = o match {
-    case event: CatalogItemWithDescriptorDeleted =>
-      serialize(event, CatalogItemWithDescriptorDeletedManifest, currentVersion)
+    case event: CatalogItemWithDescriptorsDeleted =>
+      serialize(event, CatalogItemWithDescriptorsDeletedManifest, currentVersion)
   }
 
   @SuppressWarnings(Array("org.wartremover.warts.Throw"))
   override def fromBinary(bytes: Array[Byte], manifest: String): AnyRef = manifest.split('|').toList match {
-    case CatalogItemWithDescriptorDeletedManifest :: `version1` :: Nil =>
-      deserialize(v1.events.CatalogItemWithDescriptorDeletedV1, bytes, manifest, currentVersion)
+    case CatalogItemWithDescriptorsDeletedManifest :: `version1` :: Nil =>
+      deserialize(v1.events.CatalogItemWithDescriptorsDeletedV1, bytes, manifest, currentVersion)
     case _ =>
       throw new NotSerializableException(
         s"Unable to handle manifest: [[$manifest]], currentVersion: [[$currentVersion]] "

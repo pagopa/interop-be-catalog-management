@@ -96,12 +96,12 @@ object CatalogPersistentBehavior {
         descriptorToDelete
           .map { _ =>
             Effect
-              .persist(CatalogItemWithDescriptorDeleted(deletedCatalogItem, descriptorId))
+              .persist(CatalogItemWithDescriptorsDeleted(deletedCatalogItem, descriptorId))
               .thenRun((_: State) => replyTo ! StatusReply.Success(Done))
           }
           .getOrElse {
-            replyTo ! StatusReply.Error[Done](s"Draft version not found.")
-            Effect.none[CatalogItemWithDescriptorDeleted, State]
+            replyTo ! StatusReply.Error[Done](s"Descriptor not found.")
+            Effect.none[CatalogItemWithDescriptorsDeleted, State]
           }
 
       case DeleteCatalogItem(eServiceId, replyTo) =>
@@ -113,7 +113,7 @@ object CatalogPersistentBehavior {
               .thenRun((_: State) => replyTo ! StatusReply.Success(Done))
           }
           .getOrElse {
-            replyTo ! StatusReply.Error[Done](s"Draft version not found.")
+            replyTo ! StatusReply.Error[Done](s"E-Service not found.")
             Effect.none[CatalogItemDeleted, State]
           }
 
@@ -147,7 +147,7 @@ object CatalogPersistentBehavior {
       case CatalogItemAdded(catalogItem)                               => state.add(catalogItem)
       case ClonedCatalogItemAdded(catalogItem)                         => state.add(catalogItem)
       case CatalogItemUpdated(catalogItem)                             => state.update(catalogItem)
-      case CatalogItemWithDescriptorDeleted(catalogItem, descriptorId) => state.delete(catalogItem, descriptorId)
+      case CatalogItemWithDescriptorsDeleted(catalogItem, descriptorId) => state.delete(catalogItem, descriptorId)
       case CatalogItemDeleted(catalogItemId)                           => state.deleteEService(catalogItemId)
       case DocumentUpdated(eServiceId, descriptorId, documentId, modifiedDocument) =>
         state.updateDocument(eServiceId, descriptorId, documentId, modifiedDocument)

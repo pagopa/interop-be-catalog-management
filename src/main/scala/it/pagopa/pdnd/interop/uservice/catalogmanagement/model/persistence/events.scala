@@ -7,7 +7,7 @@ sealed trait Event extends Persistable
 final case class CatalogItemAdded(catalogItem: CatalogItem)                         extends Event
 final case class ClonedCatalogItemAdded(catalogItem: CatalogItem)                   extends Event
 final case class CatalogItemUpdated(catalogItem: CatalogItem)                       extends Event
-final case class CatalogItemWithDescriptorDeleted(catalogItem: CatalogItem, descriptorId: String) extends Event
+final case class CatalogItemWithDescriptorsDeleted(catalogItem: CatalogItem, descriptorId: String) extends Event
 final case class DocumentUpdated(
   eServiceId: String,
   descriptorId: String,
