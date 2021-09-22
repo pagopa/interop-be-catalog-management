@@ -380,12 +380,6 @@ paths:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/Problem'
-        "500":
-          description: Internal Server Error
-          content:
-            application/problem+json:
-              schema:
-                $ref: '#/components/schemas/Problem'
   /eservices/{eServiceId}/descriptors/{descriptorId}:
     put:
       security:
