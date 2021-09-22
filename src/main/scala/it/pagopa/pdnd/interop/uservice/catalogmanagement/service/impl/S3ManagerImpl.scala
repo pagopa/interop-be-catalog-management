@@ -9,6 +9,7 @@ import software.amazon.awssdk.core.ResponseBytes
 import software.amazon.awssdk.core.sync.{RequestBody, ResponseTransformer}
 import software.amazon.awssdk.services.s3.S3Client
 import software.amazon.awssdk.services.s3.model.{
+  CopyObjectRequest,
   DeleteObjectRequest,
   GetObjectRequest,
   GetObjectResponse,
@@ -34,7 +35,13 @@ class S3ManagerImpl(s3Client: S3Client) extends FileManager {
   ): Future[CatalogDocument] = Future.fromTry {
 
     Try {
-      val s3Key = createS3Key(eServiceId, descriptorId, id.toString, fileInfo = fileParts._1)
+      val s3Key = createS3Key(
+        eServiceId,
+        descriptorId,
+        id.toString,
+        contentType = fileParts._1.getContentType.toString(),
+        fileName = fileParts._1.getFileName
+      )
       val objectRequest =
         PutObjectRequest.builder
           .bucket(bucketName)
@@ -55,8 +62,48 @@ class S3ManagerImpl(s3Client: S3Client) extends FileManager {
     }
   }
 
-  private def createS3Key(eServiceId: String, descriptorId: String, id: String, fileInfo: FileInfo): String =
-    s"e-services/docs/$eServiceId/$descriptorId/$id/${fileInfo.getFieldName}/${fileInfo.getContentType.toString}/${fileInfo.getFileName}"
+  override def copy(filePathToCopy: String)(
+    documentId: UUID,
+    eServiceId: String,
+    descriptorId: String,
+    description: String,
+    checksum: String,
+    contentType: String,
+    fileName: String
+  ): Future[CatalogDocument] = Future.fromTry {
+
+    Try {
+      val destinationS3Key =
+        createS3Key(eServiceId, descriptorId, documentId.toString, contentType = contentType, fileName = fileName)
+      val copyObjRequest = CopyObjectRequest.builder
+        .destinationKey(destinationS3Key)
+        .sourceKey(filePathToCopy)
+        .sourceBucket(bucketName)
+        .destinationBucket(bucketName)
+        .build
+
+      val _ = s3Client.copyObject(copyObjRequest)
+
+      CatalogDocument(
+        id = documentId,
+        name = fileName,
+        contentType = contentType,
+        description = description,
+        path = destinationS3Key,
+        checksum = checksum,
+        uploadDate = OffsetDateTime.now()
+      )
+    }
+  }
+
+  private def createS3Key(
+    eServiceId: String,
+    descriptorId: String,
+    id: String,
+    contentType: String,
+    fileName: String
+  ): String =
+    s"e-services/docs/$eServiceId/$descriptorId/$id/${contentType}/$fileName"
 
   override def get(filePath: String): Future[ByteArrayOutputStream] = Future.fromTry {
     Try {
@@ -64,7 +111,7 @@ class S3ManagerImpl(s3Client: S3Client) extends FileManager {
       val s3Object: ResponseBytes[GetObjectResponse] = s3Client.getObject(getObjectRequest, ResponseTransformer.toBytes)
       val inputStream: InputStream                   = s3Object.asInputStream()
       val outputStream: ByteArrayOutputStream        = new ByteArrayOutputStream()
-      val _ = inputStream.transferTo(outputStream)
+      val _                                          = inputStream.transferTo(outputStream)
       outputStream
     }
   }
