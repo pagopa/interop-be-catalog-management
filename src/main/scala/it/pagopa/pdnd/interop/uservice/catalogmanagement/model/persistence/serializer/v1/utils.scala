@@ -82,6 +82,17 @@ object utils {
                 uploadDate = doc.uploadDate.format(DateTimeFormatter.ISO_DATE_TIME)
               )
             },
+            interface = ver.interface.map { doc =>
+              CatalogDocumentV1(
+                id = doc.id.toString,
+                name = doc.name,
+                contentType = doc.contentType,
+                description = doc.description,
+                path = doc.path,
+                checksum = doc.checksum,
+                uploadDate = doc.uploadDate.format(DateTimeFormatter.ISO_DATE_TIME)
+              )
+            },
             status = status,
             audience = ver.audience,
             voucherLifespan = ver.voucherLifespan
