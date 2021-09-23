@@ -5,7 +5,7 @@ import it.pagopa.pdnd.interop.uservice.catalogmanagement.common._
 import it.pagopa.pdnd.interop.uservice.catalogmanagement.model._
 import it.pagopa.pdnd.interop.uservice.catalogmanagement.model.persistence._
 import it.pagopa.pdnd.interop.uservice.catalogmanagement.model.persistence.serializer.v1.catalog_item.{CatalogDocumentV1, CatalogItemV1}
-import it.pagopa.pdnd.interop.uservice.catalogmanagement.model.persistence.serializer.v1.events.{CatalogItemV1AddedV1, CatalogItemV1DeletedV1, CatalogItemV1UpdatedV1, ClonedCatalogItemV1AddedV1, DocumentUpdatedV1}
+import it.pagopa.pdnd.interop.uservice.catalogmanagement.model.persistence.serializer.v1.events.{CatalogItemDeletedV1,CatalogItemV1AddedV1, CatalogItemV1UpdatedV1, CatalogItemWithDescriptorsDeletedV1, ClonedCatalogItemV1AddedV1, DocumentUpdatedV1}
 import it.pagopa.pdnd.interop.uservice.catalogmanagement.model.persistence.serializer.v1.state.{CatalogItemsV1, StateV1}
 import it.pagopa.pdnd.interop.uservice.catalogmanagement.model.persistence.serializer.v1.utils._
 
@@ -137,13 +137,13 @@ package object v1 {
         )
     }
 
-  implicit def catalogItemV1DeletedV1PersistEventDeserializer
-    : PersistEventDeserializer[CatalogItemV1DeletedV1, CatalogItemDeleted] =
+  implicit def CatalogItemWithDescriptorsDeletedV1PersistEventDeserializer
+    : PersistEventDeserializer[CatalogItemWithDescriptorsDeletedV1, CatalogItemWithDescriptorsDeleted] =
     event => {
       for {
         attributes  <- convertAttributesFromV1(event.catalogItem.attributes)
         descriptors <- convertDescriptorsFromV1(event.catalogItem.descriptors)
-      } yield CatalogItemDeleted(
+      } yield CatalogItemWithDescriptorsDeleted(
         catalogItem = CatalogItem(
           id = UUID.fromString(event.catalogItem.id),
           producerId = UUID.fromString(event.catalogItem.producerId),
@@ -158,12 +158,12 @@ package object v1 {
 
     }
 
-  implicit def catalogItemV1DeletedV1PersistEventSerializer
-    : PersistEventSerializer[CatalogItemDeleted, CatalogItemV1DeletedV1] =
+  implicit def CatalogItemWithDescriptorsDeletedV1PersistEventSerializer
+    : PersistEventSerializer[CatalogItemWithDescriptorsDeleted, CatalogItemWithDescriptorsDeletedV1] =
     event => {
       for {
         descriptors <- convertDescriptorsToV1(event.catalogItem.descriptors)
-      } yield CatalogItemV1DeletedV1
+      } yield CatalogItemWithDescriptorsDeletedV1
         .of(
           CatalogItemV1(
             id = event.catalogItem.id.toString,
@@ -177,6 +177,14 @@ package object v1 {
           descriptorId = event.descriptorId
         )
     }
+
+  implicit def catalogItemDeletedV1PersistEventDeserializer
+    : PersistEventDeserializer[CatalogItemDeletedV1, CatalogItemDeleted] =
+    event => Right[Throwable, CatalogItemDeleted](CatalogItemDeleted(catalogItemId = event.catalogItemId))
+
+  implicit def catalogItemDeletedV1PersistEventSerializer
+    : PersistEventSerializer[CatalogItemDeleted, CatalogItemDeletedV1] =
+    event => Right[Throwable, CatalogItemDeletedV1](CatalogItemDeletedV1.of(catalogItemId = event.catalogItemId))
 
   implicit def catalogItemV1UpdatedV1PersistEventDeserializer
     : PersistEventDeserializer[CatalogItemV1UpdatedV1, CatalogItemUpdated] =

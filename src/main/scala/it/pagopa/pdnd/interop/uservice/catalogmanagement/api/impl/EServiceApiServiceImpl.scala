@@ -771,4 +771,39 @@ class EServiceApiServiceImpl(
       descriptors = Seq(descriptor)
     )
   }
+
+  /** Code: 204, Message: EService deleted
+    * Code: 400, Message: Invalid input, DataType: Problem
+    * Code: 404, Message: Not found, DataType: Problem
+    */
+  override def deleteEService(
+    eServiceId: String
+  )(implicit toEntityMarshallerProblem: ToEntityMarshaller[Problem], contexts: Seq[(String, String)]): Route = {
+    val shard: String = getShard(eServiceId)
+
+    val commander: EntityRef[Command] = getCommander(shard)
+
+    val result: Future[StatusReply[Done]] = for {
+      retrieved <- commander.ask(ref => GetCatalogItem(eServiceId, ref))
+      service   <- retrieved.toFuture(EServiceNotFoundError(eServiceId))
+      _         <- canBeDeleted(service)
+      deleted   <- commander.ask(ref => DeleteCatalogItem(service.id.toString, ref))
+    } yield deleted
+
+    onComplete(result) {
+      case Success(statusReply) =>
+        if (statusReply.isSuccess) deleteEService204
+        else deleteEService400(Problem(Option(statusReply.getError.getMessage), status = 400, "some error"))
+      case Failure(exception) =>
+        deleteEService400(Problem(Option(exception.getMessage), status = 400, "some error"))
+    }
+  }
+
+  private def canBeDeleted(catalogItem: CatalogItem): Future[Boolean] = {
+    catalogItem.descriptors match {
+      case Nil => Future.successful(true)
+      case _   => Future.failed(new RuntimeException(s"E-Service ${catalogItem.id.toString} cannot be deleted because it contains descriptors"))
+    }
+  }
+
 }

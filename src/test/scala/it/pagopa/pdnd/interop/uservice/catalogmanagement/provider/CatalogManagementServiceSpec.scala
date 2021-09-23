@@ -274,6 +274,49 @@ class CatalogManagementServiceSpec
         updatedEService.attributes.declared.size shouldBe 0
         updatedEService.attributes.verified.size shouldBe 0
     }
+
+    "delete an e-service when it has no descriptors" in {
+      //given an e-service
+      val eServiceUuid = UUID.randomUUID().toString
+      val eService     = createEService(eServiceUuid)
+
+      //when deleted
+      val response = Await.result(
+        Http().singleRequest(
+          HttpRequest(
+            uri = s"$serviceURL/eservices/${eService.id.toString}",
+            method = HttpMethods.DELETE,
+            headers = Seq(headers.Authorization(OAuth2BearerToken("1234")))
+          )
+        ),
+        Duration.Inf
+      )
+
+      //then
+      response.status shouldBe StatusCodes.NoContent
+    }
+
+    "not delete an e-service when it has at least one descriptor" in {
+      //given an e-service
+      val eServiceUuid = UUID.randomUUID().toString
+      val eService     = createEService(eServiceUuid)
+      val _ = createEServiceDescriptor(eServiceUuid, UUID.randomUUID())
+
+      //when deleted
+      val response = Await.result(
+        Http().singleRequest(
+          HttpRequest(
+            uri = s"$serviceURL/eservices/${eService.id.toString}",
+            method = HttpMethods.DELETE,
+            headers = Seq(headers.Authorization(OAuth2BearerToken("1234")))
+          )
+        ),
+        Duration.Inf
+      )
+
+      //then
+      response.status shouldBe StatusCodes.BadRequest
+    }
   }
 
 }

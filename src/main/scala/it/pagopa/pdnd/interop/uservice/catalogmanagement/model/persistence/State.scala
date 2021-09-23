@@ -14,6 +14,9 @@ final case class State(items: Map[String, CatalogItem]) extends Persistable {
     }
   }
 
+  def deleteEService(catalogItemId: String): State =
+    copy(items = items - (catalogItemId))
+
   def add(catalogItem: CatalogItem): State =
     copy(items = items + (catalogItem.id.toString -> catalogItem))
 
