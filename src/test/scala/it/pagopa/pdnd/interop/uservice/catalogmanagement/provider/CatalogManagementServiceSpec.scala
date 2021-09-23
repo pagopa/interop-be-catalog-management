@@ -151,6 +151,30 @@ class CatalogManagementServiceSpec
       updatedDescriptor.status shouldBe "archived"
     }
 
+    "publish and existing descriptor" in {
+      val eServiceUuid = UUID.randomUUID()
+      val eService     = createEService(eServiceUuid.toString)
+      val descriptorId = UUID.randomUUID()
+      val descriptor   = createEServiceDescriptor(eServiceUuid.toString, descriptorId)
+
+      val response = Await.result(
+        Http().singleRequest(
+          HttpRequest(
+            uri = s"$serviceURL/eservices/${eService.id.toString}/descriptors/${descriptor.id.toString}/publish",
+            method = HttpMethods.POST,
+            headers = Seq(headers.Authorization(OAuth2BearerToken("1234")))
+          )
+        ),
+        Duration.Inf
+      )
+
+      response.status shouldBe StatusCodes.NoContent
+      val updatedEService = retrieveEService(eServiceUuid.toString)
+      updatedEService.descriptors.size shouldBe 1
+      val updatedDescriptor = updatedEService.descriptors.head
+      updatedDescriptor.status shouldBe "published"
+    }
+
     "fail with 404 code when updating a non-existing descriptor of existing eservice" in {
 
       val newEService = createEService("24772a3d-e6f2-47f2-96e5-4cbd1e4e8c00")

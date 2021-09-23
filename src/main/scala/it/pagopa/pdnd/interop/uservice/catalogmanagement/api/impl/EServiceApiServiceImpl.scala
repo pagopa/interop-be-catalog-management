@@ -45,6 +45,9 @@ class EServiceApiServiceImpl(
     extends EServiceApiService
     with Validation {
 
+  private lazy val INTERFACE = "interface"
+  private lazy val DOCUMENT  = "document"
+
   private val settings: ClusterShardingSettings = entity.settings match {
     case None    => ClusterShardingSettings(system)
     case Some(s) => s
@@ -98,14 +101,14 @@ class EServiceApiServiceImpl(
     val commander: EntityRef[Command] = getCommander(shard)
 
     val isInterface: Boolean = kind match {
-      case "interface" => true
-      case "document"  => false
+      case INTERFACE => true
+      case DOCUMENT  => false
     }
 
     val result: Future[Option[CatalogItem]] = for {
       current  <- retrieveCatalogItem(commander, eServiceId)
       verified <- FileManager.verify(doc, current, descriptorId, isInterface)
-      openapiDoc <- fileManager.store(
+      document <- fileManager.store(
         id = uuidSupplier.get,
         eServiceId = eServiceId,
         descriptorId = descriptorId,
@@ -113,9 +116,8 @@ class EServiceApiServiceImpl(
         interface = isInterface,
         fileParts = doc
       )
-      updated <- commander.ask(ref =>
-        UpdateCatalogItem(verified.updateFile(descriptorId, openapiDoc, isInterface), ref)
-      )
+      _       <- commander.ask(ref => AddCatalogItemDocument(verified.id.toString, descriptorId, document, isInterface, ref))
+      updated <- commander.ask(ref => GetCatalogItem(eServiceId, ref))
     } yield updated
 
     onComplete(result) {
@@ -413,7 +415,7 @@ class EServiceApiServiceImpl(
         voucherLifespan = eServiceDescriptorSeed.voucherLifespan,
         audience = eServiceDescriptorSeed.audience
       )
-      _ <- commander.ask(ref => UpdateCatalogItem(current.addDescriptor(createdCatalogDescriptor), ref))
+      _ <- commander.ask(ref => AddCatalogItemDescriptor(current.id.toString, createdCatalogDescriptor, ref))
     } yield createdCatalogDescriptor
 
     onComplete(result) {
@@ -435,19 +437,19 @@ class EServiceApiServiceImpl(
 
     val commander: EntityRef[Command] = getCommander(shard)
 
-    val result: Future[Option[CatalogItem]] = for {
+    val result: Future[StatusReply[Done]] = for {
       found         <- commander.ask(ref => GetCatalogItem(eServiceId, ref))
       catalogItem   <- found.toFuture(EServiceNotFoundError(eServiceId))
       document      <- extractDocument(catalogItem, descriptorId, documentId)
       extractedFile <- extractFile(document)
       _             <- fileManager.delete(extractedFile.path.toString)
-      updatedEservice = catalogItem.removeDocument(descriptorId, documentId)
-      updated <- commander.ask(ref => UpdateCatalogItem(updatedEservice, ref))
+      updated <- commander.ask(ref => DeleteCatalogItemDocument(catalogItem.id.toString, descriptorId, documentId, ref))
     } yield updated
 
     onComplete(result) {
-      case Success(catalogItem) =>
-        catalogItem.fold(
+      case Success(statusReply) =>
+        if (statusReply.isSuccess) deleteEServiceDocument204
+        else
           deleteEServiceDocument400(
             Problem(
               None,
@@ -455,7 +457,7 @@ class EServiceApiServiceImpl(
               s"Error on deletion of $documentId on descriptor $descriptorId on E-Service $eServiceId"
             )
           )
-        )(_ => deleteEServiceDocument204)
+
       case Failure(exception) =>
         exception match {
           case ex @ (_: EServiceNotFoundError | _: EServiceDescriptorNotFoundError) =>
@@ -589,7 +591,7 @@ class EServiceApiServiceImpl(
     eServiceId: String,
     descriptorId: String,
     status: CatalogDescriptorStatus
-  ): Future[Option[CatalogItem]] = {
+  ): Future[Option[CatalogDescriptor]] = {
 
     val shard: String = getShard(eServiceId)
 
@@ -609,10 +611,7 @@ class EServiceApiServiceImpl(
         .find(_.id.toString == descriptorId)
         .toFuture(EServiceDescriptorNotFoundError(eServiceId, descriptorId))
       updatedDescriptor <- mergeChanges(toUpdateDescriptor, status).toFuture
-      updatedItem = current.copy(descriptors =
-        current.descriptors.filter(_.id.toString != descriptorId) :+ updatedDescriptor
-      )
-      updated <- commander.ask(ref => UpdateCatalogItem(updatedItem, ref))
+      updated <- commander.ask(ref => UpdateCatalogItemDescriptor(current.id.toString, updatedDescriptor, ref))
     } yield updated
   }
 
@@ -640,7 +639,7 @@ class EServiceApiServiceImpl(
       document    <- extractDocument(catalogItem, descriptorId, documentId)
       updatedDocument = document.copy(description = updateEServiceDescriptorDocumentSeed.description)
       updated <- commander.ask(ref =>
-        UpdateDocument(
+        UpdateCatalogItemDocument(
           eServiceId = eServiceId,
           descriptorId = descriptorId,
           documentId = documentId,
@@ -802,7 +801,12 @@ class EServiceApiServiceImpl(
   private def canBeDeleted(catalogItem: CatalogItem): Future[Boolean] = {
     catalogItem.descriptors match {
       case Nil => Future.successful(true)
-      case _   => Future.failed(new RuntimeException(s"E-Service ${catalogItem.id.toString} cannot be deleted because it contains descriptors"))
+      case _ =>
+        Future.failed(
+          new RuntimeException(
+            s"E-Service ${catalogItem.id.toString} cannot be deleted because it contains descriptors"
+          )
+        )
     }
   }
 

@@ -59,84 +59,87 @@ object utils {
 
   }
 
+  def convertDescriptorToV1(descriptor: CatalogDescriptor): Either[RuntimeException, CatalogDescriptorV1] = {
+    CatalogDescriptorStatusV1
+      .fromName(descriptor.status.stringify)
+      .toRight(new RuntimeException("Invalid descriptor status"))
+      .map { status =>
+        CatalogDescriptorV1(
+          id = descriptor.id.toString,
+          version = descriptor.version,
+          description = descriptor.description,
+          docs = descriptor.docs.map { doc =>
+            CatalogDocumentV1(
+              id = doc.id.toString,
+              name = doc.name,
+              contentType = doc.contentType,
+              description = doc.description,
+              path = doc.path,
+              checksum = doc.checksum,
+              uploadDate = doc.uploadDate.format(DateTimeFormatter.ISO_DATE_TIME)
+            )
+          },
+          interface = descriptor.interface.map { doc =>
+            CatalogDocumentV1(
+              id = doc.id.toString,
+              name = doc.name,
+              contentType = doc.contentType,
+              description = doc.description,
+              path = doc.path,
+              checksum = doc.checksum,
+              uploadDate = doc.uploadDate.format(DateTimeFormatter.ISO_DATE_TIME)
+            )
+          },
+          status = status,
+          audience = descriptor.audience,
+          voucherLifespan = descriptor.voucherLifespan
+        )
+      }
+  }
+
   def convertDescriptorsToV1(
     descriptors: Seq[CatalogDescriptor]
   ): Either[RuntimeException, Seq[CatalogDescriptorV1]] = {
-    descriptors.traverse { ver =>
-      CatalogDescriptorStatusV1
-        .fromName(ver.status.stringify)
-        .toRight(new RuntimeException("Invalid descriptor status"))
-        .map { status =>
-          CatalogDescriptorV1(
-            id = ver.id.toString,
-            version = ver.version,
-            description = ver.description,
-            docs = ver.docs.map { doc =>
-              CatalogDocumentV1(
-                id = doc.id.toString,
-                name = doc.name,
-                contentType = doc.contentType,
-                description = doc.description,
-                path = doc.path,
-                checksum = doc.checksum,
-                uploadDate = doc.uploadDate.format(DateTimeFormatter.ISO_DATE_TIME)
-              )
-            },
-            interface = ver.interface.map { doc =>
-              CatalogDocumentV1(
-                id = doc.id.toString,
-                name = doc.name,
-                contentType = doc.contentType,
-                description = doc.description,
-                path = doc.path,
-                checksum = doc.checksum,
-                uploadDate = doc.uploadDate.format(DateTimeFormatter.ISO_DATE_TIME)
-              )
-            },
-            status = status,
-            audience = ver.audience,
-            voucherLifespan = ver.voucherLifespan
-          )
-        }
+    descriptors.traverse { convertDescriptorToV1 }
+  }
 
+  def convertDescriptorFromV1(ver1: CatalogDescriptorV1): Either[Throwable, CatalogDescriptor] = {
+    CatalogDescriptorStatus.fromText(ver1.status.name).map { status =>
+      CatalogDescriptor(
+        id = UUID.fromString(ver1.id),
+        version = ver1.version,
+        description = ver1.description,
+        interface = ver1.interface.map { doc =>
+          CatalogDocument(
+            id = UUID.fromString(doc.id),
+            name = doc.name,
+            contentType = doc.contentType,
+            description = doc.description,
+            path = doc.path,
+            checksum = doc.checksum,
+            uploadDate = OffsetDateTime.parse(doc.uploadDate, DateTimeFormatter.ISO_DATE_TIME)
+          )
+        },
+        docs = ver1.docs.map { doc =>
+          CatalogDocument(
+            id = UUID.fromString(doc.id),
+            name = doc.name,
+            contentType = doc.contentType,
+            description = doc.description,
+            path = doc.path,
+            checksum = doc.checksum,
+            uploadDate = OffsetDateTime.parse(doc.uploadDate, DateTimeFormatter.ISO_DATE_TIME)
+          )
+        },
+        status = status,
+        audience = ver1.audience,
+        voucherLifespan = ver1.voucherLifespan
+      )
     }
   }
 
   def convertDescriptorsFromV1(descriptors: Seq[CatalogDescriptorV1]): Either[Throwable, Seq[CatalogDescriptor]] = {
-    descriptors.traverse(ver1 =>
-      CatalogDescriptorStatus.fromText(ver1.status.name).map { status =>
-        CatalogDescriptor(
-          id = UUID.fromString(ver1.id),
-          version = ver1.version,
-          description = ver1.description,
-          interface = ver1.interface.map { doc =>
-            CatalogDocument(
-              id = UUID.fromString(doc.id),
-              name = doc.name,
-              contentType = doc.contentType,
-              description = doc.description,
-              path = doc.path,
-              checksum = doc.checksum,
-              uploadDate = OffsetDateTime.parse(doc.uploadDate, DateTimeFormatter.ISO_DATE_TIME)
-            )
-          },
-          docs = ver1.docs.map { doc =>
-            CatalogDocument(
-              id = UUID.fromString(doc.id),
-              name = doc.name,
-              contentType = doc.contentType,
-              description = doc.description,
-              path = doc.path,
-              checksum = doc.checksum,
-              uploadDate = OffsetDateTime.parse(doc.uploadDate, DateTimeFormatter.ISO_DATE_TIME)
-            )
-          },
-          status = status,
-          audience = ver1.audience,
-          voucherLifespan = ver1.voucherLifespan
-        )
-      }
-    )
+    descriptors.traverse(convertDescriptorFromV1)
   }
 
 }
