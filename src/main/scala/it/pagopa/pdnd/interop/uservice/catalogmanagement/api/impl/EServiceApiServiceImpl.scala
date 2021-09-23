@@ -802,7 +802,7 @@ class EServiceApiServiceImpl(
   private def canBeDeleted(catalogItem: CatalogItem): Future[Boolean] = {
     catalogItem.descriptors match {
       case Nil => Future.successful(true)
-      case _   => Future.failed(new RuntimeException(s"E-Service ${catalogItem.id.toString} cannot be deleted"))
+      case _   => Future.failed(new RuntimeException(s"E-Service ${catalogItem.id.toString} cannot be deleted because it contains descriptors"))
     }
   }
 
