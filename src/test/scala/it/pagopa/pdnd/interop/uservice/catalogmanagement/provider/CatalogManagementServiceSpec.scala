@@ -151,7 +151,7 @@ class CatalogManagementServiceSpec
       updatedDescriptor.status shouldBe "archived"
     }
 
-    "publish and existing descriptor" in {
+    "publish an existing descriptor" in {
       val eServiceUuid = UUID.randomUUID()
       val eService     = createEService(eServiceUuid.toString)
       val descriptorId = UUID.randomUUID()
