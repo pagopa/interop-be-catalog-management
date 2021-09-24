@@ -1,5 +1,6 @@
 package it.pagopa.pdnd.interop.uservice.catalogmanagement.model
 
+import it.pagopa.pdnd.interop.uservice.catalogmanagement.model.persistence.State
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
 
@@ -78,16 +79,20 @@ class CatalogItemSpec extends AnyWordSpecLike with Matchers {
       //given a catalog item with 6 documents and an interface
       val catalogItem = catalogItemGen(descriptors)
 
+      val state = State(items = Map(catalogItem.id.toString -> catalogItem))
+
       //when we remove one of the documents
-      val updatedItem = catalogItem.removeDocument(descriptorId.toString, toBeRemovedUUID.toString)
+      val descriptor =
+        state
+          .deleteDocument(catalogItem.id.toString, descriptorId.toString, toBeRemovedUUID.toString)
+          .items
+          .get(catalogItem.id.toString)
+          .flatMap(_.descriptors.find(_.id == descriptorId))
+          .get
 
       //then
-      updatedItem.descriptors
-        .find(_.id == descriptorId)
-        .get
-        .docs
-        .map(_.id) should contain allOf (uuid1, uuid2, uuid3, uuid4, uuid6)
-      updatedItem.descriptors.find(_.id == descriptorId).get.interface shouldBe a [Some[_]]
+      descriptor.docs.map(_.id) should contain only (uuid1, uuid2, uuid3, uuid4, uuid6)
+      descriptor.interface shouldBe a[Some[_]]
     }
 
     "properly delete the interface found in the documents collection" in {
@@ -121,15 +126,19 @@ class CatalogItemSpec extends AnyWordSpecLike with Matchers {
 
       //given a catalog item with 6 documents and an interface
       val catalogItem = catalogItemGen(descriptors)
+      val state       = State(items = Map(catalogItem.id.toString -> catalogItem))
 
-      //when we remove the interface
-      val updatedItem = catalogItem.removeDocument(descriptorId.toString, interfaceId.toString)
-      updatedItem.descriptors
-        .find(_.id == descriptorId)
+      //when we remove one of the documents
+      val descriptor = state
+        .deleteDocument(catalogItem.id.toString, descriptorId.toString, interfaceId.toString)
+        .items
+        .get(catalogItem.id.toString)
+        .flatMap(_.descriptors.find(_.id == descriptorId))
         .get
-        .docs
-        .map(_.id) should contain allOf (uuid1, uuid2, uuid3, uuid4, uuid5, uuid6)
-      updatedItem.descriptors.find(_.id == descriptorId).get.interface shouldBe None
+
+      //then
+      descriptor.docs.map(_.id) should contain only (uuid1, uuid2, uuid3, uuid4, uuid5, uuid6)
+      descriptor.interface shouldBe None
     }
 
     "return the same set of documents when the interface or the document to be deleted is not found in the documents collection" in {
@@ -163,15 +172,19 @@ class CatalogItemSpec extends AnyWordSpecLike with Matchers {
 
       //given a catalog item with 6 documents and an interface
       val catalogItem = catalogItemGen(descriptors)
+      val state       = State(items = Map(catalogItem.id.toString -> catalogItem))
 
       //when we remove a not existing document
-      val updatedItem = catalogItem.removeDocument(descriptorId.toString, UUID.randomUUID().toString)
-      updatedItem.descriptors
-        .find(_.id == descriptorId)
+      val descriptor = state
+        .deleteDocument(catalogItem.id.toString, descriptorId.toString, UUID.randomUUID().toString)
+        .items
+        .get(catalogItem.id.toString)
+        .flatMap(_.descriptors.find(_.id == descriptorId))
         .get
-        .docs
-        .map(_.id) should contain allOf (uuid1, uuid2, uuid3, uuid4, uuid5, uuid6)
-      updatedItem.descriptors.find(_.id == descriptorId).get.interface shouldBe a [Some[_]]
+
+      descriptor.docs
+        .map(_.id) should contain only (uuid1, uuid2, uuid3, uuid4, uuid5, uuid6)
+      descriptor.interface shouldBe a[Some[_]]
     }
 
     "return the same set of documents when the descriptor is not found in the e-service" in {
@@ -205,15 +218,19 @@ class CatalogItemSpec extends AnyWordSpecLike with Matchers {
 
       //given a catalog item with 6 documents and an interface
       val catalogItem = catalogItemGen(descriptors)
+      val state       = State(items = Map(catalogItem.id.toString -> catalogItem))
 
-      //when we remove the interface from a random descriptor
-      val updatedItem = catalogItem.removeDocument(UUID.randomUUID().toString, interfaceId.toString)
-      updatedItem.descriptors
-        .find(_.id == descriptorId)
-        .get
-        .docs
-        .map(_.id) should contain allOf (uuid1, uuid2, uuid3, uuid4, uuid5, uuid6)
-      updatedItem.descriptors.find(_.id == descriptorId).get.interface shouldBe a [Some[_]]
+      //when we remove one of the documents on a not existing descriptor
+      val descriptor =
+        state
+          .deleteDocument(catalogItem.id.toString, UUID.randomUUID().toString, interfaceId.toString)
+          .items
+          .get(catalogItem.id.toString)
+          .flatMap(_.descriptors.find(_.id == descriptorId))
+          .get
+
+      descriptor.docs.map(_.id) should contain allOf (uuid1, uuid2, uuid3, uuid4, uuid5, uuid6)
+      descriptor.interface shouldBe a[Some[_]]
     }
 
     "return an empty version number since no descriptors has been defined" in {

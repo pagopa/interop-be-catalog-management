@@ -24,7 +24,7 @@ message CatalogItemWithDescriptorsDeletedV1 {
   required string descriptorId = 2;
 }
 
-message DocumentUpdatedV1 {
+message CatalogItemDocumentUpdatedV1 {
   required string eServiceId = 1;
   required string descriptorId = 2;
   required string documentId = 3;
@@ -33,4 +33,27 @@ message DocumentUpdatedV1 {
 
 message CatalogItemDeletedV1 {
   required string catalogItemId = 1;
+}
+
+message CatalogItemDocumentAddedV1 {
+  required string eServiceId = 1;
+  required string descriptorId = 2;
+  required CatalogDocumentV1 document = 3;
+  required bool isInterface = 4;
+}
+
+message CatalogItemDocumentDeletedV1 {
+  required string eServiceId = 1;
+  required string descriptorId = 2;
+  required string documentId = 3;
+}
+
+message CatalogItemDescriptorAddedV1 {
+  required string eServiceId = 1;
+  required CatalogDescriptorV1 catalogDescriptor = 2;
+}
+
+message CatalogItemDescriptorUpdatedV1 {
+  required string eServiceId = 1;
+  required CatalogDescriptorV1 catalogDescriptor = 2;
 }
