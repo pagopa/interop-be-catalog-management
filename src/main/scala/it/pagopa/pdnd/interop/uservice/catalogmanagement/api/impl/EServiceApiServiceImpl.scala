@@ -175,6 +175,40 @@ class EServiceApiServiceImpl(
 
   }
 
+  /** Code: 200, Message: EService document retrieved, DataType: EServiceDoc
+    * Code: 404, Message: EService not found, DataType: Problem
+    * Code: 400, Message: Bad request, DataType: Problem
+    */
+  override def getEServiceDocument(eServiceId: String, descriptorId: String, documentId: String)(implicit
+    toEntityMarshallerEServiceDoc: ToEntityMarshaller[EServiceDoc],
+    toEntityMarshallerProblem: ToEntityMarshaller[Problem],
+    contexts: Seq[(String, String)]
+  ): Route = {
+    contexts.foreach(println)
+
+    val shard: String = getShard(eServiceId)
+
+    val commander: EntityRef[Command] = getCommander(shard)
+
+    val result: Future[EServiceDoc] =
+      for {
+        found       <- commander.ask(ref => GetCatalogItem(eServiceId, ref))
+        catalogItem <- found.toFuture(EServiceNotFoundError(eServiceId))
+        document    <- extractDocument(catalogItem, descriptorId, documentId)
+      } yield document.toApi
+
+    onComplete(result) {
+      case Success(doc) => getEServiceDocument200(doc)
+      case Failure(exception) =>
+        exception match {
+          case ex: EServiceNotFoundError =>
+            getEService400(Problem(Option(ex.getMessage), status = 404, s"EService $eServiceId not found"))
+          case ex => getEService400(Problem(Option(ex.getMessage), status = 400, s"Invalid request"))
+        }
+
+    }
+  }
+
   private def extractDocument(
     catalogItem: CatalogItem,
     descriptorId: String,
@@ -731,7 +765,7 @@ class EServiceApiServiceImpl(
     } yield CatalogItem(
       id = uuidSupplier.get,
       producerId = serviceToClone.producerId,
-      name = s"${serviceToClone.name} - clone",
+      name = serviceToClone.name,
       description = serviceToClone.description,
       technology = serviceToClone.technology,
       attributes = serviceToClone.attributes,
