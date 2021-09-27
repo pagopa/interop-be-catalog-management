@@ -731,7 +731,7 @@ class EServiceApiServiceImpl(
     } yield CatalogItem(
       id = uuidSupplier.get,
       producerId = serviceToClone.producerId,
-      name = serviceToClone.name,
+      name = s"${serviceToClone.name} - clone",
       description = serviceToClone.description,
       technology = serviceToClone.technology,
       attributes = serviceToClone.attributes,
