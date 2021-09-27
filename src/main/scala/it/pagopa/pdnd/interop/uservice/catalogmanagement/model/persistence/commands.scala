@@ -28,7 +28,6 @@ final case class ListCatalogItem(
   from: Int,
   to: Int,
   producerId: Option[String],
-  consumerId: Option[String],
   status: Option[String],
   replyTo: ActorRef[Seq[CatalogItem]]
 ) extends Command

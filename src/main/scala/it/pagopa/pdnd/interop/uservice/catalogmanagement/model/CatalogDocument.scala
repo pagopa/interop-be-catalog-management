@@ -17,7 +17,7 @@ final case class CatalogDocument(
 ) extends Convertable[EServiceDoc] {
 
   override def toApi: EServiceDoc =
-    EServiceDoc(id = id, name = name, contentType = contentType, description = description)
+    EServiceDoc(id = id, name = name, contentType = contentType, description = description, path = path)
 
   /** clones the current document instance as a new one.
     * @param fileManager - DI of the fileManager in place
