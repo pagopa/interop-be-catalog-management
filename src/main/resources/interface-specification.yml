@@ -64,10 +64,6 @@ paths:
           schema:
             type: string
         - in: query
-          name: consumerId
-          schema:
-            type: string
-        - in: query
           name: status
           schema:
             type: string
@@ -635,10 +631,9 @@ paths:
         "200":
           description: EService document retrieved
           content:
-            application/octet-stream:
+            application/json:
               schema:
-                type: string
-                format: binary
+                $ref: '#/components/schemas/EServiceDoc'
         '404':
           description: EService not found
           content:
@@ -751,6 +746,7 @@ components:
         - name
         - contentType
         - description
+        - path
       properties:
         id:
           type: string
@@ -760,6 +756,8 @@ components:
         contentType:
           type: string
         description:
+          type: string
+        path:
           type: string
     EServiceDescriptor:
       type: object

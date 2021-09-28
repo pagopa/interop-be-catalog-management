@@ -191,13 +191,12 @@ object CatalogPersistentBehavior {
         replyTo ! catalogItem
         Effect.none[Event, State]
 
-      case ListCatalogItem(from, to, producerId, _, status, replyTo) =>
+      case ListCatalogItem(from, to, producerId, status, replyTo) =>
         val catalogItems: Seq[CatalogItem] = state.items
-          .filter { case (_, v) =>
-            (if (producerId.isDefined) producerId.contains(v.producerId.toString) else true) &&
-              (if (status.isDefined) v.descriptors.exists(descriptor => status.contains(descriptor.status.stringify))
-               else true)
-          }
+          .filter(item => producerId.forall(filter => filter == item._2.producerId.toString))
+          .filter(item =>
+            status.forall(filter => item._2.descriptors.exists(descriptor => filter == descriptor.status.stringify))
+          )
           .values
           .toSeq
           .slice(from, to)
@@ -222,9 +221,12 @@ object CatalogPersistentBehavior {
         state.updateDocument(eServiceId, descriptorId, documentId, modifiedDocument)
       case CatalogItemDocumentAdded(eServiceId, descriptorId, openapiDoc, isInterface) =>
         state.addItemDocument(eServiceId, descriptorId, openapiDoc, isInterface)
-      case CatalogItemDocumentDeleted(eServiceId, descriptorId, documentId) => state.deleteDocument(eServiceId, descriptorId, documentId)
-      case CatalogItemDescriptorAdded(eServiceId, catalogDescriptor) => state.addDescriptor(eServiceId, catalogDescriptor)
-      case CatalogItemDescriptorUpdated(eServiceId, catalogDescriptor) => state.updateDescriptor(eServiceId, catalogDescriptor)
+      case CatalogItemDocumentDeleted(eServiceId, descriptorId, documentId) =>
+        state.deleteDocument(eServiceId, descriptorId, documentId)
+      case CatalogItemDescriptorAdded(eServiceId, catalogDescriptor) =>
+        state.addDescriptor(eServiceId, catalogDescriptor)
+      case CatalogItemDescriptorUpdated(eServiceId, catalogDescriptor) =>
+        state.updateDescriptor(eServiceId, catalogDescriptor)
     }
 
   val TypeKey: EntityTypeKey[Command] =

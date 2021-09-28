@@ -5,8 +5,8 @@ import akka.actor.typed.ActorSystem
 import akka.cluster.sharding.typed.scaladsl.{ClusterSharding, Entity, EntityRef}
 import akka.cluster.sharding.typed.{ClusterShardingSettings, ShardingEnvelope}
 import akka.http.scaladsl.marshalling.ToEntityMarshaller
-import akka.http.scaladsl.model.{ContentType, HttpEntity}
-import akka.http.scaladsl.server.Directives.{complete, onComplete, onSuccess}
+import akka.http.scaladsl.model.ContentType
+import akka.http.scaladsl.server.Directives.{onComplete, onSuccess}
 import akka.http.scaladsl.server.Route
 import akka.http.scaladsl.server.directives.FileInfo
 import akka.pattern.StatusReply
@@ -19,7 +19,7 @@ import it.pagopa.pdnd.interop.uservice.catalogmanagement.model._
 import it.pagopa.pdnd.interop.uservice.catalogmanagement.model.persistence._
 import it.pagopa.pdnd.interop.uservice.catalogmanagement.service.{FileManager, UUIDSupplier, VersionGenerator}
 
-import java.io.{ByteArrayOutputStream, File}
+import java.io.File
 import java.nio.file.Paths
 import scala.concurrent.duration.Duration
 import scala.concurrent.{Await, ExecutionContext, Future}
@@ -152,7 +152,7 @@ class EServiceApiServiceImpl(
 
   /** Code: 200, Message: A list of EService, DataType: Seq[EService]
     */
-  override def getEServices(producerId: Option[String], consumerId: Option[String], status: Option[String])(implicit
+  override def getEServices(producerId: Option[String], status: Option[String])(implicit
     toEntityMarshallerEServicearray: ToEntityMarshaller[Seq[EService]],
     contexts: Seq[(String, String)]
   ): Route = {
@@ -160,7 +160,7 @@ class EServiceApiServiceImpl(
     val sliceSize = 100
     def getSlice(commander: EntityRef[Command], from: Int, to: Int): LazyList[CatalogItem] = {
       val slice: Seq[CatalogItem] = Await
-        .result(commander.ask(ref => ListCatalogItem(from, to, producerId, consumerId, status, ref)), Duration.Inf)
+        .result(commander.ask(ref => ListCatalogItem(from, to, producerId, status, ref)), Duration.Inf)
 
       if (slice.isEmpty)
         LazyList.empty[CatalogItem]
@@ -175,13 +175,13 @@ class EServiceApiServiceImpl(
 
   }
 
-  /** Code: 200, Message: EService document retrieved, DataType: File
+  /** Code: 200, Message: EService document retrieved, DataType: EServiceDoc
     * Code: 404, Message: EService not found, DataType: Problem
     * Code: 400, Message: Bad request, DataType: Problem
     */
   override def getEServiceDocument(eServiceId: String, descriptorId: String, documentId: String)(implicit
+    toEntityMarshallerEServiceDoc: ToEntityMarshaller[EServiceDoc],
     toEntityMarshallerProblem: ToEntityMarshaller[Problem],
-    toEntityMarshallerFile: ToEntityMarshaller[File],
     contexts: Seq[(String, String)]
   ): Route = {
     contexts.foreach(println)
@@ -190,20 +190,22 @@ class EServiceApiServiceImpl(
 
     val commander: EntityRef[Command] = getCommander(shard)
 
-    val result: Future[(ContentType, ByteArrayOutputStream)] =
+    val result: Future[EServiceDoc] =
       for {
-        found         <- commander.ask(ref => GetCatalogItem(eServiceId, ref))
-        catalogItem   <- found.toFuture(EServiceNotFoundError(eServiceId))
-        document      <- extractDocument(catalogItem, descriptorId, documentId)
-        extractedFile <- extractFile(document)
-        outputStream  <- fileManager.get(extractedFile.path.toString)
-      } yield (extractedFile.contentType, outputStream)
+        found       <- commander.ask(ref => GetCatalogItem(eServiceId, ref))
+        catalogItem <- found.toFuture(EServiceNotFoundError(eServiceId))
+        document    <- extractDocument(catalogItem, descriptorId, documentId)
+      } yield document.toApi
 
     onComplete(result) {
-      case Success(tuple) =>
-        complete(HttpEntity(tuple._1, tuple._2.toByteArray))
+      case Success(doc) => getEServiceDocument200(doc)
       case Failure(exception) =>
-        getEService400(Problem(Option(exception.getMessage), status = 400, s"EService $eServiceId not found"))
+        exception match {
+          case ex: EServiceNotFoundError =>
+            getEService400(Problem(Option(ex.getMessage), status = 404, s"EService $eServiceId not found"))
+          case ex => getEService400(Problem(Option(ex.getMessage), status = 400, s"Invalid request"))
+        }
+
     }
   }
 
@@ -443,7 +445,7 @@ class EServiceApiServiceImpl(
       document      <- extractDocument(catalogItem, descriptorId, documentId)
       extractedFile <- extractFile(document)
       _             <- fileManager.delete(extractedFile.path.toString)
-      updated <- commander.ask(ref => DeleteCatalogItemDocument(catalogItem.id.toString, descriptorId, documentId, ref))
+      updated       <- commander.ask(ref => DeleteCatalogItemDocument(catalogItem.id.toString, descriptorId, documentId, ref))
     } yield updated
 
     onComplete(result) {
@@ -611,7 +613,7 @@ class EServiceApiServiceImpl(
         .find(_.id.toString == descriptorId)
         .toFuture(EServiceDescriptorNotFoundError(eServiceId, descriptorId))
       updatedDescriptor <- mergeChanges(toUpdateDescriptor, status).toFuture
-      updated <- commander.ask(ref => UpdateCatalogItemDescriptor(current.id.toString, updatedDescriptor, ref))
+      updated           <- commander.ask(ref => UpdateCatalogItemDescriptor(current.id.toString, updatedDescriptor, ref))
     } yield updated
   }
 
