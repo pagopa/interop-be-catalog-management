@@ -24,7 +24,7 @@ import it.pagopa.pdnd.interop.uservice.catalogmanagement.model.persistence.{
   Command
 }
 import it.pagopa.pdnd.interop.uservice.catalogmanagement.server.Controller
-import it.pagopa.pdnd.interop.uservice.catalogmanagement.service.impl.{FileManagerImpl, UUIDSupplierImpl}
+import it.pagopa.pdnd.interop.uservice.catalogmanagement.service.impl.{S3ManagerImpl, UUIDSupplierImpl}
 import it.pagopa.pdnd.interop.uservice.catalogmanagement.service.{FileManager, UUIDSupplier}
 import kamon.Kamon
 import spray.json._
@@ -82,8 +82,7 @@ object Main extends App {
         }
 
         val uuidSupplier: UUIDSupplier = new UUIDSupplierImpl
-//        val fileManager: FileManager   = new S3ManagerImpl(s3Client)
-        val fileManager: FileManager  = new FileManagerImpl()
+        val fileManager: FileManager   = new S3ManagerImpl(s3Client)
         val eServiceApiMarshallerImpl = new EServiceApiMarshallerImpl()
 
         val eServiceApi = new EServiceApi(

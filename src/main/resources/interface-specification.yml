@@ -12,6 +12,7 @@ info:
   x-summary: an x-summary
 servers:
   - url: https://gateway.interop.pdnd.dev/pdnd-interop-uservice-catalog-management/0.0.1
+#  - url: /pdnd-interop-uservice-catalog-management/0.0.1
     description: This service is eservice manager
 security:
   - bearerAuth: [ ]
