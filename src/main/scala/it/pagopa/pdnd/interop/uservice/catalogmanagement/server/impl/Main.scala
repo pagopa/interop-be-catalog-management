@@ -16,7 +16,11 @@ import akka.projection.ProjectionBehavior
 import akka.{actor => classic}
 import it.pagopa.pdnd.interop.uservice.catalogmanagement.api.EServiceApi
 import it.pagopa.pdnd.interop.uservice.catalogmanagement.api.impl.{EServiceApiMarshallerImpl, EServiceApiServiceImpl, _}
-import it.pagopa.pdnd.interop.uservice.catalogmanagement.common.system.{ApplicationConfiguration, Authenticator}
+import it.pagopa.pdnd.interop.uservice.catalogmanagement.common.system.{
+  ApplicationConfiguration,
+  Authenticator,
+  s3Client
+}
 import it.pagopa.pdnd.interop.uservice.catalogmanagement.model.Problem
 import it.pagopa.pdnd.interop.uservice.catalogmanagement.model.persistence.{
   CatalogPersistentBehavior,
@@ -83,7 +87,7 @@ object Main extends App {
 
         val uuidSupplier: UUIDSupplier = new UUIDSupplierImpl
         val fileManager: FileManager   = new S3ManagerImpl(s3Client)
-        val eServiceApiMarshallerImpl = new EServiceApiMarshallerImpl()
+        val eServiceApiMarshallerImpl  = new EServiceApiMarshallerImpl()
 
         val eServiceApi = new EServiceApi(
           new EServiceApiServiceImpl(context.system, sharding, catalogPersistentEntity, uuidSupplier, fileManager),
