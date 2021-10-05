@@ -12,7 +12,6 @@ info:
   x-summary: an x-summary
 servers:
   - url: https://gateway.interop.pdnd.dev/pdnd-interop-uservice-catalog-management/0.0.1
-#  - url: /pdnd-interop-uservice-catalog-management/0.0.1
     description: This service is eservice manager
 security:
   - bearerAuth: [ ]
@@ -351,6 +350,42 @@ paths:
       responses:
         "204":
           description: EService Descriptor status deprecated
+        "400":
+          description: Invalid input
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        "404":
+          description: Not found
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+  /eservices/{eServiceId}/descriptors/{descriptorId}/suspend:
+    post:
+      security:
+        - bearerAuth: [ ]
+      tags:
+        - e_service
+      summary: Suspends a descriptor
+      operationId: suspendDescriptor
+      parameters:
+        - name: eServiceId
+          in: path
+          description: The E-Service id
+          required: true
+          schema:
+            type: string
+        - name: descriptorId
+          in: path
+          description: The Descriptor Id
+          required: true
+          schema:
+            type: string
+      responses:
+        "204":
+          description: EService Descriptor status suspended
         "400":
           description: Invalid input
           content:

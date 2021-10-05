@@ -1,7 +1,6 @@
 package it.pagopa.pdnd.interop.uservice.catalogmanagement.service.impl
 
 import akka.http.scaladsl.server.directives.FileInfo
-import it.pagopa.pdnd.interop.uservice.catalogmanagement.common.Digester
 import it.pagopa.pdnd.interop.uservice.catalogmanagement.model.CatalogDocument
 import it.pagopa.pdnd.interop.uservice.catalogmanagement.service.FileManager
 
@@ -42,7 +41,8 @@ class FileManagerImpl extends FileManager {
           contentType = fileParts._1.getContentType.toString(),
           description = description,
           path = path,
-          checksum = Digester.createHash(fileParts._2),
+//          checksum = Digester.createHash(fileParts._2),
+          checksum = UUID.randomUUID().toString,
           uploadDate = OffsetDateTime.now()
         )
 

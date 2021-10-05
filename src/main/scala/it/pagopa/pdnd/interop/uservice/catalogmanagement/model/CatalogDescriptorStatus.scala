@@ -5,6 +5,7 @@ sealed trait CatalogDescriptorStatus {
     case Draft      => "draft"
     case Published  => "published"
     case Deprecated => "deprecated"
+    case Suspended  => "suspended"
     case Archived   => "archived"
   }
 }
@@ -12,14 +13,16 @@ sealed trait CatalogDescriptorStatus {
 case object Draft      extends CatalogDescriptorStatus
 case object Published  extends CatalogDescriptorStatus
 case object Deprecated extends CatalogDescriptorStatus
+case object Suspended  extends CatalogDescriptorStatus
 case object Archived   extends CatalogDescriptorStatus
 
-object  CatalogDescriptorStatus {
+object CatalogDescriptorStatus {
 
   def fromText(str: String): Either[Throwable, CatalogDescriptorStatus] = str match {
     case "draft"      => Right[Throwable, CatalogDescriptorStatus](Draft)
     case "published"  => Right[Throwable, CatalogDescriptorStatus](Published)
     case "deprecated" => Right[Throwable, CatalogDescriptorStatus](Deprecated)
+    case "suspended"  => Right[Throwable, CatalogDescriptorStatus](Suspended)
     case "archived"   => Right[Throwable, CatalogDescriptorStatus](Archived)
     case _ =>
       Left[Throwable, CatalogDescriptorStatus](

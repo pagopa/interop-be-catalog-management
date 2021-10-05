@@ -57,5 +57,6 @@ enum CatalogDescriptorStatusV1 {
   draft = 1;
   published = 2;
   deprecated = 3;
-  archived = 4;
+  suspended = 4;
+  archived = 5;
 }
