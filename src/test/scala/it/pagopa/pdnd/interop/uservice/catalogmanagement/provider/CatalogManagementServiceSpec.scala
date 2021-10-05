@@ -92,17 +92,18 @@ class CatalogManagementServiceSpec
     println("Resources cleaned")
   }
 
-  "Processing a request payload" should {
-
+  "Contract verification" should {
     import com.itv.scalapact.http._
     import com.itv.scalapact.json._
-
-    "be able to verify it's contracts" in {
+    "succeed" in {
       verifyPact
         .withPactSource(loadFromLocal("src/test/resources/pacts"))
         .setupProviderState("given") { case "e-service id" =>
           createEService("24772a3d-e6f2-47f2-96e5-4cbd1e4e8c84")
-          createEServiceDescriptor("24772a3d-e6f2-47f2-96e5-4cbd1e4e8c84", UUID.fromString("24772a3d-e6f2-47f2-96e5-4cbd1e4e9999"))
+          createEServiceDescriptor(
+            "24772a3d-e6f2-47f2-96e5-4cbd1e4e8c84",
+            UUID.fromString("24772a3d-e6f2-47f2-96e5-4cbd1e4e9999")
+          )
           val newHeader = "Content-Type" -> "application/json"
           ProviderStateResult(
             result = true,
@@ -110,9 +111,13 @@ class CatalogManagementServiceSpec
           )
         }
         .runVerificationAgainst("localhost", 18088, 10.seconds)
-    }
 
-    "update existing descriptor" in {
+    }
+  }
+
+  "Update descriptor" should {
+
+    "succeed" in {
 
       val eServiceUuid = "24772a3d-e6f2-47f2-96e5-4cbd1e4e8c85"
       val eService     = createEService(eServiceUuid)
@@ -151,35 +156,11 @@ class CatalogManagementServiceSpec
       updatedDescriptor.status shouldBe "archived"
     }
 
-    "publish an existing descriptor" in {
-      val eServiceUuid = UUID.randomUUID()
-      val eService     = createEService(eServiceUuid.toString)
-      val descriptorId = UUID.randomUUID()
-      val descriptor   = createEServiceDescriptor(eServiceUuid.toString, descriptorId)
-
-      val response = Await.result(
-        Http().singleRequest(
-          HttpRequest(
-            uri = s"$serviceURL/eservices/${eService.id.toString}/descriptors/${descriptor.id.toString}/publish",
-            method = HttpMethods.POST,
-            headers = Seq(headers.Authorization(OAuth2BearerToken("1234")))
-          )
-        ),
-        Duration.Inf
-      )
-
-      response.status shouldBe StatusCodes.NoContent
-      val updatedEService = retrieveEService(eServiceUuid.toString)
-      updatedEService.descriptors.size shouldBe 1
-      val updatedDescriptor = updatedEService.descriptors.head
-      updatedDescriptor.status shouldBe "published"
-    }
-
     "fail with 404 code when updating a non-existing descriptor of existing eservice" in {
 
-      val newEService = createEService("24772a3d-e6f2-47f2-96e5-4cbd1e4e8c00")
+      val newEService  = createEService("24772a3d-e6f2-47f2-96e5-4cbd1e4e8c00")
       val descriptorId = UUID.randomUUID()
-      val _ = createEServiceDescriptor(newEService.id.toString, descriptorId)
+      val _            = createEServiceDescriptor(newEService.id.toString, descriptorId)
 
       val data =
         """{
@@ -234,7 +215,7 @@ class CatalogManagementServiceSpec
       val eServiceUuid = "24772a3d-e6f2-47f2-96e5-4cbd1e4e8c01"
       val eService     = createEService(eServiceUuid)
       val descriptorId = UUID.randomUUID()
-      val _ = createEServiceDescriptor(eServiceUuid, descriptorId)
+      val _            = createEServiceDescriptor(eServiceUuid, descriptorId)
 
       val data =
         """{
@@ -261,42 +242,116 @@ class CatalogManagementServiceSpec
     }
   }
 
+  "Update descriptor status" should {
+    "succeed on publish" in {
+      val eServiceUuid = UUID.randomUUID()
+      val eService     = createEService(eServiceUuid.toString)
+      val descriptorId = UUID.randomUUID()
+      val descriptor   = createEServiceDescriptor(eServiceUuid.toString, descriptorId)
+
+      val response = Await.result(
+        Http().singleRequest(
+          HttpRequest(
+            uri = s"$serviceURL/eservices/${eService.id.toString}/descriptors/${descriptor.id.toString}/publish",
+            method = HttpMethods.POST,
+            headers = Seq(headers.Authorization(OAuth2BearerToken("1234")))
+          )
+        ),
+        Duration.Inf
+      )
+
+      response.status shouldBe StatusCodes.NoContent
+      val updatedEService = retrieveEService(eServiceUuid.toString)
+      updatedEService.descriptors.size shouldBe 1
+      val updatedDescriptor = updatedEService.descriptors.head
+      updatedDescriptor.status shouldBe "published"
+    }
+
+    "succeed on deprecate" in {
+      val eServiceUuid = UUID.randomUUID()
+      val eService     = createEService(eServiceUuid.toString)
+      val descriptorId = UUID.randomUUID()
+      val descriptor   = createEServiceDescriptor(eServiceUuid.toString, descriptorId)
+
+      val response = Await.result(
+        Http().singleRequest(
+          HttpRequest(
+            uri = s"$serviceURL/eservices/${eService.id.toString}/descriptors/${descriptor.id.toString}/deprecate",
+            method = HttpMethods.POST,
+            headers = Seq(headers.Authorization(OAuth2BearerToken("1234")))
+          )
+        ),
+        Duration.Inf
+      )
+
+      response.status shouldBe StatusCodes.NoContent
+      val updatedEService = retrieveEService(eServiceUuid.toString)
+      updatedEService.descriptors.size shouldBe 1
+      val updatedDescriptor = updatedEService.descriptors.head
+      updatedDescriptor.status shouldBe "deprecated"
+    }
+
+    "succeed on suspend" in {
+      val eServiceUuid = UUID.randomUUID()
+      val eService     = createEService(eServiceUuid.toString)
+      val descriptorId = UUID.randomUUID()
+      val descriptor   = createEServiceDescriptor(eServiceUuid.toString, descriptorId)
+
+      val response = Await.result(
+        Http().singleRequest(
+          HttpRequest(
+            uri = s"$serviceURL/eservices/${eService.id.toString}/descriptors/${descriptor.id.toString}/suspend",
+            method = HttpMethods.POST,
+            headers = Seq(headers.Authorization(OAuth2BearerToken("1234")))
+          )
+        ),
+        Duration.Inf
+      )
+
+      response.status shouldBe StatusCodes.NoContent
+      val updatedEService = retrieveEService(eServiceUuid.toString)
+      updatedEService.descriptors.size shouldBe 1
+      val updatedDescriptor = updatedEService.descriptors.head
+      updatedDescriptor.status shouldBe "suspended"
+    }
+  }
+
   "Update an e-service" should {
     "return a modified set of e-service information" in {
-        //given an e-service
-        val eServiceUuid = UUID.randomUUID().toString
-        val eService     = createEService(eServiceUuid)
+      //given an e-service
+      val eServiceUuid = UUID.randomUUID().toString
+      val eService     = createEService(eServiceUuid)
 
       //when updated with the following data
-        val data =
-          """{
-            |     "name": "TestName"
-            |   , "description": "howdy!"
-            |   , "technology": "SOAP"
-            |   , "attributes": {"verified": [], "certified": [], "declared": []}
-            |}""".stripMargin
-        val response = Await.result(
-          Http().singleRequest(
-            HttpRequest(
-              uri = s"$serviceURL/eservices/${eService.id.toString}",
-              method = HttpMethods.PUT,
-              entity = HttpEntity(ContentType(MediaTypes.`application/json`), data),
-              headers = Seq(headers.Authorization(OAuth2BearerToken("1234")))
-            )
-          ),
-          Duration.Inf
-        )
+      val data =
+        """{
+          |     "name": "TestName"
+          |   , "description": "howdy!"
+          |   , "technology": "SOAP"
+          |   , "attributes": {"verified": [], "certified": [], "declared": []}
+          |}""".stripMargin
+      val response = Await.result(
+        Http().singleRequest(
+          HttpRequest(
+            uri = s"$serviceURL/eservices/${eService.id.toString}",
+            method = HttpMethods.PUT,
+            entity = HttpEntity(ContentType(MediaTypes.`application/json`), data),
+            headers = Seq(headers.Authorization(OAuth2BearerToken("1234")))
+          )
+        ),
+        Duration.Inf
+      )
 
-        //then
-        response.status shouldBe StatusCodes.OK
-        val updatedEService = retrieveEService(eServiceUuid)
+      //then
+      response.status shouldBe StatusCodes.OK
+      val updatedEService = retrieveEService(eServiceUuid)
 
-        updatedEService.name shouldBe "TestName"
-        updatedEService.description shouldBe "howdy!"
-        updatedEService.technology shouldBe "SOAP"
-        updatedEService.attributes.certified.size shouldBe 0
-        updatedEService.attributes.declared.size shouldBe 0
-        updatedEService.attributes.verified.size shouldBe 0
+      updatedEService.name shouldBe "TestName"
+      updatedEService.description shouldBe "howdy!"
+      updatedEService.technology shouldBe "SOAP"
+      updatedEService.attributes.certified.size shouldBe 0
+      updatedEService.attributes.declared.size shouldBe 0
+      updatedEService.attributes.verified.size shouldBe 0
     }
 
     "delete an e-service when it has no descriptors" in {
@@ -324,7 +379,7 @@ class CatalogManagementServiceSpec
       //given an e-service
       val eServiceUuid = UUID.randomUUID().toString
       val eService     = createEService(eServiceUuid)
-      val _ = createEServiceDescriptor(eServiceUuid, UUID.randomUUID())
+      val _            = createEServiceDescriptor(eServiceUuid, UUID.randomUUID())
 
       //when deleted
       val response = Await.result(
