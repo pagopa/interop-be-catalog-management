@@ -16,9 +16,17 @@ import akka.projection.ProjectionBehavior
 import akka.{actor => classic}
 import it.pagopa.pdnd.interop.uservice.catalogmanagement.api.EServiceApi
 import it.pagopa.pdnd.interop.uservice.catalogmanagement.api.impl.{EServiceApiMarshallerImpl, EServiceApiServiceImpl, _}
-import it.pagopa.pdnd.interop.uservice.catalogmanagement.common.system.{ApplicationConfiguration, Authenticator, s3Client}
+import it.pagopa.pdnd.interop.uservice.catalogmanagement.common.system.{
+  ApplicationConfiguration,
+  Authenticator,
+  s3Client
+}
 import it.pagopa.pdnd.interop.uservice.catalogmanagement.model.Problem
-import it.pagopa.pdnd.interop.uservice.catalogmanagement.model.persistence.{CatalogPersistentBehavior, CatalogPersistentProjection, Command}
+import it.pagopa.pdnd.interop.uservice.catalogmanagement.model.persistence.{
+  CatalogPersistentBehavior,
+  CatalogPersistentProjection,
+  Command
+}
 import it.pagopa.pdnd.interop.uservice.catalogmanagement.server.Controller
 import it.pagopa.pdnd.interop.uservice.catalogmanagement.service.impl.{S3ManagerImpl, UUIDSupplierImpl}
 import it.pagopa.pdnd.interop.uservice.catalogmanagement.service.{FileManager, UUIDSupplier}

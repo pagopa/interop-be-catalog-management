@@ -532,6 +532,29 @@ class EServiceApiServiceImpl(
     }
   }
 
+  /** Code: 204, Message: EService Descriptor status suspended
+    * Code: 400, Message: Invalid input, DataType: Problem
+    * Code: 404, Message: Not found, DataType: Problem
+    */
+  override def suspendDescriptor(eServiceId: String, descriptorId: String)(implicit
+    toEntityMarshallerProblem: ToEntityMarshaller[Problem],
+    contexts: Seq[(String, String)]
+  ): Route = {
+    val result = updateDescriptorStatus(eServiceId, descriptorId, Suspended)
+    onComplete(result) {
+      case Success(catalogItem) =>
+        catalogItem.fold(
+          suspendDescriptor400(
+            Problem(None, status = 404, s"Error on suspending of $descriptorId on E-Service $eServiceId")
+          )
+        )(_ => suspendDescriptor204)
+      case Failure(ex) =>
+        suspendDescriptor400(
+          Problem(Option(ex.getMessage), status = 400, s"Error on suspending of $descriptorId on E-Service $eServiceId")
+        )
+    }
+  }
+
   /** Code: 204, Message: EService Descriptor status changed in draft
     * Code: 400, Message: Invalid input, DataType: Problem
     * Code: 404, Message: Not found, DataType: Problem

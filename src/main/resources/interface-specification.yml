@@ -363,6 +363,42 @@ paths:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/Problem'
+  /eservices/{eServiceId}/descriptors/{descriptorId}/suspend:
+    post:
+      security:
+        - bearerAuth: [ ]
+      tags:
+        - e_service
+      summary: Suspends a descriptor
+      operationId: suspendDescriptor
+      parameters:
+        - name: eServiceId
+          in: path
+          description: The E-Service id
+          required: true
+          schema:
+            type: string
+        - name: descriptorId
+          in: path
+          description: The Descriptor Id
+          required: true
+          schema:
+            type: string
+      responses:
+        "204":
+          description: EService Descriptor status suspended
+        "400":
+          description: Invalid input
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        "404":
+          description: Not found
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
   /eservices/{eServiceId}/descriptors/{descriptorId}/clone:
     post:
       security:
@@ -792,7 +828,7 @@ components:
             $ref: '#/components/schemas/EServiceDoc'
         status:
           type: string
-          enum: [ 'draft', 'published','deprecated','archived' ]
+          enum: [ 'draft', 'published', 'deprecated', 'suspended', 'archived' ]
     EServiceDescriptorSeed:
       required:
         - audience
@@ -819,7 +855,7 @@ components:
           type: string
         status:
           type: string
-          enum: [ 'draft', 'published', 'deprecated', 'archived' ]
+          enum: [ 'draft', 'published', 'deprecated', 'suspended', 'archived' ]
         audience:
           type: array
           items:
