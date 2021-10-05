@@ -827,7 +827,7 @@ components:
             $ref: '#/components/schemas/EServiceDoc'
         status:
           type: string
-          enum: [ 'draft', 'published','deprecated','archived' ]
+          enum: [ 'draft', 'published', 'deprecated', 'suspended', 'archived' ]
     EServiceDescriptorSeed:
       required:
         - audience
@@ -854,7 +854,7 @@ components:
           type: string
         status:
           type: string
-          enum: [ 'draft', 'published', 'deprecated', 'archived' ]
+          enum: [ 'draft', 'published', 'deprecated', 'suspended', 'archived' ]
         audience:
           type: array
           items:
