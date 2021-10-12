@@ -72,7 +72,8 @@ object Dependencies {
   }
 
   private[this] object mustache {
-    lazy val mustache = "com.github.spullara.mustache.java" % "compiler" % mustacheVersion
+    lazy val namespace = "com.github.spullara.mustache.java"
+    lazy val compiler  = namespace % "compiler" % mustacheVersion
   }
 
   private[this] object openapi4j {
@@ -126,7 +127,7 @@ object Dependencies {
       akka.httpJson                % Compile,
       awssdk.s3                    % Compile,
       cats.core                    % Compile,
-      mustache.mustache            % Compile,
+      mustache.compiler            % Compile,
       logback.classic              % Compile,
       akka.slf4j                   % Compile,
       openapi4j.operationValidator % Compile,
