@@ -96,8 +96,12 @@ class CatalogManagementServiceSpec
     import com.itv.scalapact.http._
     import com.itv.scalapact.json._
     "succeed" in {
+
+      val pactJson: String =
+        getPact("src/test/resources/pacts/agreement-process-consumer_catalog-management-provider.json")
+
       verifyPact
-        .withPactSource(loadFromLocal("src/test/resources/pacts"))
+        .withPactSource(pactAsJsonString(pactJson))
         .setupProviderState("given") { case "e-service id" =>
           createEService("24772a3d-e6f2-47f2-96e5-4cbd1e4e8c84")
           createEServiceDescriptor(

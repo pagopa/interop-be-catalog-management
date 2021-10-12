@@ -2,6 +2,8 @@ package it.pagopa.pdnd.interop.uservice.catalogmanagement
 
 import com.typesafe.config.{Config, ConfigFactory}
 
+import java.nio.file.{Files, Paths}
+
 /** Selfless trait containing base test configuration for Akka Cluster Setup
   */
 trait SpecConfiguration {
@@ -27,10 +29,16 @@ trait SpecConfiguration {
     """)
 
   val config: Config = ConfigFactory
-    .parseResourcesAnySyntax("test")
+    .parseResourcesAnySyntax("application-test")
     .withFallback(testData)
 
-  def serviceURL: String = config.getString("application.url")
+  def serviceURL: String =
+    s"${config.getString("pdnd-interop-uservice-catalog-management.url")}/${buildinfo.BuildInfo.interfaceVersion}"
+
+  def getPact(path: String): String = {
+    val provider = Files.readString(Paths.get(path))
+    provider.replace(":version:", buildinfo.BuildInfo.interfaceVersion)
+  }
 }
 
 object SpecConfiguration extends SpecConfiguration
