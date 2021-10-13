@@ -59,7 +59,9 @@ object Main extends App {
         implicit val executionContext: ExecutionContextExecutor = context.system.executionContext
         val cluster: Cluster                                    = Cluster(context.system)
 
-        context.log.error("Started [" + context.system + "], cluster.selfAddress = " + cluster.selfMember.address + ")")
+        context.log.error(
+          "Started [" + context.system + "], cluster.selfAddress = " + cluster.selfMember.address + ", build info = " + buildinfo.BuildInfo.toString + ")"
+        )
 
         val sharding: ClusterSharding = ClusterSharding(context.system)
 
