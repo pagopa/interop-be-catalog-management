@@ -23,7 +23,6 @@ class CatalogItemUpdatedSerializer extends SerializerWithStringManifest {
       serialize(event, CatalogItemUpdatedManifest, currentVersion)
   }
 
-  @SuppressWarnings(Array("org.wartremover.warts.Throw"))
   override def fromBinary(bytes: Array[Byte], manifest: String): AnyRef = manifest.split('|').toList match {
     case CatalogItemUpdatedManifest :: `version1` :: Nil =>
       deserialize(v1.events.CatalogItemV1UpdatedV1, bytes, manifest, currentVersion)

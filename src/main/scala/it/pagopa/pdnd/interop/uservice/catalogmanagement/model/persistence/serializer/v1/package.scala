@@ -17,7 +17,6 @@ import java.time.format.DateTimeFormatter
 import java.util.UUID
 package object v1 {
 
-  @SuppressWarnings(Array("org.wartremover.warts.Nothing", "org.wartremover.warts.Any"))
   implicit def stateV1PersistEventDeserializer: PersistEventDeserializer[StateV1, State] =
     state => {
       val items: Either[Throwable, Seq[(String, CatalogItem)]] = state.items.traverse { itemsV1 =>
@@ -37,7 +36,6 @@ package object v1 {
       items.map(its => State(its.toMap))
     }
 
-  @SuppressWarnings(Array("org.wartremover.warts.Nothing", "org.wartremover.warts.Any"))
   implicit def stateV1PersistEventSerializer: PersistEventSerializer[State, StateV1] =
     state => {
       val itemsV1: Either[RuntimeException, Seq[CatalogItemsV1]] = state.items.toSeq.traverse {

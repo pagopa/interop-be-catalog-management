@@ -5,7 +5,6 @@ import it.pagopa.pdnd.interop.uservice.catalogmanagement.service.UUIDSupplier
 import java.util.UUID
 import scala.concurrent.Future
 
-@SuppressWarnings(Array("org.wartremover.warts.Equals"))
 final case class CatalogItem(
   id: UUID,
   producerId: UUID,

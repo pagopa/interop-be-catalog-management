@@ -8,7 +8,6 @@ import java.time.OffsetDateTime
 import java.time.format.DateTimeFormatter
 import java.util.UUID
 
-@SuppressWarnings(Array("org.wartremover.warts.Nothing", "org.wartremover.warts.Any"))
 object utils {
 
   def convertAttributeValueToV1(catalogAttributeValue: CatalogAttributeValue): CatalogAttributeValueV1 =

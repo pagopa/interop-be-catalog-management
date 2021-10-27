@@ -12,7 +12,6 @@ import java.util.UUID
 import scala.concurrent.Future
 import scala.util.Try
 
-@SuppressWarnings(Array("org.wartremover.warts.ToString"))
 class FileManagerImpl extends FileManager {
 
   val currentPath: Path = Paths.get(System.getProperty("user.dir"))

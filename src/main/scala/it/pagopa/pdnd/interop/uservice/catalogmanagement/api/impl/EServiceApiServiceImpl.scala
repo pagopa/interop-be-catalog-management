@@ -25,16 +25,6 @@ import scala.concurrent.duration.Duration
 import scala.concurrent.{Await, ExecutionContext, Future}
 import scala.util.{Failure, Success}
 
-@SuppressWarnings(
-  Array(
-    "org.wartremover.warts.ImplicitParameter",
-    "org.wartremover.warts.ToString",
-    "org.wartremover.warts.Any",
-    "org.wartremover.warts.Nothing",
-    "org.wartremover.warts.Recursion",
-    "org.wartremover.warts.Equals"
-  )
-)
 class EServiceApiServiceImpl(
   system: ActorSystem[_],
   sharding: ClusterSharding,

@@ -36,9 +36,6 @@ import spray.json._
 import scala.concurrent.ExecutionContextExecutor
 import scala.jdk.CollectionConverters._
 
-@SuppressWarnings(
-  Array("org.wartremover.warts.StringPlusAny", "org.wartremover.warts.Nothing", "org.wartremover.warts.Throw")
-)
 object Main extends App {
 
   def buildPersistentEntity(): Entity[Command, ShardingEnvelope[Command]] =
