@@ -23,7 +23,6 @@ class CatalogItemDocumentDeletedSerializer extends SerializerWithStringManifest 
       serialize(event,  CatalogItemDocumentDeletedManifest, currentVersion)
   }
 
-  @SuppressWarnings(Array("org.wartremover.warts.Throw"))
   override def fromBinary(bytes: Array[Byte], manifest: String): AnyRef = manifest.split('|').toList match {
     case  CatalogItemDocumentDeletedManifest :: `version1` :: Nil =>
       deserialize(v1.events.CatalogItemDocumentDeletedV1, bytes, manifest, currentVersion)

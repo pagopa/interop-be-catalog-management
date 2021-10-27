@@ -36,7 +36,6 @@ final case class State(items: Map[String, CatalogItem]) extends Persistable {
     updateDescriptorLens(eServiceId, catalogDescriptor.id.toString, _ => catalogDescriptor)
   }
 
-  @SuppressWarnings(Array("org.wartremover.warts.Equals"))
   def updateDocument(
     eServiceId: String,
     descriptorId: String,
@@ -79,7 +78,6 @@ final case class State(items: Map[String, CatalogItem]) extends Persistable {
     updateDescriptorLens(eServiceId, descriptorId, addDocument(openapiDoc, isInterface))
   }
 
-  @SuppressWarnings(Array("org.wartremover.warts.Equals"))
   def deleteDocument(eServiceId: String, descriptorId: String, documentId: String): State = {
 
     def deleteDescriptorDocument(docId: String)(descriptor: CatalogDescriptor): CatalogDescriptor = {
@@ -102,7 +100,6 @@ final case class State(items: Map[String, CatalogItem]) extends Persistable {
     Even though quick and dirty, it behaves like a lens.
     //TODO for updates of complex states as this, evaluate the introduction of an optic library (e.g.: Monocle)
    */
-  @SuppressWarnings(Array("org.wartremover.warts.Equals"))
   private def updateDescriptorLens(
                                     eServiceId: String,
                                     descriptorId: String,

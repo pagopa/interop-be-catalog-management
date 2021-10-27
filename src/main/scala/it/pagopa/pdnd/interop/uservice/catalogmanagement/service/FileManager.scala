@@ -37,7 +37,6 @@ trait FileManager {
 
 }
 
-@SuppressWarnings(Array("org.wartremover.warts.Equals", "org.wartremover.warts.ImplicitParameter"))
 object FileManager {
   def verify(fileParts: (FileInfo, File), catalogItem: CatalogItem, descriptorId: String, isInterface: Boolean)(implicit
     ec: ExecutionContext

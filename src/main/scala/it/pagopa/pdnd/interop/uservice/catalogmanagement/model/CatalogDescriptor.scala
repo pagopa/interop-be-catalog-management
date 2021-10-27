@@ -2,7 +2,6 @@ package it.pagopa.pdnd.interop.uservice.catalogmanagement.model
 
 import java.util.UUID
 
-@SuppressWarnings(Array("org.wartremover.warts.Equals"))
 final case class CatalogDescriptor(
   id: UUID,
   version: String,
