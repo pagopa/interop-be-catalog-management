@@ -14,7 +14,7 @@ class CatalogItemSpec extends AnyWordSpecLike with Matchers {
     producerId = UUID.randomUUID(),
     name = "String",
     description = "String",
-    technology = Rest,
+    technology = RestTechnology,
     attributes = CatalogAttributes(certified = Seq.empty, declared = Seq.empty, verified = Seq.empty),
     descriptors = descriptors
   )
@@ -31,7 +31,7 @@ class CatalogItemSpec extends AnyWordSpecLike with Matchers {
       description = None,
       interface = interfaceFile,
       docs = documents,
-      status = Draft,
+      status = DraftStatus,
       audience = Seq("a"),
       voucherLifespan = 0
     )

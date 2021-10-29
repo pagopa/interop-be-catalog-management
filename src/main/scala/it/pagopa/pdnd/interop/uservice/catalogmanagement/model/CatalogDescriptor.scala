@@ -26,6 +26,6 @@ final case class CatalogDescriptor(
   }
 
   def isDraft: Boolean = {
-    status == Draft
+    status == DraftStatus
   }
 }

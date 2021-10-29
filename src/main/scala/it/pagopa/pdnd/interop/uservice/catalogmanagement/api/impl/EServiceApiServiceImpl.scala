@@ -414,7 +414,7 @@ class EServiceApiServiceImpl(
         version = nextVersion,
         interface = None,
         docs = Seq.empty[CatalogDocument],
-        status = Draft,
+        status = DraftStatus,
         voucherLifespan = eServiceDescriptorSeed.voucherLifespan,
         audience = eServiceDescriptorSeed.audience
       )
@@ -491,7 +491,7 @@ class EServiceApiServiceImpl(
     toEntityMarshallerProblem: ToEntityMarshaller[Problem],
     contexts: Seq[(String, String)]
   ): Route = {
-    val result = updateDescriptorStatus(eServiceId, descriptorId, Archived)
+    val result = updateDescriptorStatus(eServiceId, descriptorId, ArchivedStatus)
     onComplete(result) {
       case Success(catalogItem) =>
         catalogItem.fold(
@@ -514,7 +514,7 @@ class EServiceApiServiceImpl(
     toEntityMarshallerProblem: ToEntityMarshaller[Problem],
     contexts: Seq[(String, String)]
   ): Route = {
-    val result = updateDescriptorStatus(eServiceId, descriptorId, Deprecated)
+    val result = updateDescriptorStatus(eServiceId, descriptorId, DeprecatedStatus)
     onComplete(result) {
       case Success(catalogItem) =>
         catalogItem.fold(
@@ -541,7 +541,7 @@ class EServiceApiServiceImpl(
     toEntityMarshallerProblem: ToEntityMarshaller[Problem],
     contexts: Seq[(String, String)]
   ): Route = {
-    val result = updateDescriptorStatus(eServiceId, descriptorId, Suspended)
+    val result = updateDescriptorStatus(eServiceId, descriptorId, SuspendedStatus)
     onComplete(result) {
       case Success(catalogItem) =>
         catalogItem.fold(
@@ -564,7 +564,7 @@ class EServiceApiServiceImpl(
     toEntityMarshallerProblem: ToEntityMarshaller[Problem],
     contexts: Seq[(String, String)]
   ): Route = {
-    val result = updateDescriptorStatus(eServiceId, descriptorId, Draft)
+    val result = updateDescriptorStatus(eServiceId, descriptorId, DraftStatus)
     onComplete(result) {
       case Success(catalogItem) =>
         catalogItem.fold(
@@ -591,7 +591,7 @@ class EServiceApiServiceImpl(
     toEntityMarshallerProblem: ToEntityMarshaller[Problem],
     contexts: Seq[(String, String)]
   ): Route = {
-    val result = updateDescriptorStatus(eServiceId, descriptorId, Published)
+    val result = updateDescriptorStatus(eServiceId, descriptorId, PublishedStatus)
 
     onComplete(result) {
       case Success(catalogItem) =>
@@ -782,7 +782,7 @@ class EServiceApiServiceImpl(
         description = descriptorToClone.description,
         interface = clonedInterface,
         docs = clonedDocuments,
-        status = Draft,
+        status = DraftStatus,
         audience = descriptorToClone.audience,
         voucherLifespan = descriptorToClone.voucherLifespan
       )

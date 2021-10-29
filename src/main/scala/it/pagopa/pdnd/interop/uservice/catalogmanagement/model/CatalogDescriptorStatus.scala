@@ -2,27 +2,27 @@ package it.pagopa.pdnd.interop.uservice.catalogmanagement.model
 
 sealed trait CatalogDescriptorStatus {
   def toApi: EServiceDescriptorStatusEnum = this match {
-    case Draft      => DRAFT
-    case Published  => PUBLISHED
-    case Deprecated => DEPRECATED
-    case Suspended  => SUSPENDED
-    case Archived   => ARCHIVED
+    case DraftStatus      => DRAFT
+    case PublishedStatus  => PUBLISHED
+    case DeprecatedStatus => DEPRECATED
+    case SuspendedStatus  => SUSPENDED
+    case ArchivedStatus   => ARCHIVED
   }
 }
 
-case object Draft      extends CatalogDescriptorStatus
-case object Published  extends CatalogDescriptorStatus
-case object Deprecated extends CatalogDescriptorStatus
-case object Suspended  extends CatalogDescriptorStatus
-case object Archived   extends CatalogDescriptorStatus
+case object DraftStatus      extends CatalogDescriptorStatus
+case object PublishedStatus  extends CatalogDescriptorStatus
+case object DeprecatedStatus extends CatalogDescriptorStatus
+case object SuspendedStatus  extends CatalogDescriptorStatus
+case object ArchivedStatus   extends CatalogDescriptorStatus
 
 object CatalogDescriptorStatus {
 
   def fromApi(status: EServiceDescriptorStatusEnum): CatalogDescriptorStatus = status match {
-    case DRAFT      => Draft
-    case PUBLISHED  => Published
-    case DEPRECATED => Deprecated
-    case SUSPENDED  => Suspended
-    case ARCHIVED   => Archived
+    case DRAFT      => DraftStatus
+    case PUBLISHED  => PublishedStatus
+    case DEPRECATED => DeprecatedStatus
+    case SUSPENDED  => SuspendedStatus
+    case ARCHIVED   => ArchivedStatus
   }
 }

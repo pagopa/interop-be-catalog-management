@@ -2,18 +2,18 @@ package it.pagopa.pdnd.interop.uservice.catalogmanagement.model
 
 sealed trait CatalogItemTechnology {
   def toApi: EServiceTechnologyEnum = this match {
-    case Rest => REST
-    case Soap => SOAP
+    case RestTechnology => REST
+    case SoapTechnology => SOAP
   }
 }
 
-case object Rest extends CatalogItemTechnology
-case object Soap extends CatalogItemTechnology
+case object RestTechnology extends CatalogItemTechnology
+case object SoapTechnology extends CatalogItemTechnology
 
 object CatalogItemTechnology {
 
   def fromApi(status: EServiceTechnologyEnum): CatalogItemTechnology = status match {
-    case REST => Rest
-    case SOAP => Soap
+    case REST => RestTechnology
+    case SOAP => SoapTechnology
   }
 }

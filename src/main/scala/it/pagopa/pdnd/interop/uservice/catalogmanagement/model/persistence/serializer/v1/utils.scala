@@ -148,36 +148,36 @@ object utils {
 
   def convertDescriptorStatusFromV1(status: CatalogDescriptorStatusV1): Either[Throwable, CatalogDescriptorStatus] =
     status match {
-      case DESCRIPTOR_STATUS_DRAFT      => Right(Draft)
-      case DESCRIPTOR_STATUS_PUBLISHED  => Right(Published)
-      case DESCRIPTOR_STATUS_DEPRECATED => Right(Deprecated)
-      case DESCRIPTOR_STATUS_SUSPENDED  => Right(Suspended)
-      case DESCRIPTOR_STATUS_ARCHIVED   => Right(Archived)
+      case DESCRIPTOR_STATUS_DRAFT      => Right(DraftStatus)
+      case DESCRIPTOR_STATUS_PUBLISHED  => Right(PublishedStatus)
+      case DESCRIPTOR_STATUS_DEPRECATED => Right(DeprecatedStatus)
+      case DESCRIPTOR_STATUS_SUSPENDED  => Right(SuspendedStatus)
+      case DESCRIPTOR_STATUS_ARCHIVED   => Right(ArchivedStatus)
       case UnrecognizedDescriptorStatus(value) =>
         Left(new RuntimeException(s"Unable to deserialize catalog descriptor status value $value"))
     }
 
   def convertDescriptorStatusToV1(status: CatalogDescriptorStatus): CatalogDescriptorStatusV1 =
     status match {
-      case Draft      => DESCRIPTOR_STATUS_DRAFT
-      case Published  => DESCRIPTOR_STATUS_PUBLISHED
-      case Deprecated => DESCRIPTOR_STATUS_DEPRECATED
-      case Suspended  => DESCRIPTOR_STATUS_SUSPENDED
-      case Archived   => DESCRIPTOR_STATUS_ARCHIVED
+      case DraftStatus      => DESCRIPTOR_STATUS_DRAFT
+      case PublishedStatus  => DESCRIPTOR_STATUS_PUBLISHED
+      case DeprecatedStatus => DESCRIPTOR_STATUS_DEPRECATED
+      case SuspendedStatus  => DESCRIPTOR_STATUS_SUSPENDED
+      case ArchivedStatus   => DESCRIPTOR_STATUS_ARCHIVED
     }
 
   def convertItemTechnologyFromV1(technology: CatalogItemTechnologyV1): Either[Throwable, CatalogItemTechnology] =
     technology match {
-      case CATALOG_ITEM_TECHNOLOGY_REST => Right(Rest)
-      case CATALOG_ITEM_TECHNOLOGY_SOAP => Right(Soap)
+      case CATALOG_ITEM_TECHNOLOGY_REST => Right(RestTechnology)
+      case CATALOG_ITEM_TECHNOLOGY_SOAP => Right(SoapTechnology)
       case UnrecognizedTechnology(value) =>
         Left(new RuntimeException(s"Unable to deserialize catalog item technology value $value"))
     }
 
   def convertItemTechnologyToV1(status: CatalogItemTechnology): CatalogItemTechnologyV1 =
     status match {
-      case Rest => CATALOG_ITEM_TECHNOLOGY_REST
-      case Soap => CATALOG_ITEM_TECHNOLOGY_SOAP
+      case RestTechnology => CATALOG_ITEM_TECHNOLOGY_REST
+      case SoapTechnology => CATALOG_ITEM_TECHNOLOGY_SOAP
     }
 
 }
