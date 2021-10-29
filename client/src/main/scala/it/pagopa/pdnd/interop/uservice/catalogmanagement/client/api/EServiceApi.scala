@@ -14,6 +14,7 @@ package it.pagopa.pdnd.interop.uservice.catalogmanagement.client.api
 import it.pagopa.pdnd.interop.uservice.catalogmanagement.client.model.EService
 import it.pagopa.pdnd.interop.uservice.catalogmanagement.client.model.EServiceDescriptor
 import it.pagopa.pdnd.interop.uservice.catalogmanagement.client.model.EServiceDescriptorSeed
+import it.pagopa.pdnd.interop.uservice.catalogmanagement.client.model.EServiceDescriptorStatusEnum
 import it.pagopa.pdnd.interop.uservice.catalogmanagement.client.model.EServiceDoc
 import it.pagopa.pdnd.interop.uservice.catalogmanagement.client.model.EServiceSeed
 import java.io.File
@@ -32,7 +33,7 @@ object EServiceApi {
 }
 
 class EServiceApi(baseUrl: String) {
-
+  
   /**
    * Expected answers:
    *   code 204 :  (EService Descriptor status archived)
@@ -124,7 +125,7 @@ class EServiceApi(baseUrl: String) {
    * 
    * @param eServiceId the eservice id
    * @param descriptorId the descriptor Id
-   * @param kind 
+   * @param kind Document Type Enum
    * @param description 
    * @param doc 
    */
@@ -290,6 +291,7 @@ class EServiceApi(baseUrl: String) {
   /**
    * Expected answers:
    *   code 200 : Seq[EService] (A list of EService)
+   *   code 400 : Problem (Bad request)
    * 
    * Available security schemes:
    *   bearerAuth (http)
@@ -297,11 +299,12 @@ class EServiceApi(baseUrl: String) {
    * @param producerId 
    * @param status 
    */
-  def getEServices(producerId: Option[String] = None, status: Option[String] = None)(implicit bearerToken: BearerToken): ApiRequest[Seq[EService]] =
+  def getEServices(producerId: Option[String] = None, status: Option[EServiceDescriptorStatusEnum] = None)(implicit bearerToken: BearerToken): ApiRequest[Seq[EService]] =
     ApiRequest[Seq[EService]](ApiMethods.GET, baseUrl, "/eservices", "application/json")
       .withCredentials(bearerToken).withQueryParam("producerId", producerId)
       .withQueryParam("status", status)
       .withSuccessResponse[Seq[EService]](200)
+      .withErrorResponse[Problem](400)
       
 
   /**

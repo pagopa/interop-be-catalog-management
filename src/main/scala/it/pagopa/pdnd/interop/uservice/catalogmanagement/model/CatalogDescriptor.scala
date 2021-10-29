@@ -19,7 +19,7 @@ final case class CatalogDescriptor(
       description = description,
       interface = interface.map(_.toApi),
       docs = docs.map(_.toApi),
-      status = status.stringify,
+      status = status.toApi,
       audience = audience,
       voucherLifespan = voucherLifespan
     )

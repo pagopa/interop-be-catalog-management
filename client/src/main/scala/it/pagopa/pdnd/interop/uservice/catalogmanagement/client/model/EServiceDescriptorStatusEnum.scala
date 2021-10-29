@@ -11,19 +11,14 @@
  */
 package it.pagopa.pdnd.interop.uservice.catalogmanagement.client.model
 
-import java.util.UUID
-
-import it.pagopa.pdnd.interop.uservice.catalogmanagement.client.invoker.ApiModel
-
-
-case class EServiceDoc (
-  id: UUID,
-  name: String,
-  contentType: String,
-  description: String,
-  path: String
-) extends ApiModel
 
 
 
+sealed trait EServiceDescriptorStatusEnum
+
+case object DRAFT extends EServiceDescriptorStatusEnum
+case object PUBLISHED extends EServiceDescriptorStatusEnum
+case object DEPRECATED extends EServiceDescriptorStatusEnum
+case object SUSPENDED extends EServiceDescriptorStatusEnum
+case object ARCHIVED extends EServiceDescriptorStatusEnum
 

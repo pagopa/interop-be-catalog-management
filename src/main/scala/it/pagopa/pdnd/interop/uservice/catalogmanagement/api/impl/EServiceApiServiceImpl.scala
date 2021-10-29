@@ -10,7 +10,7 @@ import akka.http.scaladsl.server.Directives.{onComplete, onSuccess}
 import akka.http.scaladsl.server.Route
 import akka.http.scaladsl.server.directives.FileInfo
 import akka.pattern.StatusReply
-import cats.data.Validated.{Invalid, Valid}
+import cats.implicits.toTraverseOps
 import it.pagopa.pdnd.interop.uservice.catalogmanagement.api.EServiceApiService
 import it.pagopa.pdnd.interop.uservice.catalogmanagement.common._
 import it.pagopa.pdnd.interop.uservice.catalogmanagement.common.system._
@@ -32,8 +32,7 @@ class EServiceApiServiceImpl(
   uuidSupplier: UUIDSupplier,
   fileManager: FileManager
 )(implicit ec: ExecutionContext)
-    extends EServiceApiService
-    with Validation {
+    extends EServiceApiService {
 
   private lazy val INTERFACE = "interface"
   private lazy val DOCUMENT  = "document"
@@ -144,24 +143,44 @@ class EServiceApiServiceImpl(
     */
   override def getEServices(producerId: Option[String], status: Option[String])(implicit
     toEntityMarshallerEServicearray: ToEntityMarshaller[Seq[EService]],
+    toEntityMarshallerProblem: ToEntityMarshaller[Problem],
     contexts: Seq[(String, String)]
   ): Route = {
     contexts.foreach(println)
     val sliceSize = 100
-    def getSlice(commander: EntityRef[Command], from: Int, to: Int): LazyList[CatalogItem] = {
+
+    val commanders: Seq[EntityRef[Command]] =
+      (0 until settings.numberOfShards).map(shard => getCommander(shard.toString))
+
+    def getSlice(
+      commander: EntityRef[Command],
+      from: Int,
+      to: Int,
+      producerId: Option[String],
+      status: Option[CatalogDescriptorStatus]
+    ): LazyList[CatalogItem] = {
       val slice: Seq[CatalogItem] = Await
         .result(commander.ask(ref => ListCatalogItem(from, to, producerId, status, ref)), Duration.Inf)
 
       if (slice.isEmpty)
         LazyList.empty[CatalogItem]
       else
-        getSlice(commander, to, to + sliceSize) #::: slice.to(LazyList)
+        getSlice(commander, to, to + sliceSize, producerId, status) #::: slice.to(LazyList)
     }
-    val commanders: Seq[EntityRef[Command]] =
-      (0 until settings.numberOfShards).map(shard => getCommander(shard.toString))
-    val catalogItem: Seq[CatalogItem] = commanders.flatMap(ref => getSlice(ref, 0, sliceSize))
 
-    getEServices200(catalogItem.map(_.toApi))
+    val stringToStatus: String => Either[Throwable, CatalogDescriptorStatus] =
+      EServiceDescriptorStatusEnum.fromValue(_).map(CatalogDescriptorStatus.fromApi)
+
+    val statusEnum = status.traverse(stringToStatus)
+
+    val result = statusEnum.map { status =>
+      commanders.flatMap(ref => getSlice(ref, 0, sliceSize, producerId, status))
+    }
+
+    result match {
+      case Right(items) => getEServices200(items.map(_.toApi))
+      case Left(error)  => getEServices400(Problem(Option(error.getMessage), 400, "Catalog Items retrieve error"))
+    }
 
   }
 
@@ -274,22 +293,14 @@ class EServiceApiServiceImpl(
     def mergeChanges(
       descriptor: CatalogDescriptor,
       eServiceDescriptorSeed: UpdateEServiceDescriptorSeed
-    ): Either[ValidationError, CatalogDescriptor] = {
-      val newStatus = validateDescriptorStatus(eServiceDescriptorSeed.status)
-      newStatus match {
-        case Invalid(nel) => Left(ValidationError(nel.toList))
-        case Valid(status) =>
-          Right(
-            descriptor
-              .copy(
-                description = eServiceDescriptorSeed.description,
-                audience = eServiceDescriptorSeed.audience,
-                voucherLifespan = eServiceDescriptorSeed.voucherLifespan,
-                status = status
-              )
-          )
-      }
-    }
+    ): CatalogDescriptor =
+      descriptor
+        .copy(
+          description = eServiceDescriptorSeed.description,
+          audience = eServiceDescriptorSeed.audience,
+          voucherLifespan = eServiceDescriptorSeed.voucherLifespan,
+          status = CatalogDescriptorStatus.fromApi(eServiceDescriptorSeed.status)
+        )
 
     val result: Future[Option[CatalogItem]] = for {
       retrieved <- commander.ask(ref => GetCatalogItem(eServiceId, ref))
@@ -297,7 +308,7 @@ class EServiceApiServiceImpl(
       toUpdateDescriptor <- current.descriptors
         .find(_.id.toString == descriptorId)
         .toFuture(EServiceDescriptorNotFoundError(eServiceId, descriptorId))
-      updatedDescriptor <- mergeChanges(toUpdateDescriptor, eServiceDescriptorSeed).toFuture
+      updatedDescriptor = mergeChanges(toUpdateDescriptor, eServiceDescriptorSeed)
       updatedItem = current.copy(descriptors =
         current.descriptors.filter(_.id.toString != descriptorId) :+ updatedDescriptor
       )

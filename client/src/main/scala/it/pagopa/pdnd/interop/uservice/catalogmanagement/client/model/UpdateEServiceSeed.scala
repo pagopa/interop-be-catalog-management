@@ -11,21 +11,17 @@
  */
 package it.pagopa.pdnd.interop.uservice.catalogmanagement.client.model
 
+
 import it.pagopa.pdnd.interop.uservice.catalogmanagement.client.invoker.ApiModel
+
 
 case class UpdateEServiceSeed (
   name: String,
   description: String,
-  technology: UpdateEServiceSeedEnums.Technology,
+  technology: EServiceTechnologyEnum,
   attributes: Attributes
 ) extends ApiModel
 
-object UpdateEServiceSeedEnums {
 
-  type Technology = Technology.Value
-  object Technology extends Enumeration {
-    val REST = Value("REST")
-    val SOAP = Value("SOAP")
-  }
 
-}
+

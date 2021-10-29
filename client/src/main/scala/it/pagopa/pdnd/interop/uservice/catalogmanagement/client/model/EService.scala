@@ -12,15 +12,20 @@
 package it.pagopa.pdnd.interop.uservice.catalogmanagement.client.model
 
 import java.util.UUID
+
 import it.pagopa.pdnd.interop.uservice.catalogmanagement.client.invoker.ApiModel
+
 
 case class EService (
   id: UUID,
   producerId: UUID,
   name: String,
   description: String,
-  technology: String,
+  technology: EServiceTechnologyEnum,
   attributes: Attributes,
   descriptors: Seq[EServiceDescriptor]
 ) extends ApiModel
+
+
+
 

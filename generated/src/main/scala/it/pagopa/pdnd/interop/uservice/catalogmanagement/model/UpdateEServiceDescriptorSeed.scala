@@ -8,9 +8,10 @@ package it.pagopa.pdnd.interop.uservice.catalogmanagement.model
  * @param voucherLifespan  for example: ''null''
 */
 final case class UpdateEServiceDescriptorSeed (
-  description: Option[String],
-  status: String,
+  description: Option[String] = None,
+  status: EServiceDescriptorStatusEnum,
   audience: Seq[String],
   voucherLifespan: Int
 )
+
 

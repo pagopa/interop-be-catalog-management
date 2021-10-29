@@ -14,6 +14,7 @@ import it.pagopa.pdnd.interop.uservice.catalogmanagement.server.PartsAndFiles
 import it.pagopa.pdnd.interop.uservice.catalogmanagement.model.EService
 import it.pagopa.pdnd.interop.uservice.catalogmanagement.model.EServiceDescriptor
 import it.pagopa.pdnd.interop.uservice.catalogmanagement.model.EServiceDescriptorSeed
+import it.pagopa.pdnd.interop.uservice.catalogmanagement.model.EServiceDescriptorStatusEnum
 import it.pagopa.pdnd.interop.uservice.catalogmanagement.model.EServiceDoc
 import it.pagopa.pdnd.interop.uservice.catalogmanagement.model.EServiceSeed
 import java.io.File
@@ -338,11 +339,14 @@ eServiceService.createEServiceDocument(eServiceId = eServiceId, descriptorId = d
 
           def getEServices200(responseEServicearray: Seq[EService])(implicit toEntityMarshallerEServicearray: ToEntityMarshaller[Seq[EService]]): Route =
             complete((200, responseEServicearray))
+  def getEServices400(responseProblem: Problem)(implicit toEntityMarshallerProblem: ToEntityMarshaller[Problem]): Route =
+            complete((400, responseProblem))
         /**
            * Code: 200, Message: A list of EService, DataType: Seq[EService]
+   * Code: 400, Message: Bad request, DataType: Problem
         */
         def getEServices(producerId: Option[String], status: Option[String])
-            (implicit toEntityMarshallerEServicearray: ToEntityMarshaller[Seq[EService]], contexts: Seq[(String, String)]): Route
+            (implicit toEntityMarshallerEServicearray: ToEntityMarshaller[Seq[EService]], toEntityMarshallerProblem: ToEntityMarshaller[Problem], contexts: Seq[(String, String)]): Route
 
           def publishDescriptor204: Route =
             complete((204, "EService Descriptor status published."))

@@ -11,7 +11,9 @@
  */
 package it.pagopa.pdnd.interop.uservice.catalogmanagement.client.model
 
+
 import it.pagopa.pdnd.interop.uservice.catalogmanagement.client.invoker.ApiModel
+
 
 case class Problem (
   /* A human readable explanation specific to this occurrence of the problem. */
@@ -21,4 +23,7 @@ case class Problem (
   /* A short, summary of the problem type. Written in english and readable */
   title: String
 ) extends ApiModel
+
+
+
 

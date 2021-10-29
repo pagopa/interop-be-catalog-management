@@ -11,11 +11,16 @@
  */
 package it.pagopa.pdnd.interop.uservice.catalogmanagement.client.model
 
+
 import it.pagopa.pdnd.interop.uservice.catalogmanagement.client.invoker.ApiModel
+
 
 case class EServiceDescriptorSeed (
   description: Option[String] = None,
   audience: Seq[String],
   voucherLifespan: Int
 ) extends ApiModel
+
+
+
 

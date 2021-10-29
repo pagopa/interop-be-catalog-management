@@ -193,9 +193,7 @@ object CatalogPersistentBehavior {
       case ListCatalogItem(from, to, producerId, status, replyTo) =>
         val catalogItems: Seq[CatalogItem] = state.items
           .filter(item => producerId.forall(filter => filter == item._2.producerId.toString))
-          .filter(item =>
-            status.forall(filter => item._2.descriptors.exists(descriptor => filter == descriptor.status.stringify))
-          )
+          .filter(item => status.forall(s => item._2.descriptors.exists(_.status == s)))
           .values
           .toSeq
           .slice(from, to)

@@ -15,11 +15,12 @@ import java.util.UUID
 final case class EServiceDescriptor (
   id: UUID,
   version: String,
-  description: Option[String],
+  description: Option[String] = None,
   audience: Seq[String],
   voucherLifespan: Int,
-  interface: Option[EServiceDoc],
+  interface: Option[EServiceDoc] = None,
   docs: Seq[EServiceDoc],
-  status: String
+  status: EServiceDescriptorStatusEnum
 )
+
 

@@ -11,24 +11,17 @@
  */
 package it.pagopa.pdnd.interop.uservice.catalogmanagement.client.model
 
+
 import it.pagopa.pdnd.interop.uservice.catalogmanagement.client.invoker.ApiModel
+
 
 case class UpdateEServiceDescriptorSeed (
   description: Option[String] = None,
-  status: UpdateEServiceDescriptorSeedEnums.Status,
+  status: EServiceDescriptorStatusEnum,
   audience: Seq[String],
   voucherLifespan: Int
 ) extends ApiModel
 
-object UpdateEServiceDescriptorSeedEnums {
 
-  type Status = Status.Value
-  object Status extends Enumeration {
-    val Draft = Value("draft")
-    val Published = Value("published")
-    val Deprecated = Value("deprecated")
-    val Suspended = Value("suspended")
-    val Archived = Value("archived")
-  }
 
-}
+

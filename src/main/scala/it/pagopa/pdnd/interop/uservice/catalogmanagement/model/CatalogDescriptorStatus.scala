@@ -1,12 +1,12 @@
 package it.pagopa.pdnd.interop.uservice.catalogmanagement.model
 
 sealed trait CatalogDescriptorStatus {
-  def stringify: String = this match {
-    case Draft      => "draft"
-    case Published  => "published"
-    case Deprecated => "deprecated"
-    case Suspended  => "suspended"
-    case Archived   => "archived"
+  def toApi: EServiceDescriptorStatusEnum = this match {
+    case Draft      => DRAFT
+    case Published  => PUBLISHED
+    case Deprecated => DEPRECATED
+    case Suspended  => SUSPENDED
+    case Archived   => ARCHIVED
   }
 }
 
@@ -18,15 +18,11 @@ case object Archived   extends CatalogDescriptorStatus
 
 object CatalogDescriptorStatus {
 
-  def fromText(str: String): Either[Throwable, CatalogDescriptorStatus] = str match {
-    case "draft"      => Right[Throwable, CatalogDescriptorStatus](Draft)
-    case "published"  => Right[Throwable, CatalogDescriptorStatus](Published)
-    case "deprecated" => Right[Throwable, CatalogDescriptorStatus](Deprecated)
-    case "suspended"  => Right[Throwable, CatalogDescriptorStatus](Suspended)
-    case "archived"   => Right[Throwable, CatalogDescriptorStatus](Archived)
-    case _ =>
-      Left[Throwable, CatalogDescriptorStatus](
-        new RuntimeException(s"Invalid descriptor status: $str")
-      ) //TODO meaningful error
+  def fromApi(status: EServiceDescriptorStatusEnum): CatalogDescriptorStatus = status match {
+    case DRAFT      => Draft
+    case PUBLISHED  => Published
+    case DEPRECATED => Deprecated
+    case SUSPENDED  => Suspended
+    case ARCHIVED   => Archived
   }
 }

@@ -8,3 +8,4 @@ final case class UpdateEServiceDescriptorDocumentSeed (
   description: String
 )
 
+

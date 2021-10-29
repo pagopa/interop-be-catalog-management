@@ -69,7 +69,7 @@
               ],
               "docs" : [
               ],
-              "status" : "draft"
+              "status" : "DRAFT"
             }
           ]
         },
@@ -85,7 +85,7 @@
           },
           "$.body.descriptors[*].status" : {
             "match" : "regex",
-            "regex" : "draft|active"
+            "regex" : "DRAFT|ACTIVE"
           },
           "$.body.descriptors" : {
             "match" : "type",

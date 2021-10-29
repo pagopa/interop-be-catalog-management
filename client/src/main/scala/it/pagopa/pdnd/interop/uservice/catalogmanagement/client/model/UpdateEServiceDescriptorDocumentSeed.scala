@@ -11,9 +11,14 @@
  */
 package it.pagopa.pdnd.interop.uservice.catalogmanagement.client.model
 
+
 import it.pagopa.pdnd.interop.uservice.catalogmanagement.client.invoker.ApiModel
+
 
 case class UpdateEServiceDescriptorDocumentSeed (
   description: String
 ) extends ApiModel
+
+
+
 

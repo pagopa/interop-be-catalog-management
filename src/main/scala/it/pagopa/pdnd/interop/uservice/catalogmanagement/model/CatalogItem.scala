@@ -10,7 +10,7 @@ final case class CatalogItem(
   producerId: UUID,
   name: String,
   description: String,
-  technology: String,
+  technology: CatalogItemTechnology,
   attributes: CatalogAttributes,
   descriptors: Seq[CatalogDescriptor]
 ) extends Convertable[EService] {
@@ -21,7 +21,7 @@ final case class CatalogItem(
       producerId = producerId,
       name = name,
       description = description,
-      technology = technology,
+      technology = technology.toApi,
       attributes = attributes.toApi,
       descriptors = descriptors.map(_.toApi)
     )
@@ -47,7 +47,7 @@ final case class CatalogItem(
       } yield copy(
         name = updateEServiceSeed.name,
         description = updateEServiceSeed.description,
-        technology = updateEServiceSeed.technology,
+        technology = CatalogItemTechnology.fromApi(updateEServiceSeed.technology),
         attributes = attributes
       )
     }
@@ -69,7 +69,7 @@ object CatalogItem {
         producerId = seed.producerId,
         name = seed.name,
         description = seed.description,
-        technology = seed.technology,
+        technology = CatalogItemTechnology.fromApi(seed.technology),
         attributes = attributes,
         descriptors = Seq.empty[CatalogDescriptor]
       )

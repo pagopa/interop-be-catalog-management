@@ -11,19 +11,11 @@
  */
 package it.pagopa.pdnd.interop.uservice.catalogmanagement.client.model
 
-import java.util.UUID
-
-import it.pagopa.pdnd.interop.uservice.catalogmanagement.client.invoker.ApiModel
-
-
-case class EServiceDoc (
-  id: UUID,
-  name: String,
-  contentType: String,
-  description: String,
-  path: String
-) extends ApiModel
 
 
 
+sealed trait EServiceTechnologyEnum
+
+case object REST extends EServiceTechnologyEnum
+case object SOAP extends EServiceTechnologyEnum
 

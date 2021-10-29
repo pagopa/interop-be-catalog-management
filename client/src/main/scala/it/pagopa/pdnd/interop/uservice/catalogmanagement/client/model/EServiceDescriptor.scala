@@ -12,7 +12,9 @@
 package it.pagopa.pdnd.interop.uservice.catalogmanagement.client.model
 
 import java.util.UUID
+
 import it.pagopa.pdnd.interop.uservice.catalogmanagement.client.invoker.ApiModel
+
 
 case class EServiceDescriptor (
   id: UUID,
@@ -22,18 +24,9 @@ case class EServiceDescriptor (
   voucherLifespan: Int,
   interface: Option[EServiceDoc] = None,
   docs: Seq[EServiceDoc],
-  status: EServiceDescriptorEnums.Status
+  status: EServiceDescriptorStatusEnum
 ) extends ApiModel
 
-object EServiceDescriptorEnums {
 
-  type Status = Status.Value
-  object Status extends Enumeration {
-    val Draft = Value("draft")
-    val Published = Value("published")
-    val Deprecated = Value("deprecated")
-    val Suspended = Value("suspended")
-    val Archived = Value("archived")
-  }
 
-}
+

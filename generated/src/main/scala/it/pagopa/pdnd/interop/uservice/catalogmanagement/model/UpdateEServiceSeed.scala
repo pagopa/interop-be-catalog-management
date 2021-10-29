@@ -10,7 +10,8 @@ package it.pagopa.pdnd.interop.uservice.catalogmanagement.model
 final case class UpdateEServiceSeed (
   name: String,
   description: String,
-  technology: String,
+  technology: EServiceTechnologyEnum,
   attributes: Attributes
 )
+
 

@@ -15,6 +15,7 @@ import com.itv.scalapact.shared.ProviderStateResult
 import it.pagopa.pdnd.interop.uservice.catalogmanagement.api.impl.{EServiceApiMarshallerImpl, EServiceApiServiceImpl}
 import it.pagopa.pdnd.interop.uservice.catalogmanagement.api.{EServiceApi, EServiceApiMarshaller}
 import it.pagopa.pdnd.interop.uservice.catalogmanagement.common.system.Authenticator
+import it.pagopa.pdnd.interop.uservice.catalogmanagement.model._
 import it.pagopa.pdnd.interop.uservice.catalogmanagement.server.Controller
 import it.pagopa.pdnd.interop.uservice.catalogmanagement.server.impl.Main
 import it.pagopa.pdnd.interop.uservice.catalogmanagement.service.{FileManager, UUIDSupplier}
@@ -133,7 +134,7 @@ class CatalogManagementServiceSpec
           |     "description": "NewDescription"
           |   , "voucherLifespan": 30
           |   , "audience": ["a", "b", "c"]
-          |   , "status": "archived"
+          |   , "status": "ARCHIVED"
           |}""".stripMargin
 
       val response = Await.result(
@@ -157,7 +158,7 @@ class CatalogManagementServiceSpec
       updatedDescriptor.description shouldBe Some("NewDescription")
       updatedDescriptor.voucherLifespan shouldBe 30
       updatedDescriptor.audience shouldBe Seq("a", "b", "c")
-      updatedDescriptor.status shouldBe "archived"
+      updatedDescriptor.status shouldBe ARCHIVED
     }
 
     "fail with 404 code when updating a non-existing descriptor of existing eservice" in {
@@ -171,7 +172,7 @@ class CatalogManagementServiceSpec
           |  "description": "NewDescription",
           |  "audience": ["1"],
           |  "voucherLifespan": 20,
-          |  "status": "draft"
+          |  "status": "DRAFT"
           |}""".stripMargin
 
       val response = Await.result(
@@ -196,7 +197,7 @@ class CatalogManagementServiceSpec
           |  "description": "NewDescription",
           |  "audience": ["1"],
           |  "voucherLifespan": 20,
-          |  "status": "draft"
+          |  "status": "DRAFT"
           |}""".stripMargin
 
       val response = Await.result(
@@ -268,7 +269,7 @@ class CatalogManagementServiceSpec
       val updatedEService = retrieveEService(eServiceUuid.toString)
       updatedEService.descriptors.size shouldBe 1
       val updatedDescriptor = updatedEService.descriptors.head
-      updatedDescriptor.status shouldBe "published"
+      updatedDescriptor.status shouldBe PUBLISHED
     }
 
     "succeed on deprecate" in {
@@ -292,7 +293,7 @@ class CatalogManagementServiceSpec
       val updatedEService = retrieveEService(eServiceUuid.toString)
       updatedEService.descriptors.size shouldBe 1
       val updatedDescriptor = updatedEService.descriptors.head
-      updatedDescriptor.status shouldBe "deprecated"
+      updatedDescriptor.status shouldBe DEPRECATED
     }
 
     "succeed on suspend" in {
@@ -316,7 +317,7 @@ class CatalogManagementServiceSpec
       val updatedEService = retrieveEService(eServiceUuid.toString)
       updatedEService.descriptors.size shouldBe 1
       val updatedDescriptor = updatedEService.descriptors.head
-      updatedDescriptor.status shouldBe "suspended"
+      updatedDescriptor.status shouldBe SUSPENDED
     }
   }
 
@@ -352,7 +353,7 @@ class CatalogManagementServiceSpec
 
       updatedEService.name shouldBe "TestName"
       updatedEService.description shouldBe "howdy!"
-      updatedEService.technology shouldBe "SOAP"
+      updatedEService.technology shouldBe SOAP
       updatedEService.attributes.certified.size shouldBe 0
       updatedEService.attributes.declared.size shouldBe 0
       updatedEService.attributes.verified.size shouldBe 0

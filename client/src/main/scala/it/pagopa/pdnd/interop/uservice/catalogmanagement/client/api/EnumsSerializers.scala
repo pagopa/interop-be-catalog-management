@@ -17,11 +17,7 @@ import scala.reflect.ClassTag
 
 object EnumsSerializers {
 
-  def all: Seq[Serializer[_]] = Seq[Serializer[_]]() :+
-    new EnumNameSerializer(EServiceDescriptorEnums.Status) :+
-    new EnumNameSerializer(EServiceSeedEnums.Technology) :+
-    new EnumNameSerializer(UpdateEServiceDescriptorSeedEnums.Status) :+
-    new EnumNameSerializer(UpdateEServiceSeedEnums.Technology)
+  def all: Seq[Serializer[_]] = Seq[Serializer[_]]()
 
   private class EnumNameSerializer[E <: Enumeration: ClassTag](enum: E)
     extends Serializer[E#Value] {
