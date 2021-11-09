@@ -10,7 +10,7 @@ import java.util.UUID
  * @param voucherLifespan  for example: ''null''
  * @param interface  for example: ''null''
  * @param docs  for example: ''null''
- * @param status  for example: ''null''
+ * @param state  for example: ''null''
 */
 final case class EServiceDescriptor (
   id: UUID,
@@ -20,7 +20,7 @@ final case class EServiceDescriptor (
   voucherLifespan: Int,
   interface: Option[EServiceDoc] = None,
   docs: Seq[EServiceDoc],
-  status: EServiceDescriptorStatusEnum
+  state: EServiceDescriptorState
 )
 
 

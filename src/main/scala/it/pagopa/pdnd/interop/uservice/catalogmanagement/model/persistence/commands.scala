@@ -5,7 +5,7 @@ import akka.actor.typed.ActorRef
 import akka.pattern.StatusReply
 import it.pagopa.pdnd.interop.uservice.catalogmanagement.model.{
   CatalogDescriptor,
-  CatalogDescriptorStatus,
+  CatalogDescriptorState,
   CatalogDocument,
   CatalogItem
 }
@@ -33,7 +33,7 @@ final case class ListCatalogItem(
   from: Int,
   to: Int,
   producerId: Option[String],
-  status: Option[CatalogDescriptorStatus],
+  status: Option[CatalogDescriptorState],
   replyTo: ActorRef[Seq[CatalogItem]]
 ) extends Command
 

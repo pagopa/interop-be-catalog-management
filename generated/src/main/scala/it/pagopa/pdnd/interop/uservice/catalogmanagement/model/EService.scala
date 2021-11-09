@@ -16,7 +16,7 @@ final case class EService (
   producerId: UUID,
   name: String,
   description: String,
-  technology: EServiceTechnologyEnum,
+  technology: EServiceTechnology,
   attributes: Attributes,
   descriptors: Seq[EServiceDescriptor]
 )

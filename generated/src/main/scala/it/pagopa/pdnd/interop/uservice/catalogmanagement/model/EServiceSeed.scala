@@ -13,7 +13,7 @@ final case class EServiceSeed (
   producerId: UUID,
   name: String,
   description: String,
-  technology: EServiceTechnologyEnum,
+  technology: EServiceTechnology,
   attributes: Attributes
 )
 

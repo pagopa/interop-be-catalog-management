@@ -37,7 +37,7 @@ message CatalogDescriptorV1 {
   required string version = 2;
   optional string description = 3;
   repeated CatalogDocumentV1 docs = 4;
-  required CatalogDescriptorStatusV1 status = 5;
+  required CatalogDescriptorStateV1 state = 5;
   optional CatalogDocumentV1 interface = 6;
   repeated string audience = 7;
   required int32 voucherLifespan = 8;
@@ -53,15 +53,15 @@ message CatalogDocumentV1 {
   required string description = 7;
 }
 
-enum CatalogDescriptorStatusV1 {
-  DESCRIPTOR_STATUS_DRAFT = 1;
-  DESCRIPTOR_STATUS_PUBLISHED = 2;
-  DESCRIPTOR_STATUS_DEPRECATED = 3;
-  DESCRIPTOR_STATUS_SUSPENDED = 4;
-  DESCRIPTOR_STATUS_ARCHIVED = 5;
+enum CatalogDescriptorStateV1 {
+  DRAFT = 1;
+  PUBLISHED = 2;
+  DEPRECATED = 3;
+  SUSPENDED = 4;
+  ARCHIVED = 5;
 }
 
 enum CatalogItemTechnologyV1 {
-  CATALOG_ITEM_TECHNOLOGY_REST = 1;
-  CATALOG_ITEM_TECHNOLOGY_SOAP = 2;
+  REST = 1;
+  SOAP = 2;
 }

@@ -14,7 +14,7 @@ import it.pagopa.pdnd.interop.uservice.catalogmanagement.server.PartsAndFiles
 import it.pagopa.pdnd.interop.uservice.catalogmanagement.model.EService
 import it.pagopa.pdnd.interop.uservice.catalogmanagement.model.EServiceDescriptor
 import it.pagopa.pdnd.interop.uservice.catalogmanagement.model.EServiceDescriptorSeed
-import it.pagopa.pdnd.interop.uservice.catalogmanagement.model.EServiceDescriptorStatusEnum
+import it.pagopa.pdnd.interop.uservice.catalogmanagement.model.EServiceDescriptorState
 import it.pagopa.pdnd.interop.uservice.catalogmanagement.model.EServiceDoc
 import it.pagopa.pdnd.interop.uservice.catalogmanagement.model.EServiceSeed
 import java.io.File
@@ -126,8 +126,8 @@ eServiceService.createEServiceDocument(eServiceId = eServiceId, descriptorId = d
         } ~
         path("eservices") { 
         get { wrappingDirective { implicit contexts => 
-            parameters("producerId".as[String].?, "status".as[String].?) { (producerId, status) => 
-            eServiceService.getEServices(producerId = producerId, status = status)
+            parameters("producerId".as[String].?, "state".as[String].?) { (producerId, state) => 
+            eServiceService.getEServices(producerId = producerId, state = state)
             }
         }
         }
@@ -173,13 +173,13 @@ eServiceService.createEServiceDocument(eServiceId = eServiceId, descriptorId = d
 
     trait EServiceApiService {
           def archiveDescriptor204: Route =
-            complete((204, "EService Descriptor status archived"))
+            complete((204, "EService Descriptor state archived"))
   def archiveDescriptor400(responseProblem: Problem)(implicit toEntityMarshallerProblem: ToEntityMarshaller[Problem]): Route =
             complete((400, responseProblem))
   def archiveDescriptor404(responseProblem: Problem)(implicit toEntityMarshallerProblem: ToEntityMarshaller[Problem]): Route =
             complete((404, responseProblem))
         /**
-           * Code: 204, Message: EService Descriptor status archived
+           * Code: 204, Message: EService Descriptor state archived
    * Code: 400, Message: Invalid input, DataType: Problem
    * Code: 404, Message: Not found, DataType: Problem
         */
@@ -282,13 +282,13 @@ eServiceService.createEServiceDocument(eServiceId = eServiceId, descriptorId = d
             (implicit toEntityMarshallerProblem: ToEntityMarshaller[Problem], contexts: Seq[(String, String)]): Route
 
           def deprecateDescriptor204: Route =
-            complete((204, "EService Descriptor status deprecated"))
+            complete((204, "EService Descriptor state deprecated"))
   def deprecateDescriptor400(responseProblem: Problem)(implicit toEntityMarshallerProblem: ToEntityMarshaller[Problem]): Route =
             complete((400, responseProblem))
   def deprecateDescriptor404(responseProblem: Problem)(implicit toEntityMarshallerProblem: ToEntityMarshaller[Problem]): Route =
             complete((404, responseProblem))
         /**
-           * Code: 204, Message: EService Descriptor status deprecated
+           * Code: 204, Message: EService Descriptor state deprecated
    * Code: 400, Message: Invalid input, DataType: Problem
    * Code: 404, Message: Not found, DataType: Problem
         */
@@ -296,13 +296,13 @@ eServiceService.createEServiceDocument(eServiceId = eServiceId, descriptorId = d
             (implicit toEntityMarshallerProblem: ToEntityMarshaller[Problem], contexts: Seq[(String, String)]): Route
 
           def draftDescriptor204: Route =
-            complete((204, "EService Descriptor status changed in draft"))
+            complete((204, "EService Descriptor state changed in draft"))
   def draftDescriptor400(responseProblem: Problem)(implicit toEntityMarshallerProblem: ToEntityMarshaller[Problem]): Route =
             complete((400, responseProblem))
   def draftDescriptor404(responseProblem: Problem)(implicit toEntityMarshallerProblem: ToEntityMarshaller[Problem]): Route =
             complete((404, responseProblem))
         /**
-           * Code: 204, Message: EService Descriptor status changed in draft
+           * Code: 204, Message: EService Descriptor state changed in draft
    * Code: 400, Message: Invalid input, DataType: Problem
    * Code: 404, Message: Not found, DataType: Problem
         */
@@ -345,17 +345,17 @@ eServiceService.createEServiceDocument(eServiceId = eServiceId, descriptorId = d
            * Code: 200, Message: A list of EService, DataType: Seq[EService]
    * Code: 400, Message: Bad request, DataType: Problem
         */
-        def getEServices(producerId: Option[String], status: Option[String])
+        def getEServices(producerId: Option[String], state: Option[String])
             (implicit toEntityMarshallerEServicearray: ToEntityMarshaller[Seq[EService]], toEntityMarshallerProblem: ToEntityMarshaller[Problem], contexts: Seq[(String, String)]): Route
 
           def publishDescriptor204: Route =
-            complete((204, "EService Descriptor status published."))
+            complete((204, "EService Descriptor state published."))
   def publishDescriptor400(responseProblem: Problem)(implicit toEntityMarshallerProblem: ToEntityMarshaller[Problem]): Route =
             complete((400, responseProblem))
   def publishDescriptor404(responseProblem: Problem)(implicit toEntityMarshallerProblem: ToEntityMarshaller[Problem]): Route =
             complete((404, responseProblem))
         /**
-           * Code: 204, Message: EService Descriptor status published.
+           * Code: 204, Message: EService Descriptor state published.
    * Code: 400, Message: Invalid input, DataType: Problem
    * Code: 404, Message: Not found, DataType: Problem
         */
@@ -363,13 +363,13 @@ eServiceService.createEServiceDocument(eServiceId = eServiceId, descriptorId = d
             (implicit toEntityMarshallerProblem: ToEntityMarshaller[Problem], contexts: Seq[(String, String)]): Route
 
           def suspendDescriptor204: Route =
-            complete((204, "EService Descriptor status suspended"))
+            complete((204, "EService Descriptor state suspended"))
   def suspendDescriptor400(responseProblem: Problem)(implicit toEntityMarshallerProblem: ToEntityMarshaller[Problem]): Route =
             complete((400, responseProblem))
   def suspendDescriptor404(responseProblem: Problem)(implicit toEntityMarshallerProblem: ToEntityMarshaller[Problem]): Route =
             complete((404, responseProblem))
         /**
-           * Code: 204, Message: EService Descriptor status suspended
+           * Code: 204, Message: EService Descriptor state suspended
    * Code: 400, Message: Invalid input, DataType: Problem
    * Code: 404, Message: Not found, DataType: Problem
         */

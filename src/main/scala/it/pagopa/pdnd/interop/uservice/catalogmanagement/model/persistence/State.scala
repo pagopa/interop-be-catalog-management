@@ -101,9 +101,9 @@ final case class State(items: Map[String, CatalogItem]) extends Persistable {
     //TODO for updates of complex states as this, evaluate the introduction of an optic library (e.g.: Monocle)
    */
   private def updateDescriptorLens(
-                                    eServiceId: String,
-                                    descriptorId: String,
-                                    descriptorOperation: CatalogDescriptor => CatalogDescriptor
+    eServiceId: String,
+    descriptorId: String,
+    descriptorOperation: CatalogDescriptor => CatalogDescriptor
   ): State = {
 
     val newState = for {

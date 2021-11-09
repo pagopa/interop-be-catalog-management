@@ -2,11 +2,6 @@ package it.pagopa.pdnd.interop.uservice.catalogmanagement.model.persistence.seri
 
 import cats.implicits.toTraverseOps
 import it.pagopa.pdnd.interop.uservice.catalogmanagement.model._
-import it.pagopa.pdnd.interop.uservice.catalogmanagement.model.persistence.serializer.v1.catalog_item.CatalogDescriptorStatusV1._
-import it.pagopa.pdnd.interop.uservice.catalogmanagement.model.persistence.serializer.v1.catalog_item.CatalogDescriptorStatusV1.{
-  Unrecognized => UnrecognizedDescriptorStatus
-}
-import it.pagopa.pdnd.interop.uservice.catalogmanagement.model.persistence.serializer.v1.catalog_item.CatalogItemTechnologyV1._
 import it.pagopa.pdnd.interop.uservice.catalogmanagement.model.persistence.serializer.v1.catalog_item.CatalogItemTechnologyV1.{
   Unrecognized => UnrecognizedTechnology
 }
@@ -94,7 +89,7 @@ object utils {
             uploadDate = doc.uploadDate.format(DateTimeFormatter.ISO_DATE_TIME)
           )
         },
-        status = convertDescriptorStatusToV1(descriptor.status),
+        state = convertDescriptorStateToV1(descriptor.state),
         audience = descriptor.audience,
         voucherLifespan = descriptor.voucherLifespan
       )
@@ -108,7 +103,7 @@ object utils {
   }
 
   def convertDescriptorFromV1(ver1: CatalogDescriptorV1): Either[Throwable, CatalogDescriptor] = {
-    convertDescriptorStatusFromV1(ver1.status).map { status =>
+    convertDescriptorStateFromV1(ver1.state).map { state =>
       CatalogDescriptor(
         id = UUID.fromString(ver1.id),
         version = ver1.version,
@@ -135,7 +130,7 @@ object utils {
             uploadDate = OffsetDateTime.parse(doc.uploadDate, DateTimeFormatter.ISO_DATE_TIME)
           )
         },
-        status = status,
+        state = state,
         audience = ver1.audience,
         voucherLifespan = ver1.voucherLifespan
       )
@@ -146,38 +141,38 @@ object utils {
     descriptors.traverse(convertDescriptorFromV1)
   }
 
-  def convertDescriptorStatusFromV1(status: CatalogDescriptorStatusV1): Either[Throwable, CatalogDescriptorStatus] =
-    status match {
-      case DESCRIPTOR_STATUS_DRAFT      => Right(DraftStatus)
-      case DESCRIPTOR_STATUS_PUBLISHED  => Right(PublishedStatus)
-      case DESCRIPTOR_STATUS_DEPRECATED => Right(DeprecatedStatus)
-      case DESCRIPTOR_STATUS_SUSPENDED  => Right(SuspendedStatus)
-      case DESCRIPTOR_STATUS_ARCHIVED   => Right(ArchivedStatus)
-      case UnrecognizedDescriptorStatus(value) =>
-        Left(new RuntimeException(s"Unable to deserialize catalog descriptor status value $value"))
+  def convertDescriptorStateFromV1(state: CatalogDescriptorStateV1): Either[Throwable, CatalogDescriptorState] =
+    state match {
+      case CatalogDescriptorStateV1.DRAFT      => Right(Draft)
+      case CatalogDescriptorStateV1.PUBLISHED  => Right(Published)
+      case CatalogDescriptorStateV1.DEPRECATED => Right(Deprecated)
+      case CatalogDescriptorStateV1.SUSPENDED  => Right(Suspended)
+      case CatalogDescriptorStateV1.ARCHIVED   => Right(Archived)
+      case CatalogDescriptorStateV1.Unrecognized(value) =>
+        Left(new RuntimeException(s"Unable to deserialize catalog descriptor state value $value"))
     }
 
-  def convertDescriptorStatusToV1(status: CatalogDescriptorStatus): CatalogDescriptorStatusV1 =
-    status match {
-      case DraftStatus      => DESCRIPTOR_STATUS_DRAFT
-      case PublishedStatus  => DESCRIPTOR_STATUS_PUBLISHED
-      case DeprecatedStatus => DESCRIPTOR_STATUS_DEPRECATED
-      case SuspendedStatus  => DESCRIPTOR_STATUS_SUSPENDED
-      case ArchivedStatus   => DESCRIPTOR_STATUS_ARCHIVED
+  def convertDescriptorStateToV1(state: CatalogDescriptorState): CatalogDescriptorStateV1 =
+    state match {
+      case Draft      => CatalogDescriptorStateV1.DRAFT
+      case Published  => CatalogDescriptorStateV1.PUBLISHED
+      case Deprecated => CatalogDescriptorStateV1.DEPRECATED
+      case Suspended  => CatalogDescriptorStateV1.SUSPENDED
+      case Archived   => CatalogDescriptorStateV1.ARCHIVED
     }
 
   def convertItemTechnologyFromV1(technology: CatalogItemTechnologyV1): Either[Throwable, CatalogItemTechnology] =
     technology match {
-      case CATALOG_ITEM_TECHNOLOGY_REST => Right(RestTechnology)
-      case CATALOG_ITEM_TECHNOLOGY_SOAP => Right(SoapTechnology)
+      case CatalogItemTechnologyV1.REST => Right(Rest)
+      case CatalogItemTechnologyV1.SOAP => Right(Soap)
       case UnrecognizedTechnology(value) =>
         Left(new RuntimeException(s"Unable to deserialize catalog item technology value $value"))
     }
 
-  def convertItemTechnologyToV1(status: CatalogItemTechnology): CatalogItemTechnologyV1 =
-    status match {
-      case RestTechnology => CATALOG_ITEM_TECHNOLOGY_REST
-      case SoapTechnology => CATALOG_ITEM_TECHNOLOGY_SOAP
+  def convertItemTechnologyToV1(technology: CatalogItemTechnology): CatalogItemTechnologyV1 =
+    technology match {
+      case Rest => CatalogItemTechnologyV1.REST
+      case Soap => CatalogItemTechnologyV1.SOAP
     }
 
 }

@@ -40,6 +40,11 @@ object Dependencies {
     lazy val s3        = namespace % "s3" % awsSdkVersion
   }
 
+  private[this] object enumeratum {
+    lazy val namespace = "com.beachape"
+    lazy val core      = namespace %% "enumeratum" % enumeratumVersion
+  }
+
   lazy val Protobuf = "protobuf"
 
   private[this] object scalaprotobuf {
@@ -108,32 +113,33 @@ object Dependencies {
       "javax.annotation" % "javax.annotation-api" % "1.3.2" % "compile",
       //
       akka.actorTyped              % Compile,
-      akka.clusterTyped            % Compile,
-      akka.clusterSharding         % Compile,
+      akka.clusterBootstrap        % Compile,
       akka.clusterHttp             % Compile,
+      akka.clusterSharding         % Compile,
+      akka.clusterTools            % Compile,
+      akka.clusterTyped            % Compile,
       akka.discovery               % Compile,
       akka.discoveryKubernetesApi  % Compile,
-      akka.clusterBootstrap        % Compile,
-      akka.clusterTools            % Compile,
+      akka.http                    % Compile,
+      akka.httpJson                % Compile,
       akka.persistence             % Compile,
+      akka.persistenceCassandra    % Compile,
       akka.persistenceQuery        % Compile,
       akka.projection              % Compile,
       akka.projectionCassandra     % Compile,
-      akka.persistenceCassandra    % Compile,
       akka.s3Journal               % Compile,
       akka.s3Snapshot              % Compile,
+      akka.slf4j                   % Compile,
       akka.stream                  % Compile,
-      akka.http                    % Compile,
-      akka.httpJson                % Compile,
       awssdk.s3                    % Compile,
       cats.core                    % Compile,
-      mustache.compiler            % Compile,
-      logback.classic              % Compile,
-      akka.slf4j                   % Compile,
-      openapi4j.operationValidator % Compile,
       commons.fileUpload           % Compile,
+      enumeratum.core              % Compile,
       kamon.bundle                 % Compile,
       kamon.prometheus             % Compile,
+      logback.classic              % Compile,
+      mustache.compiler            % Compile,
+      openapi4j.operationValidator % Compile,
       scalaprotobuf.core           % Protobuf,
       scalatest.core               % Test,
       scalamock.core               % Test,
@@ -144,6 +150,7 @@ object Dependencies {
       akka.stream     % Compile,
       akka.http       % Compile,
       akka.httpJson4s % Compile,
+      enumeratum.core % Compile,
       json4s.jackson  % Compile,
       json4s.ext      % Compile
     )
