@@ -64,10 +64,9 @@ paths:
           schema:
             type: string
         - in: query
-          name: status
+          name: state
           schema:
-            type: string
-            enum: [ draft, active, suspended ]
+            $ref: '#/components/schemas/EServiceDescriptorState'
       responses:
         "200":
           description: A list of EService
@@ -75,6 +74,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/EServices'
+        "400":
+          description: Bad request
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
   /eservices/{eServiceId}:
     get:
       security:
@@ -242,7 +247,7 @@ paths:
             type: string
       responses:
         "204":
-          description: EService Descriptor status published.
+          description: EService Descriptor state published.
         "400":
           description: Invalid input
           content:
@@ -278,7 +283,7 @@ paths:
             type: string
       responses:
         "204":
-          description: EService Descriptor status changed in draft
+          description: EService Descriptor state changed in draft
         "400":
           description: Invalid input
           content:
@@ -314,7 +319,7 @@ paths:
             type: string
       responses:
         "204":
-          description: EService Descriptor status archived
+          description: EService Descriptor state archived
         "400":
           description: Invalid input
           content:
@@ -350,7 +355,7 @@ paths:
             type: string
       responses:
         "204":
-          description: EService Descriptor status deprecated
+          description: EService Descriptor state deprecated
         "400":
           description: Invalid input
           content:
@@ -386,7 +391,7 @@ paths:
             type: string
       responses:
         "204":
-          description: EService Descriptor status suspended
+          description: EService Descriptor state suspended
         "400":
           description: Invalid input
           content:
@@ -557,7 +562,10 @@ paths:
               properties:
                 kind:
                   type: string
-                  enum: [ "interface","document" ]
+                  description: Document Type
+                  enum:
+                    - INTERFACE
+                    - DOCUMENT
                 description:
                   type: string
                 doc:
@@ -742,8 +750,7 @@ components:
         description:
           type: string
         technology:
-          type: string
-          enum: [ 'REST', 'SOAP' ]
+          $ref: '#/components/schemas/EServiceTechnology'
         attributes:
           $ref: '#/components/schemas/Attributes'
     EService:
@@ -768,7 +775,7 @@ components:
         description:
           type: string
         technology:
-          type: string
+          $ref: '#/components/schemas/EServiceTechnology'
         attributes:
           $ref: '#/components/schemas/Attributes'
         descriptors:
@@ -801,7 +808,7 @@ components:
         - id
         - version
         - docs
-        - status
+        - state
         - creationDate
         - audience
         - voucherLifespan
@@ -826,9 +833,8 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/EServiceDoc'
-        status:
-          type: string
-          enum: [ 'draft', 'published', 'deprecated', 'suspended', 'archived' ]
+        state:
+          $ref: '#/components/schemas/EServiceDescriptorState'
     EServiceDescriptorSeed:
       required:
         - audience
@@ -846,16 +852,15 @@ components:
           format: int32
     UpdateEServiceDescriptorSeed:
       required:
-        - status
+        - state
         - audience
         - voucherLifespan
       type: object
       properties:
         description:
           type: string
-        status:
-          type: string
-          enum: [ 'draft', 'published', 'deprecated', 'suspended', 'archived' ]
+        state:
+          $ref: '#/components/schemas/EServiceDescriptorState'
         audience:
           type: array
           items:
@@ -924,10 +929,24 @@ components:
         description:
           type: string
         technology:
-          type: string
-          enum: [ 'REST', 'SOAP' ]
+          $ref: '#/components/schemas/EServiceTechnology'
         attributes:
           $ref: '#/components/schemas/Attributes'
+    EServiceTechnology:
+      type: string
+      description: API Technology
+      enum:
+        - REST
+        - SOAP
+    EServiceDescriptorState:
+      type: string
+      description: EService Descriptor state
+      enum:
+        - DRAFT
+        - PUBLISHED
+        - DEPRECATED
+        - SUSPENDED
+        - ARCHIVED
     Problem:
       properties:
         detail:

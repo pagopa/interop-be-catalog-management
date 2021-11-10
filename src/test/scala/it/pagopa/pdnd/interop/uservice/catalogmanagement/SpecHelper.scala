@@ -18,7 +18,9 @@ import scala.concurrent.duration.Duration
 
 trait SpecHelper extends SpecConfiguration with AnyWordSpecLike with MockFactory {
 
-  def createEServiceDescriptor(eserviceId: String, descriptorId: UUID)(implicit actorSystem: ActorSystem[_]): EServiceDescriptor = {
+  def createEServiceDescriptor(eserviceId: String, descriptorId: UUID)(implicit
+    actorSystem: ActorSystem[_]
+  ): EServiceDescriptor = {
     (() => mockUUIDSupplier.get).expects().returning(descriptorId).once()
     val data =
       """

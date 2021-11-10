@@ -3,12 +3,11 @@ package it.pagopa.pdnd.interop.uservice.catalogmanagement.service
 import akka.http.scaladsl.model.{HttpCharsets, MediaType, MediaTypes}
 import akka.http.scaladsl.server.directives.FileInfo
 import it.pagopa.pdnd.interop.uservice.catalogmanagement.common.Digester
-import it.pagopa.pdnd.interop.uservice.catalogmanagement.model.{CatalogDocument, CatalogItem}
+import it.pagopa.pdnd.interop.uservice.catalogmanagement.model.{CatalogDocument, CatalogItem, Rest, Soap}
 
 import java.io.{ByteArrayOutputStream, File}
 import java.util.UUID
 import scala.concurrent.{ExecutionContext, Future}
-
 
 trait FileManager {
 
@@ -76,9 +75,8 @@ object FileManager {
     val soapContentTypes: Set[MediaType] = Set(MediaTypes.`application/soap+xml`)
 
     val isValidTechnology = catalogItem.technology match {
-      case "REST" => restContentTypes.contains(fileParts._1.contentType.mediaType)
-      case "SOAP" => soapContentTypes.contains(fileParts._1.contentType.mediaType)
-      case _      => false
+      case Rest => restContentTypes.contains(fileParts._1.contentType.mediaType)
+      case Soap => soapContentTypes.contains(fileParts._1.contentType.mediaType)
     }
 
     if (isValidTechnology)
