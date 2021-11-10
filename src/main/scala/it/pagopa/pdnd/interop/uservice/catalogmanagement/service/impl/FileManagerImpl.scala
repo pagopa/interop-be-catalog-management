@@ -96,7 +96,7 @@ class FileManagerImpl extends FileManager {
   ): Future[CatalogDocument] = Future.fromTry {
     Try {
       val destination = createPath(eServiceId, descriptorId, documentId.toString, contentType, fileName)
-      val _ = Files.copy(Paths.get(filePathToCopy), Paths.get(destination), StandardCopyOption.REPLACE_EXISTING)
+      val _           = Files.copy(Paths.get(filePathToCopy), Paths.get(destination), StandardCopyOption.REPLACE_EXISTING)
 
       CatalogDocument(
         id = documentId,

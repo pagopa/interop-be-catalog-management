@@ -11,7 +11,7 @@ message CatalogItemV1 {
   required string producerId = 2;
   required string name = 3;
   required string description = 4;
-  required string technology = 5;
+  required CatalogItemTechnologyV1 technology = 5;
   required CatalogAttributesV1  attributes = 6;
   repeated CatalogDescriptorV1 descriptors = 7;
 }
@@ -37,7 +37,7 @@ message CatalogDescriptorV1 {
   required string version = 2;
   optional string description = 3;
   repeated CatalogDocumentV1 docs = 4;
-  required CatalogDescriptorStatusV1 status = 5;
+  required CatalogDescriptorStateV1 state = 5;
   optional CatalogDocumentV1 interface = 6;
   repeated string audience = 7;
   required int32 voucherLifespan = 8;
@@ -53,10 +53,15 @@ message CatalogDocumentV1 {
   required string description = 7;
 }
 
-enum CatalogDescriptorStatusV1 {
-  draft = 1;
-  published = 2;
-  deprecated = 3;
-  suspended = 4;
-  archived = 5;
+enum CatalogDescriptorStateV1 {
+  DRAFT = 1;
+  PUBLISHED = 2;
+  DEPRECATED = 3;
+  SUSPENDED = 4;
+  ARCHIVED = 5;
+}
+
+enum CatalogItemTechnologyV1 {
+  REST = 1;
+  SOAP = 2;
 }

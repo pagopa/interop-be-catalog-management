@@ -2,6 +2,9 @@ package it.pagopa.pdnd.interop.uservice.catalogmanagement.model.persistence.seri
 
 import cats.implicits.toTraverseOps
 import it.pagopa.pdnd.interop.uservice.catalogmanagement.model._
+import it.pagopa.pdnd.interop.uservice.catalogmanagement.model.persistence.serializer.v1.catalog_item.CatalogItemTechnologyV1.{
+  Unrecognized => UnrecognizedTechnology
+}
 import it.pagopa.pdnd.interop.uservice.catalogmanagement.model.persistence.serializer.v1.catalog_item._
 
 import java.time.OffsetDateTime
@@ -59,41 +62,38 @@ object utils {
   }
 
   def convertDescriptorToV1(descriptor: CatalogDescriptor): Either[RuntimeException, CatalogDescriptorV1] = {
-    CatalogDescriptorStatusV1
-      .fromName(descriptor.status.stringify)
-      .toRight(new RuntimeException("Invalid descriptor status"))
-      .map { status =>
-        CatalogDescriptorV1(
-          id = descriptor.id.toString,
-          version = descriptor.version,
-          description = descriptor.description,
-          docs = descriptor.docs.map { doc =>
-            CatalogDocumentV1(
-              id = doc.id.toString,
-              name = doc.name,
-              contentType = doc.contentType,
-              description = doc.description,
-              path = doc.path,
-              checksum = doc.checksum,
-              uploadDate = doc.uploadDate.format(DateTimeFormatter.ISO_DATE_TIME)
-            )
-          },
-          interface = descriptor.interface.map { doc =>
-            CatalogDocumentV1(
-              id = doc.id.toString,
-              name = doc.name,
-              contentType = doc.contentType,
-              description = doc.description,
-              path = doc.path,
-              checksum = doc.checksum,
-              uploadDate = doc.uploadDate.format(DateTimeFormatter.ISO_DATE_TIME)
-            )
-          },
-          status = status,
-          audience = descriptor.audience,
-          voucherLifespan = descriptor.voucherLifespan
-        )
-      }
+    Right(
+      CatalogDescriptorV1(
+        id = descriptor.id.toString,
+        version = descriptor.version,
+        description = descriptor.description,
+        docs = descriptor.docs.map { doc =>
+          CatalogDocumentV1(
+            id = doc.id.toString,
+            name = doc.name,
+            contentType = doc.contentType,
+            description = doc.description,
+            path = doc.path,
+            checksum = doc.checksum,
+            uploadDate = doc.uploadDate.format(DateTimeFormatter.ISO_DATE_TIME)
+          )
+        },
+        interface = descriptor.interface.map { doc =>
+          CatalogDocumentV1(
+            id = doc.id.toString,
+            name = doc.name,
+            contentType = doc.contentType,
+            description = doc.description,
+            path = doc.path,
+            checksum = doc.checksum,
+            uploadDate = doc.uploadDate.format(DateTimeFormatter.ISO_DATE_TIME)
+          )
+        },
+        state = convertDescriptorStateToV1(descriptor.state),
+        audience = descriptor.audience,
+        voucherLifespan = descriptor.voucherLifespan
+      )
+    )
   }
 
   def convertDescriptorsToV1(
@@ -103,7 +103,7 @@ object utils {
   }
 
   def convertDescriptorFromV1(ver1: CatalogDescriptorV1): Either[Throwable, CatalogDescriptor] = {
-    CatalogDescriptorStatus.fromText(ver1.status.name).map { status =>
+    convertDescriptorStateFromV1(ver1.state).map { state =>
       CatalogDescriptor(
         id = UUID.fromString(ver1.id),
         version = ver1.version,
@@ -130,7 +130,7 @@ object utils {
             uploadDate = OffsetDateTime.parse(doc.uploadDate, DateTimeFormatter.ISO_DATE_TIME)
           )
         },
-        status = status,
+        state = state,
         audience = ver1.audience,
         voucherLifespan = ver1.voucherLifespan
       )
@@ -140,5 +140,39 @@ object utils {
   def convertDescriptorsFromV1(descriptors: Seq[CatalogDescriptorV1]): Either[Throwable, Seq[CatalogDescriptor]] = {
     descriptors.traverse(convertDescriptorFromV1)
   }
+
+  def convertDescriptorStateFromV1(state: CatalogDescriptorStateV1): Either[Throwable, CatalogDescriptorState] =
+    state match {
+      case CatalogDescriptorStateV1.DRAFT      => Right(Draft)
+      case CatalogDescriptorStateV1.PUBLISHED  => Right(Published)
+      case CatalogDescriptorStateV1.DEPRECATED => Right(Deprecated)
+      case CatalogDescriptorStateV1.SUSPENDED  => Right(Suspended)
+      case CatalogDescriptorStateV1.ARCHIVED   => Right(Archived)
+      case CatalogDescriptorStateV1.Unrecognized(value) =>
+        Left(new RuntimeException(s"Unable to deserialize catalog descriptor state value $value"))
+    }
+
+  def convertDescriptorStateToV1(state: CatalogDescriptorState): CatalogDescriptorStateV1 =
+    state match {
+      case Draft      => CatalogDescriptorStateV1.DRAFT
+      case Published  => CatalogDescriptorStateV1.PUBLISHED
+      case Deprecated => CatalogDescriptorStateV1.DEPRECATED
+      case Suspended  => CatalogDescriptorStateV1.SUSPENDED
+      case Archived   => CatalogDescriptorStateV1.ARCHIVED
+    }
+
+  def convertItemTechnologyFromV1(technology: CatalogItemTechnologyV1): Either[Throwable, CatalogItemTechnology] =
+    technology match {
+      case CatalogItemTechnologyV1.REST => Right(Rest)
+      case CatalogItemTechnologyV1.SOAP => Right(Soap)
+      case UnrecognizedTechnology(value) =>
+        Left(new RuntimeException(s"Unable to deserialize catalog item technology value $value"))
+    }
+
+  def convertItemTechnologyToV1(technology: CatalogItemTechnology): CatalogItemTechnologyV1 =
+    technology match {
+      case Rest => CatalogItemTechnologyV1.REST
+      case Soap => CatalogItemTechnologyV1.SOAP
+    }
 
 }

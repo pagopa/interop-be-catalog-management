@@ -10,7 +10,7 @@ import akka.http.scaladsl.server.Directives.{onComplete, onSuccess}
 import akka.http.scaladsl.server.Route
 import akka.http.scaladsl.server.directives.FileInfo
 import akka.pattern.StatusReply
-import cats.data.Validated.{Invalid, Valid}
+import cats.implicits.toTraverseOps
 import it.pagopa.pdnd.interop.uservice.catalogmanagement.api.EServiceApiService
 import it.pagopa.pdnd.interop.uservice.catalogmanagement.common._
 import it.pagopa.pdnd.interop.uservice.catalogmanagement.common.system._
@@ -32,8 +32,7 @@ class EServiceApiServiceImpl(
   uuidSupplier: UUIDSupplier,
   fileManager: FileManager
 )(implicit ec: ExecutionContext)
-    extends EServiceApiService
-    with Validation {
+    extends EServiceApiService {
 
   private lazy val INTERFACE = "interface"
   private lazy val DOCUMENT  = "document"
@@ -142,26 +141,46 @@ class EServiceApiServiceImpl(
 
   /** Code: 200, Message: A list of EService, DataType: Seq[EService]
     */
-  override def getEServices(producerId: Option[String], status: Option[String])(implicit
+  override def getEServices(producerId: Option[String], state: Option[String])(implicit
     toEntityMarshallerEServicearray: ToEntityMarshaller[Seq[EService]],
+    toEntityMarshallerProblem: ToEntityMarshaller[Problem],
     contexts: Seq[(String, String)]
   ): Route = {
     contexts.foreach(println)
     val sliceSize = 100
-    def getSlice(commander: EntityRef[Command], from: Int, to: Int): LazyList[CatalogItem] = {
+
+    val commanders: Seq[EntityRef[Command]] =
+      (0 until settings.numberOfShards).map(shard => getCommander(shard.toString))
+
+    def getSlice(
+      commander: EntityRef[Command],
+      from: Int,
+      to: Int,
+      producerId: Option[String],
+      state: Option[CatalogDescriptorState]
+    ): LazyList[CatalogItem] = {
       val slice: Seq[CatalogItem] = Await
-        .result(commander.ask(ref => ListCatalogItem(from, to, producerId, status, ref)), Duration.Inf)
+        .result(commander.ask(ref => ListCatalogItem(from, to, producerId, state, ref)), Duration.Inf)
 
       if (slice.isEmpty)
         LazyList.empty[CatalogItem]
       else
-        getSlice(commander, to, to + sliceSize) #::: slice.to(LazyList)
+        getSlice(commander, to, to + sliceSize, producerId, state) #::: slice.to(LazyList)
     }
-    val commanders: Seq[EntityRef[Command]] =
-      (0 until settings.numberOfShards).map(shard => getCommander(shard.toString))
-    val catalogItem: Seq[CatalogItem] = commanders.flatMap(ref => getSlice(ref, 0, sliceSize))
 
-    getEServices200(catalogItem.map(_.toApi))
+    val stringToState: String => Either[Throwable, CatalogDescriptorState] =
+      EServiceDescriptorState.fromValue(_).map(CatalogDescriptorState.fromApi)
+
+    val stateEnum = state.traverse(stringToState)
+
+    val result = stateEnum.map { state =>
+      commanders.flatMap(ref => getSlice(ref, 0, sliceSize, producerId, state))
+    }
+
+    result match {
+      case Right(items) => getEServices200(items.map(_.toApi))
+      case Left(error)  => getEServices400(Problem(Option(error.getMessage), 400, "Catalog Items retrieve error"))
+    }
 
   }
 
@@ -274,22 +293,14 @@ class EServiceApiServiceImpl(
     def mergeChanges(
       descriptor: CatalogDescriptor,
       eServiceDescriptorSeed: UpdateEServiceDescriptorSeed
-    ): Either[ValidationError, CatalogDescriptor] = {
-      val newStatus = validateDescriptorStatus(eServiceDescriptorSeed.status)
-      newStatus match {
-        case Invalid(nel) => Left(ValidationError(nel.toList))
-        case Valid(status) =>
-          Right(
-            descriptor
-              .copy(
-                description = eServiceDescriptorSeed.description,
-                audience = eServiceDescriptorSeed.audience,
-                voucherLifespan = eServiceDescriptorSeed.voucherLifespan,
-                status = status
-              )
-          )
-      }
-    }
+    ): CatalogDescriptor =
+      descriptor
+        .copy(
+          description = eServiceDescriptorSeed.description,
+          audience = eServiceDescriptorSeed.audience,
+          voucherLifespan = eServiceDescriptorSeed.voucherLifespan,
+          state = CatalogDescriptorState.fromApi(eServiceDescriptorSeed.state)
+        )
 
     val result: Future[Option[CatalogItem]] = for {
       retrieved <- commander.ask(ref => GetCatalogItem(eServiceId, ref))
@@ -297,7 +308,7 @@ class EServiceApiServiceImpl(
       toUpdateDescriptor <- current.descriptors
         .find(_.id.toString == descriptorId)
         .toFuture(EServiceDescriptorNotFoundError(eServiceId, descriptorId))
-      updatedDescriptor <- mergeChanges(toUpdateDescriptor, eServiceDescriptorSeed).toFuture
+      updatedDescriptor = mergeChanges(toUpdateDescriptor, eServiceDescriptorSeed)
       updatedItem = current.copy(descriptors =
         current.descriptors.filter(_.id.toString != descriptorId) :+ updatedDescriptor
       )
@@ -403,7 +414,7 @@ class EServiceApiServiceImpl(
         version = nextVersion,
         interface = None,
         docs = Seq.empty[CatalogDocument],
-        status = Draft,
+        state = Draft,
         voucherLifespan = eServiceDescriptorSeed.voucherLifespan,
         audience = eServiceDescriptorSeed.audience
       )
@@ -472,7 +483,7 @@ class EServiceApiServiceImpl(
     }
   }
 
-  /** Code: 204, Message: EService Descriptor status archived
+  /** Code: 204, Message: EService Descriptor state archived
     * Code: 400, Message: Invalid input, DataType: Problem
     * Code: 404, Message: Not found, DataType: Problem
     */
@@ -480,7 +491,7 @@ class EServiceApiServiceImpl(
     toEntityMarshallerProblem: ToEntityMarshaller[Problem],
     contexts: Seq[(String, String)]
   ): Route = {
-    val result = updateDescriptorStatus(eServiceId, descriptorId, Archived)
+    val result = updateDescriptorState(eServiceId, descriptorId, Archived)
     onComplete(result) {
       case Success(catalogItem) =>
         catalogItem.fold(
@@ -495,7 +506,7 @@ class EServiceApiServiceImpl(
     }
   }
 
-  /** Code: 204, Message: EService Descriptor status deprecated
+  /** Code: 204, Message: EService Descriptor state deprecated
     * Code: 400, Message: Invalid input, DataType: Problem
     * Code: 404, Message: Not found, DataType: Problem
     */
@@ -503,7 +514,7 @@ class EServiceApiServiceImpl(
     toEntityMarshallerProblem: ToEntityMarshaller[Problem],
     contexts: Seq[(String, String)]
   ): Route = {
-    val result = updateDescriptorStatus(eServiceId, descriptorId, Deprecated)
+    val result = updateDescriptorState(eServiceId, descriptorId, Deprecated)
     onComplete(result) {
       case Success(catalogItem) =>
         catalogItem.fold(
@@ -522,7 +533,7 @@ class EServiceApiServiceImpl(
     }
   }
 
-  /** Code: 204, Message: EService Descriptor status suspended
+  /** Code: 204, Message: EService Descriptor state suspended
     * Code: 400, Message: Invalid input, DataType: Problem
     * Code: 404, Message: Not found, DataType: Problem
     */
@@ -530,7 +541,7 @@ class EServiceApiServiceImpl(
     toEntityMarshallerProblem: ToEntityMarshaller[Problem],
     contexts: Seq[(String, String)]
   ): Route = {
-    val result = updateDescriptorStatus(eServiceId, descriptorId, Suspended)
+    val result = updateDescriptorState(eServiceId, descriptorId, Suspended)
     onComplete(result) {
       case Success(catalogItem) =>
         catalogItem.fold(
@@ -545,7 +556,7 @@ class EServiceApiServiceImpl(
     }
   }
 
-  /** Code: 204, Message: EService Descriptor status changed in draft
+  /** Code: 204, Message: EService Descriptor state changed in draft
     * Code: 400, Message: Invalid input, DataType: Problem
     * Code: 404, Message: Not found, DataType: Problem
     */
@@ -553,7 +564,7 @@ class EServiceApiServiceImpl(
     toEntityMarshallerProblem: ToEntityMarshaller[Problem],
     contexts: Seq[(String, String)]
   ): Route = {
-    val result = updateDescriptorStatus(eServiceId, descriptorId, Draft)
+    val result = updateDescriptorState(eServiceId, descriptorId, Draft)
     onComplete(result) {
       case Success(catalogItem) =>
         catalogItem.fold(
@@ -572,7 +583,7 @@ class EServiceApiServiceImpl(
     }
   }
 
-  /** Code: 204, Message: EService Descriptor status published.
+  /** Code: 204, Message: EService Descriptor state published.
     * Code: 400, Message: Invalid input, DataType: Problem
     * Code: 404, Message: Not found, DataType: Problem
     */
@@ -580,7 +591,7 @@ class EServiceApiServiceImpl(
     toEntityMarshallerProblem: ToEntityMarshaller[Problem],
     contexts: Seq[(String, String)]
   ): Route = {
-    val result = updateDescriptorStatus(eServiceId, descriptorId, Published)
+    val result = updateDescriptorState(eServiceId, descriptorId, Published)
 
     onComplete(result) {
       case Success(catalogItem) =>
@@ -600,12 +611,12 @@ class EServiceApiServiceImpl(
     }
   }
 
-  /* utility method for descriptor status updates
+  /* utility method for descriptor state updates
    */
-  private def updateDescriptorStatus(
+  private def updateDescriptorState(
     eServiceId: String,
     descriptorId: String,
-    status: CatalogDescriptorStatus
+    state: CatalogDescriptorState
   ): Future[Option[CatalogDescriptor]] = {
 
     val shard: String = getShard(eServiceId)
@@ -614,9 +625,9 @@ class EServiceApiServiceImpl(
 
     def mergeChanges(
       descriptor: CatalogDescriptor,
-      updateEServiceDescriptorStatus: CatalogDescriptorStatus
+      updateEServiceDescriptorState: CatalogDescriptorState
     ): Either[ValidationError, CatalogDescriptor] = {
-      Right(descriptor.copy(status = updateEServiceDescriptorStatus))
+      Right(descriptor.copy(state = updateEServiceDescriptorState))
     }
 
     for {
@@ -625,7 +636,7 @@ class EServiceApiServiceImpl(
       toUpdateDescriptor <- current.descriptors
         .find(_.id.toString == descriptorId)
         .toFuture(EServiceDescriptorNotFoundError(eServiceId, descriptorId))
-      updatedDescriptor <- mergeChanges(toUpdateDescriptor, status).toFuture
+      updatedDescriptor <- mergeChanges(toUpdateDescriptor, state).toFuture
       updated           <- commander.ask(ref => UpdateCatalogItemDescriptor(current.id.toString, updatedDescriptor, ref))
     } yield updated
   }
@@ -771,7 +782,7 @@ class EServiceApiServiceImpl(
         description = descriptorToClone.description,
         interface = clonedInterface,
         docs = clonedDocuments,
-        status = Draft,
+        state = Draft,
         audience = descriptorToClone.audience,
         voucherLifespan = descriptorToClone.voucherLifespan
       )
