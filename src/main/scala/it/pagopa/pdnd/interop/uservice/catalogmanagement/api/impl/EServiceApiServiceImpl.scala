@@ -169,7 +169,7 @@ class EServiceApiServiceImpl(
     }
 
     val stringToState: String => Either[Throwable, CatalogDescriptorState] =
-      EServiceDescriptorState.withNameEither(_).map(CatalogDescriptorState.fromApi)
+      EServiceDescriptorState.fromValue(_).map(CatalogDescriptorState.fromApi)
 
     val stateEnum = state.traverse(stringToState)
 

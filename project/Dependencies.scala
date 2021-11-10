@@ -40,11 +40,6 @@ object Dependencies {
     lazy val s3        = namespace % "s3" % awsSdkVersion
   }
 
-  private[this] object enumeratum {
-    lazy val namespace = "com.beachape"
-    lazy val core      = namespace %% "enumeratum" % enumeratumVersion
-  }
-
   lazy val Protobuf = "protobuf"
 
   private[this] object scalaprotobuf {
@@ -134,7 +129,6 @@ object Dependencies {
       awssdk.s3                    % Compile,
       cats.core                    % Compile,
       commons.fileUpload           % Compile,
-      enumeratum.core              % Compile,
       kamon.bundle                 % Compile,
       kamon.prometheus             % Compile,
       logback.classic              % Compile,
@@ -150,7 +144,6 @@ object Dependencies {
       akka.stream     % Compile,
       akka.http       % Compile,
       akka.httpJson4s % Compile,
-      enumeratum.core % Compile,
       json4s.jackson  % Compile,
       json4s.ext      % Compile
     )
