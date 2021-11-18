@@ -74,7 +74,7 @@ object Main extends App {
           val userPersistentProjection = CatalogPersistentProjection(context.system, catalogPersistentEntity, dbConfig)
 
           ShardedDaemonProcess(context.system).init[ProjectionBehavior.Command](
-            name = "user-projections",
+            name = "catalog-projections",
             numberOfInstances = settings.numberOfShards,
             behaviorFactory = (i: Int) => ProjectionBehavior(userPersistentProjection.projections(i)),
             stopMessage = ProjectionBehavior.Stop
