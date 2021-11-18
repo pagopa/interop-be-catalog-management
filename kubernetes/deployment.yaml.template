@@ -18,16 +18,11 @@ spec:
     spec:
       imagePullSecrets:
         - name: regcred
-      volumes:
-        - name: application-conf
-          secret:
-            secretName: application.conf
-            defaultMode: 420
       containers:
         - name: {{name}}
           image: {{repository}}/services/{{name}}:{{version}}
           command: ["bin/{{name}}"]
-          args: ["-Dconfig.file=etc/application.conf", "-Dconfig.override_with_env_vars=true"]
+          args: ["-Dconfig.override_with_env_vars=true"]
           imagePullPolicy: Always
           readinessProbe:
             httpGet:
@@ -57,21 +52,24 @@ spec:
             runAsUser: 1001
             allowPrivilegeEscalation: false
           env:
-            - name: CASSANDRA_HOST
+            - name: POSTGRES_HOST
+              value : "{{postgresHost}}"
+            - name: POSTGRES_PORT
+              value : "{{postgresPort}}"
+            - name: POSTGRES_DB
+              value : "{{postgresDb}}"
+            - name: POSTGRES_SCHEMA
+              value : "{{postgresSchema}}"
+            - name: POSTGRES_USR
               valueFrom:
                 secretKeyRef:
-                  name: cassandra
-                  key: CASSANDRA_HOST
-            - name: CASSANDRA_USR
+                  name: postgres
+                  key: 'POSTGRES_USR'
+            - name: POSTGRES_PSW
               valueFrom:
                 secretKeyRef:
-                  name: cassandra
-                  key: CASSANDRA_USR
-            - name: CASSANDRA_PSW
-              valueFrom:
-                secretKeyRef:
-                  name: cassandra
-                  key: CASSANDRA_PSW
+                  name: postgres
+                  key: 'POSTGRES_PSW'
             - name: AWS_SECRET_ACCESS_KEY
               valueFrom:
                 secretKeyRef:
@@ -88,9 +86,6 @@ spec:
                   fieldPath: metadata.namespace
             - name: REQUIRED_CONTACT_POINT_NR
               value: "{{replicas}}"
-          volumeMounts:
-            - name: application-conf
-              mountPath: /opt/docker/etc
 ---
 apiVersion: v1
 kind: Service

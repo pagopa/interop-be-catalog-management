@@ -13,3 +13,11 @@ sbt -Djavax.net.ssl.trustStore=<path_to_your_local_trust_store> -Djavax.net.ssl.
 ```
 sbt -Dconfig.file="src/main/resources/reference-standalone.conf" run
 ```
+
+## Environment variables
+POSTGRES_HOST=localhost
+POSTGRES_PORT=5432
+POSTGRES_DB=persistence_management
+POSTGRES_SCHEMA=catalog
+POSTGRES_USR=root
+POSTGRES_PSW=password

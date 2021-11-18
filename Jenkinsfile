@@ -21,11 +21,11 @@ pipeline {
       steps {
         withCredentials([file(credentialsId: 'pdnd-interop-trust-cert', variable: 'pdnd_certificate')]) {
           sh '''
-                        cat \$pdnd_certificate > gateway.interop.pdnd.dev.cer
-                        keytool -import -file gateway.interop.pdnd.dev.cer -alias pdnd-interop-gateway -keystore PDNDTrustStore -storepass ${PDND_TRUST_STORE_PSW} -noprompt
-                        cp $JAVA_HOME/jre/lib/security/cacerts main_certs
-                        keytool -importkeystore -srckeystore main_certs -destkeystore PDNDTrustStore -srcstorepass ${PDND_TRUST_STORE_PSW} -deststorepass ${PDND_TRUST_STORE_PSW}
-                       '''
+             cat \$pdnd_certificate > gateway.interop.pdnd.dev.cer
+             keytool -import -file gateway.interop.pdnd.dev.cer -alias pdnd-interop-gateway -keystore PDNDTrustStore -storepass ${PDND_TRUST_STORE_PSW} -noprompt
+             cp $JAVA_HOME/jre/lib/security/cacerts main_certs
+             keytool -importkeystore -srckeystore main_certs -destkeystore PDNDTrustStore -srcstorepass ${PDND_TRUST_STORE_PSW} -deststorepass ${PDND_TRUST_STORE_PSW}
+           '''
           stash includes: "PDNDTrustStore", name: "pdnd_trust_store"
         }
       }
@@ -45,7 +45,9 @@ pipeline {
           unstash "pdnd_trust_store"
           script {
             sh '''docker login $NEXUS -u $NEXUS_CREDENTIALS_USR -p $NEXUS_CREDENTIALS_PSW'''
-            sbtAction 'test docker:publish'
+            sbtAction 'test'
+            sbtAction 'project client publish'
+            sbtAction 'docker:publish'
           }
         }
       }
@@ -54,22 +56,21 @@ pipeline {
     stage('Apply Kubernetes files') {
       agent { label 'sbt-template' }
       environment {
-        CASSANDRA = credentials('cassandra-db')
+        POSTGRES = credentials('postgres-db')
         AWS_SECRET_ACCESS = credentials('jenkins-aws')
-        CASSANDRA_HOST = 'cluster1-dc1-service.cassandra-operator.svc.cluster.local:9042'
         DOCKER_REPO = 'gateway.interop.pdnd.dev'
-        REPLICAS_NR = 1
+        //REPLICAS_NR = 1
       }
       steps {
         container('sbt-container') {
           withKubeConfig([credentialsId: 'kube-config']) {
             sh '''
-                              cd kubernetes
-                              chmod u+x undeploy.sh
-                              chmod u+x deploy.sh
-                              ./undeploy.sh
-                              ./deploy.sh
-                           '''
+              cd kubernetes
+              chmod u+x undeploy.sh
+              chmod u+x deploy.sh
+              ./undeploy.sh
+              ./deploy.sh
+            '''
           }
         }
       }
