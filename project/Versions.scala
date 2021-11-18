@@ -8,6 +8,7 @@ object Versions {
   lazy val commonsFileUploadVersion    = "1.4"
   lazy val httpJson4sVersion           = "1.38.2"
   lazy val jacksonVersion              = "2.11.4"
+  lazy val jdbcPersistenceVersion      = "5.0.1"
   lazy val json4sVersion               = "4.0.3"
   lazy val kamonVersion                = "2.1.17"
   lazy val logbackVersion              = "1.2.3"
@@ -20,4 +21,5 @@ object Versions {
   lazy val scalaPactVersion            = "3.3.2-RC2"
   lazy val scalapbVersion              = "0.11.1"
   lazy val scalatestVersion            = "3.2.8"
+  lazy val slickProjectionVersion      = "1.2.2"
 }

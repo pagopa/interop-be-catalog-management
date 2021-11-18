@@ -16,21 +16,15 @@ import akka.projection.ProjectionBehavior
 import akka.{actor => classic}
 import it.pagopa.pdnd.interop.uservice.catalogmanagement.api.EServiceApi
 import it.pagopa.pdnd.interop.uservice.catalogmanagement.api.impl.{EServiceApiMarshallerImpl, EServiceApiServiceImpl, _}
-import it.pagopa.pdnd.interop.uservice.catalogmanagement.common.system.{
-  ApplicationConfiguration,
-  Authenticator,
-  s3Client
-}
+import it.pagopa.pdnd.interop.uservice.catalogmanagement.common.system.{ApplicationConfiguration, Authenticator, s3Client}
 import it.pagopa.pdnd.interop.uservice.catalogmanagement.model.Problem
-import it.pagopa.pdnd.interop.uservice.catalogmanagement.model.persistence.{
-  CatalogPersistentBehavior,
-  CatalogPersistentProjection,
-  Command
-}
+import it.pagopa.pdnd.interop.uservice.catalogmanagement.model.persistence.{CatalogPersistentBehavior, CatalogPersistentProjection, Command}
 import it.pagopa.pdnd.interop.uservice.catalogmanagement.server.Controller
 import it.pagopa.pdnd.interop.uservice.catalogmanagement.service.impl.{S3ManagerImpl, UUIDSupplierImpl}
 import it.pagopa.pdnd.interop.uservice.catalogmanagement.service.{FileManager, UUIDSupplier}
 import kamon.Kamon
+import slick.basic.DatabaseConfig
+import slick.jdbc.JdbcProfile
 import spray.json._
 
 import scala.concurrent.ExecutionContextExecutor
@@ -71,15 +65,18 @@ object Main extends App {
           case Some(s) => s
         }
 
-        val persistence =
-          classicSystem.classicSystem.settings.config.getString("uservice-catalog-management.persistence")
-        if (persistence == "cassandra") {
-          val catalogPersistentProjection = new CatalogPersistentProjection(context.system, catalogPersistentEntity)
+        val persistence = classicSystem.classicSystem.settings.config.getString("akka.persistence.journal.plugin")
+
+        if (persistence == "jdbc-journal") {
+          val dbConfig: DatabaseConfig[JdbcProfile] =
+            DatabaseConfig.forConfig("akka-persistence-jdbc.shared-databases.slick")
+
+          val userPersistentProjection = CatalogPersistentProjection(context.system, catalogPersistentEntity, dbConfig)
 
           ShardedDaemonProcess(context.system).init[ProjectionBehavior.Command](
-            name = "catalog-projections",
+            name = "user-projections",
             numberOfInstances = settings.numberOfShards,
-            behaviorFactory = (i: Int) => ProjectionBehavior(catalogPersistentProjection.projections(i)),
+            behaviorFactory = (i: Int) => ProjectionBehavior(userPersistentProjection.projections(i)),
             stopMessage = ProjectionBehavior.Stop
           )
         }

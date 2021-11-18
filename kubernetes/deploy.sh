@@ -14,9 +14,7 @@ kubectl create namespace $NAMESPACE
 
 kubectl get secret regcred -n default -o yaml | sed s/"namespace: default"/"namespace: $NAMESPACE"/ | kubectl apply -n $NAMESPACE -f -
 
-kubectl create secret generic cassandra --from-literal=CASSANDRA_HOST=$CASSANDRA_HOST --from-literal=CASSANDRA_USR=$CASSANDRA_USR --from-literal=CASSANDRA_PSW=$CASSANDRA_PSW -n $NAMESPACE
-
-kubectl create secret generic application.conf --from-file=application.conf=$SCRIPT_PATH/../src/main/resources/application.conf -n $NAMESPACE
+kubectl create secret generic postgres --from-literal=POSTGRES_USR=$POSTGRES_USR --from-literal=POSTGRES_PSW="$POSTGRES_PSW" -n $NAMESPACE
 
 kubectl create secret generic aws --from-literal=AWS_ACCESS_KEY_ID=$AWS_SECRET_ACCESS_USR --from-literal=AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_PSW -n $NAMESPACE
 
