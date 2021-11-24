@@ -18,10 +18,10 @@ import slick.jdbc.JdbcProfile
 import scala.concurrent.duration.DurationInt
 
 final case class CatalogPersistentProjection(
-                                           system: ActorSystem[_],
-                                           entity: Entity[Command, ShardingEnvelope[Command]],
-                                           dbConfig: DatabaseConfig[JdbcProfile]
-                                         ) {
+  system: ActorSystem[_],
+  entity: Entity[Command, ShardingEnvelope[Command]],
+  dbConfig: DatabaseConfig[JdbcProfile]
+) {
 
   private val settings: ClusterShardingSettings = entity.settings match {
     case None    => ClusterShardingSettings(system)
@@ -33,10 +33,10 @@ final case class CatalogPersistentProjection(
       .eventsByTag[Event](system, readJournalPluginId = JdbcReadJournal.Identifier, tag = tag)
 
   val flow
-  : FlowWithContext[EventEnvelope[Event], ProjectionContext, EventEnvelope[Event], ProjectionContext, NotUsed]#Repr[
-    Event,
-    ProjectionContext
-  ]#Repr[Done.type, ProjectionContext] = FlowWithContext[EventEnvelope[Event], ProjectionContext]
+    : FlowWithContext[EventEnvelope[Event], ProjectionContext, EventEnvelope[Event], ProjectionContext, NotUsed]#Repr[
+      Event,
+      ProjectionContext
+    ]#Repr[Done.type, ProjectionContext] = FlowWithContext[EventEnvelope[Event], ProjectionContext]
     .map(envelope => envelope.event)
     .map(event => {
       println(event)
