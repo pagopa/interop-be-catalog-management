@@ -1,7 +1,7 @@
 package it.pagopa.pdnd.interop.uservice.catalogmanagement.model.persistence.serializer
 
 import cats.implicits._
-import it.pagopa.pdnd.interop.uservice.catalogmanagement.common._
+import it.pagopa.pdnd.interop.commons.utils.TypeConversions.{OffsetDateTimeOps, StringOps}
 import it.pagopa.pdnd.interop.uservice.catalogmanagement.model._
 import it.pagopa.pdnd.interop.uservice.catalogmanagement.model.persistence._
 import it.pagopa.pdnd.interop.uservice.catalogmanagement.model.persistence.serializer.v1.catalog_item.{
@@ -12,9 +12,6 @@ import it.pagopa.pdnd.interop.uservice.catalogmanagement.model.persistence.seria
 import it.pagopa.pdnd.interop.uservice.catalogmanagement.model.persistence.serializer.v1.state.{CatalogItemsV1, StateV1}
 import it.pagopa.pdnd.interop.uservice.catalogmanagement.model.persistence.serializer.v1.utils._
 
-import java.time.OffsetDateTime
-import java.time.format.DateTimeFormatter
-import java.util.UUID
 package object v1 {
 
   implicit def stateV1PersistEventDeserializer: PersistEventDeserializer[StateV1, State] =
@@ -24,9 +21,11 @@ package object v1 {
           attributes  <- convertAttributesFromV1(itemsV1.value.attributes)
           descriptors <- convertDescriptorsFromV1(itemsV1.value.descriptors)
           technology  <- convertItemTechnologyFromV1(itemsV1.value.technology)
+          uuid        <- itemsV1.value.id.toUUID.toEither
+          producerId  <- itemsV1.value.producerId.toUUID.toEither
         } yield itemsV1.key -> CatalogItem(
-          id = UUID.fromString(itemsV1.value.id),
-          producerId = UUID.fromString(itemsV1.value.producerId),
+          id = uuid,
+          producerId = producerId,
           name = itemsV1.value.name,
           description = itemsV1.value.description,
           technology = technology,
@@ -68,10 +67,12 @@ package object v1 {
         attributes  <- convertAttributesFromV1(event.catalogItem.attributes)
         descriptors <- convertDescriptorsFromV1(event.catalogItem.descriptors)
         technology  <- convertItemTechnologyFromV1(event.catalogItem.technology)
+        uuid        <- event.catalogItem.id.toUUID.toEither
+        producerId  <- event.catalogItem.producerId.toUUID.toEither
       } yield CatalogItemAdded(catalogItem =
         CatalogItem(
-          id = UUID.fromString(event.catalogItem.id),
-          producerId = UUID.fromString(event.catalogItem.producerId),
+          id = uuid,
+          producerId = producerId,
           name = event.catalogItem.name,
           description = event.catalogItem.description,
           technology = technology,
@@ -108,10 +109,12 @@ package object v1 {
         attributes  <- convertAttributesFromV1(event.catalogItem.attributes)
         descriptors <- convertDescriptorsFromV1(event.catalogItem.descriptors)
         technology  <- convertItemTechnologyFromV1(event.catalogItem.technology)
+        uuid        <- event.catalogItem.id.toUUID.toEither
+        producerId  <- event.catalogItem.producerId.toUUID.toEither
       } yield ClonedCatalogItemAdded(catalogItem =
         CatalogItem(
-          id = UUID.fromString(event.catalogItem.id),
-          producerId = UUID.fromString(event.catalogItem.producerId),
+          id = uuid,
+          producerId = producerId,
           name = event.catalogItem.name,
           description = event.catalogItem.description,
           technology = technology,
@@ -148,10 +151,12 @@ package object v1 {
         attributes  <- convertAttributesFromV1(event.catalogItem.attributes)
         descriptors <- convertDescriptorsFromV1(event.catalogItem.descriptors)
         technology  <- convertItemTechnologyFromV1(event.catalogItem.technology)
+        uuid        <- event.catalogItem.id.toUUID.toEither
+        producerId  <- event.catalogItem.producerId.toUUID.toEither
       } yield CatalogItemWithDescriptorsDeleted(
         catalogItem = CatalogItem(
-          id = UUID.fromString(event.catalogItem.id),
-          producerId = UUID.fromString(event.catalogItem.producerId),
+          id = uuid,
+          producerId = producerId,
           name = event.catalogItem.name,
           description = event.catalogItem.description,
           technology = technology,
@@ -198,10 +203,12 @@ package object v1 {
         attributes  <- convertAttributesFromV1(event.catalogItem.attributes)
         descriptors <- convertDescriptorsFromV1(event.catalogItem.descriptors)
         technology  <- convertItemTechnologyFromV1(event.catalogItem.technology)
+        uuid        <- event.catalogItem.id.toUUID.toEither
+        producerId  <- event.catalogItem.producerId.toUUID.toEither
       } yield CatalogItemUpdated(catalogItem =
         CatalogItem(
-          id = UUID.fromString(event.catalogItem.id),
-          producerId = UUID.fromString(event.catalogItem.producerId),
+          id = uuid,
+          producerId = producerId,
           name = event.catalogItem.name,
           description = event.catalogItem.description,
           technology = technology,
@@ -235,7 +242,8 @@ package object v1 {
     : PersistEventDeserializer[CatalogItemDocumentUpdatedV1, CatalogItemDocumentUpdated] =
     event => {
       for {
-        documentId <- event.updatedDocument.id.parseUUID
+        documentId <- event.updatedDocument.id.toUUID.toEither
+        uploadDate <- event.updatedDocument.uploadDate.toOffsetDateTime.toEither
       } yield CatalogItemDocumentUpdated(
         eServiceId = event.eServiceId,
         descriptorId = event.descriptorId,
@@ -247,7 +255,7 @@ package object v1 {
           description = event.updatedDocument.description,
           path = event.updatedDocument.path,
           checksum = event.updatedDocument.checksum,
-          uploadDate = OffsetDateTime.parse(event.updatedDocument.uploadDate, DateTimeFormatter.ISO_DATE_TIME)
+          uploadDate = uploadDate
         )
       )
     }
@@ -255,20 +263,20 @@ package object v1 {
   implicit def documentUpdatedV1PersistEventSerializer
     : PersistEventSerializer[CatalogItemDocumentUpdated, CatalogItemDocumentUpdatedV1] =
     event => {
-      Right[Throwable, CatalogItemDocumentUpdatedV1](
-        CatalogItemDocumentUpdatedV1(
-          eServiceId = event.eServiceId,
-          descriptorId = event.descriptorId,
-          documentId = event.documentId,
-          updatedDocument = CatalogDocumentV1(
-            id = event.updatedDocument.id.toString,
-            name = event.updatedDocument.name,
-            contentType = event.updatedDocument.contentType,
-            description = event.updatedDocument.description,
-            path = event.updatedDocument.path,
-            checksum = event.updatedDocument.checksum,
-            uploadDate = event.updatedDocument.uploadDate.format(DateTimeFormatter.ISO_DATE_TIME)
-          )
+      for {
+        uploadDate <- event.updatedDocument.uploadDate.asFormattedString.toEither
+      } yield CatalogItemDocumentUpdatedV1(
+        eServiceId = event.eServiceId,
+        descriptorId = event.descriptorId,
+        documentId = event.documentId,
+        updatedDocument = CatalogDocumentV1(
+          id = event.updatedDocument.id.toString,
+          name = event.updatedDocument.name,
+          contentType = event.updatedDocument.contentType,
+          description = event.updatedDocument.description,
+          path = event.updatedDocument.path,
+          checksum = event.updatedDocument.checksum,
+          uploadDate = uploadDate
         )
       )
     }
@@ -276,21 +284,21 @@ package object v1 {
   implicit def catalogItemDocumentAddedV1PersistEventSerializer
     : PersistEventSerializer[CatalogItemDocumentAdded, CatalogItemDocumentAddedV1] =
     event => {
-      Right[Throwable, CatalogItemDocumentAddedV1](
-        CatalogItemDocumentAddedV1(
-          eServiceId = event.eServiceId,
-          descriptorId = event.descriptorId,
-          document = CatalogDocumentV1(
-            id = event.document.id.toString,
-            name = event.document.name,
-            contentType = event.document.contentType,
-            description = event.document.description,
-            path = event.document.path,
-            checksum = event.document.checksum,
-            uploadDate = event.document.uploadDate.format(DateTimeFormatter.ISO_DATE_TIME)
-          ),
-          isInterface = event.isInterface
-        )
+      for {
+        uploadDate <- event.document.uploadDate.asFormattedString.toEither
+      } yield CatalogItemDocumentAddedV1(
+        eServiceId = event.eServiceId,
+        descriptorId = event.descriptorId,
+        document = CatalogDocumentV1(
+          id = event.document.id.toString,
+          name = event.document.name,
+          contentType = event.document.contentType,
+          description = event.document.description,
+          path = event.document.path,
+          checksum = event.document.checksum,
+          uploadDate = uploadDate
+        ),
+        isInterface = event.isInterface
       )
     }
 
@@ -298,7 +306,8 @@ package object v1 {
     : PersistEventDeserializer[CatalogItemDocumentAddedV1, CatalogItemDocumentAdded] =
     event => {
       for {
-        documentId <- event.document.id.parseUUID
+        documentId <- event.document.id.toUUID.toEither
+        uploadDate <- event.document.uploadDate.toOffsetDateTime.toEither
       } yield CatalogItemDocumentAdded(
         eServiceId = event.eServiceId,
         descriptorId = event.descriptorId,
@@ -309,7 +318,7 @@ package object v1 {
           description = event.document.description,
           path = event.document.path,
           checksum = event.document.checksum,
-          uploadDate = OffsetDateTime.parse(event.document.uploadDate, DateTimeFormatter.ISO_DATE_TIME)
+          uploadDate = uploadDate
         ),
         isInterface = event.isInterface
       )

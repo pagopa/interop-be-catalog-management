@@ -14,13 +14,14 @@ import akka.management.scaladsl.AkkaManagement
 import akka.persistence.typed.PersistenceId
 import akka.projection.ProjectionBehavior
 import akka.{actor => classic}
+import it.pagopa.pdnd.interop.commons.files.StorageConfiguration
+import it.pagopa.pdnd.interop.commons.files.service.FileManager
+import it.pagopa.pdnd.interop.commons.utils.AkkaUtils
+import it.pagopa.pdnd.interop.commons.utils.service.UUIDSupplier
+import it.pagopa.pdnd.interop.commons.utils.service.impl.UUIDSupplierImpl
 import it.pagopa.pdnd.interop.uservice.catalogmanagement.api.EServiceApi
 import it.pagopa.pdnd.interop.uservice.catalogmanagement.api.impl.{EServiceApiMarshallerImpl, EServiceApiServiceImpl, _}
-import it.pagopa.pdnd.interop.uservice.catalogmanagement.common.system.{
-  ApplicationConfiguration,
-  Authenticator,
-  s3Client
-}
+import it.pagopa.pdnd.interop.uservice.catalogmanagement.common.system.ApplicationConfiguration
 import it.pagopa.pdnd.interop.uservice.catalogmanagement.model.Problem
 import it.pagopa.pdnd.interop.uservice.catalogmanagement.model.persistence.{
   CatalogPersistentBehavior,
@@ -28,8 +29,7 @@ import it.pagopa.pdnd.interop.uservice.catalogmanagement.model.persistence.{
   Command
 }
 import it.pagopa.pdnd.interop.uservice.catalogmanagement.server.Controller
-import it.pagopa.pdnd.interop.uservice.catalogmanagement.service.impl.{S3ManagerImpl, UUIDSupplierImpl}
-import it.pagopa.pdnd.interop.uservice.catalogmanagement.service.{FileManager, UUIDSupplier}
+import it.pagopa.pdnd.interop.uservice.catalogmanagement.service.CatalogFileManager
 import kamon.Kamon
 import slick.basic.DatabaseConfig
 import slick.jdbc.JdbcProfile
@@ -47,6 +47,9 @@ object Main extends App {
         PersistenceId(entityContext.entityTypeKey.name, entityContext.entityId)
       )
     }
+
+  //end of the world here. It must break the execution if no concrete implementation is provided
+  val runtimeFileManager = FileManager.getConcreteImplementation(StorageConfiguration.runtimeFileManager).get
 
   Kamon.init()
 
@@ -89,14 +92,14 @@ object Main extends App {
           )
         }
 
-        val uuidSupplier: UUIDSupplier = new UUIDSupplierImpl
-        val fileManager: FileManager   = new S3ManagerImpl(s3Client)
-        val eServiceApiMarshallerImpl  = new EServiceApiMarshallerImpl()
+        val uuidSupplier: UUIDSupplier      = new UUIDSupplierImpl
+        val fileManager: CatalogFileManager = new CatalogFileManager(runtimeFileManager)
+        val eServiceApiMarshallerImpl       = new EServiceApiMarshallerImpl()
 
         val eServiceApi = new EServiceApi(
           new EServiceApiServiceImpl(context.system, sharding, catalogPersistentEntity, uuidSupplier, fileManager),
           eServiceApiMarshallerImpl,
-          SecurityDirectives.authenticateOAuth2("SecurityRealm", Authenticator)
+          SecurityDirectives.authenticateOAuth2("SecurityRealm", AkkaUtils.Authenticator)
         )
 
         val _ = AkkaManagement.get(classicSystem).start()
