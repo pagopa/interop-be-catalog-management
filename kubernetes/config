@@ -14,6 +14,9 @@ postgresHost=$POSTGRES_HOST
 postgresPort=$POSTGRES_PORT
 postgresDb=$POSTGRES_DB
 postgresSchema=$POSTGRES_SCHEMA
+storageType=$STORAGE_TYPE
+storageContainer=$STORAGE_CONTAINER
+storageEndpoint=$STORAGE_ENDPOINT
 
 replicas=$REPLICAS_NR
 
