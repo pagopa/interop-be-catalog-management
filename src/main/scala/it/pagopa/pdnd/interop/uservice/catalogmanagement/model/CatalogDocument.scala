@@ -1,10 +1,10 @@
 package it.pagopa.pdnd.interop.uservice.catalogmanagement.model
 
-import it.pagopa.pdnd.interop.uservice.catalogmanagement.service.FileManager
+import it.pagopa.pdnd.interop.uservice.catalogmanagement.service.CatalogFileManager
 
 import java.time.OffsetDateTime
 import java.util.UUID
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 
 final case class CatalogDocument(
   id: UUID,
@@ -27,12 +27,10 @@ final case class CatalogDocument(
     * @return
     */
   def cloneDocument(
-    fileManager: FileManager
-  )(clonedDocumentId: UUID, eServiceId: String, descriptorId: String): Future[CatalogDocument] = {
+    fileManager: CatalogFileManager
+  )(clonedDocumentId: UUID)(implicit ec: ExecutionContext): Future[CatalogDocument] = {
     fileManager.copy(path)(
       documentId = clonedDocumentId,
-      eServiceId = eServiceId,
-      descriptorId = descriptorId,
       description = this.description,
       checksum = this.checksum,
       contentType = this.contentType,

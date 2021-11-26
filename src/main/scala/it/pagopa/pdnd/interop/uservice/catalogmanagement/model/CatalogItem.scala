@@ -1,7 +1,6 @@
 package it.pagopa.pdnd.interop.uservice.catalogmanagement.model
 
-import it.pagopa.pdnd.interop.uservice.catalogmanagement.service.UUIDSupplier
-
+import it.pagopa.pdnd.interop.commons.utils.service.UUIDSupplier
 import java.util.UUID
 import scala.concurrent.Future
 

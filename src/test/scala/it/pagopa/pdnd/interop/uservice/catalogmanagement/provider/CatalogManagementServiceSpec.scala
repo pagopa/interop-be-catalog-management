@@ -12,13 +12,14 @@ import akka.http.scaladsl.model.headers.OAuth2BearerToken
 import akka.http.scaladsl.server.directives.{AuthenticationDirective, SecurityDirectives}
 import com.itv.scalapact.ScalaPactVerify._
 import com.itv.scalapact.shared.ProviderStateResult
+import it.pagopa.pdnd.interop.commons.utils.AkkaUtils
+import it.pagopa.pdnd.interop.commons.utils.service.UUIDSupplier
 import it.pagopa.pdnd.interop.uservice.catalogmanagement.api.impl.{EServiceApiMarshallerImpl, EServiceApiServiceImpl}
 import it.pagopa.pdnd.interop.uservice.catalogmanagement.api.{EServiceApi, EServiceApiMarshaller}
-import it.pagopa.pdnd.interop.uservice.catalogmanagement.common.system.Authenticator
 import it.pagopa.pdnd.interop.uservice.catalogmanagement.model._
 import it.pagopa.pdnd.interop.uservice.catalogmanagement.server.Controller
 import it.pagopa.pdnd.interop.uservice.catalogmanagement.server.impl.Main
-import it.pagopa.pdnd.interop.uservice.catalogmanagement.service.{FileManager, UUIDSupplier}
+import it.pagopa.pdnd.interop.uservice.catalogmanagement.service.CatalogFileManager
 import it.pagopa.pdnd.interop.uservice.catalogmanagement.{SpecConfiguration, SpecHelper}
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.wordspec.AnyWordSpecLike
@@ -29,8 +30,8 @@ import scala.concurrent.{Await, ExecutionContextExecutor, Future}
 
 object CatalogManagementServiceSpec extends MockFactory {
 
-  val mockUUIDSupplier: UUIDSupplier = mock[UUIDSupplier]
-  val mockFileManager: FileManager   = mock[FileManager]
+  val mockUUIDSupplier: UUIDSupplier      = mock[UUIDSupplier]
+  val mockFileManager: CatalogFileManager = mock[CatalogFileManager]
 }
 
 /** Local integration test.
@@ -48,7 +49,7 @@ class CatalogManagementServiceSpec
   var controller: Option[Controller]                 = None
   var bindServer: Option[Future[Http.ServerBinding]] = None
   val wrappingDirective: AuthenticationDirective[Seq[(String, String)]] =
-    SecurityDirectives.authenticateOAuth2("SecurityRealm", Authenticator)
+    SecurityDirectives.authenticateOAuth2("SecurityRealm", AkkaUtils.Authenticator)
 
   val sharding: ClusterSharding = ClusterSharding(system)
 

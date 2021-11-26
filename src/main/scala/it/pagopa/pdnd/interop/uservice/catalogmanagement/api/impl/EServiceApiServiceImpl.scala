@@ -11,13 +11,16 @@ import akka.http.scaladsl.server.Route
 import akka.http.scaladsl.server.directives.FileInfo
 import akka.pattern.StatusReply
 import cats.implicits.toTraverseOps
+import it.pagopa.pdnd.interop.commons.utils.AkkaUtils
+import it.pagopa.pdnd.interop.commons.utils.TypeConversions.{EitherOps, OptionOps}
+import it.pagopa.pdnd.interop.commons.utils.service.UUIDSupplier
 import it.pagopa.pdnd.interop.uservice.catalogmanagement.api.EServiceApiService
-import it.pagopa.pdnd.interop.uservice.catalogmanagement.common._
 import it.pagopa.pdnd.interop.uservice.catalogmanagement.common.system._
 import it.pagopa.pdnd.interop.uservice.catalogmanagement.error._
 import it.pagopa.pdnd.interop.uservice.catalogmanagement.model._
 import it.pagopa.pdnd.interop.uservice.catalogmanagement.model.persistence._
-import it.pagopa.pdnd.interop.uservice.catalogmanagement.service.{FileManager, UUIDSupplier, VersionGenerator}
+import it.pagopa.pdnd.interop.uservice.catalogmanagement.service.VersionGenerator
+import it.pagopa.pdnd.interop.uservice.catalogmanagement.service.CatalogFileManager
 
 import java.io.File
 import java.nio.file.Paths
@@ -30,7 +33,7 @@ class EServiceApiServiceImpl(
   sharding: ClusterSharding,
   entity: Entity[Command, ShardingEnvelope[Command]],
   uuidSupplier: UUIDSupplier,
-  fileManager: FileManager
+  catalogFileManager: CatalogFileManager
 )(implicit ec: ExecutionContext)
     extends EServiceApiService {
 
@@ -42,7 +45,7 @@ class EServiceApiServiceImpl(
     case Some(s) => s
   }
 
-  @inline private def getShard(id: String): String = Math.abs(id.hashCode % settings.numberOfShards).toString
+  @inline private def getShard(id: String): String = AkkaUtils.getShard(id, settings.numberOfShards)
 
   /** Code: 200, Message: EService created, DataType: EService
     * Code: 400, Message: Invalid input, DataType: Problem
@@ -96,17 +99,10 @@ class EServiceApiServiceImpl(
 
     val result: Future[Option[CatalogItem]] = for {
       current  <- retrieveCatalogItem(commander, eServiceId)
-      verified <- FileManager.verify(doc, current, descriptorId, isInterface)
-      document <- fileManager.store(
-        id = uuidSupplier.get,
-        eServiceId = eServiceId,
-        descriptorId = descriptorId,
-        description = description,
-        interface = isInterface,
-        fileParts = doc
-      )
-      _       <- commander.ask(ref => AddCatalogItemDocument(verified.id.toString, descriptorId, document, isInterface, ref))
-      updated <- commander.ask(ref => GetCatalogItem(eServiceId, ref))
+      verified <- CatalogFileManager.verify(doc, current, descriptorId, isInterface)
+      document <- catalogFileManager.store(id = uuidSupplier.get, description = description, fileParts = doc)
+      _        <- commander.ask(ref => AddCatalogItemDocument(verified.id.toString, descriptorId, document, isInterface, ref))
+      updated  <- commander.ask(ref => GetCatalogItem(eServiceId, ref))
     } yield updated
 
     onComplete(result) {
@@ -256,10 +252,14 @@ class EServiceApiServiceImpl(
       retrieved <- commander.ask(ref => GetCatalogItem(eServiceId, ref))
       current   <- retrieved.toFuture(new RuntimeException("EService non found"))
       _         <- descriptorDeletable(current, descriptorId)
-      _         <- current.getInterfacePath(descriptorId).fold(Future.successful(true))(path => fileManager.delete(path))
+      _ <- current
+        .getInterfacePath(descriptorId)
+        .fold(Future.successful(true))(path => catalogFileManager.fileManager.delete(path))
       _ <- current
         .getDocumentPaths(descriptorId)
-        .fold(Future.successful(Seq.empty[Boolean]))(path => Future.traverse(path)(fileManager.delete))
+        .fold(Future.successful(Seq.empty[Boolean]))(path =>
+          Future.traverse(path)(catalogFileManager.fileManager.delete)
+        )
       deleted <- commander.ask(ref => DeleteCatalogItemWithDescriptor(current, descriptorId, ref))
     } yield deleted
 
@@ -445,7 +445,7 @@ class EServiceApiServiceImpl(
       catalogItem   <- found.toFuture(EServiceNotFoundError(eServiceId))
       document      <- extractDocument(catalogItem, descriptorId, documentId)
       extractedFile <- extractFile(document)
-      _             <- fileManager.delete(extractedFile.path.toString)
+      _             <- catalogFileManager.fileManager.delete(extractedFile.path.toString)
       updated       <- commander.ask(ref => DeleteCatalogItemDocument(catalogItem.id.toString, descriptorId, documentId, ref))
     } yield updated
 
@@ -731,10 +731,10 @@ class EServiceApiServiceImpl(
           .toFuture(EServiceDescriptorNotFoundError(eServiceId, descriptorId))
         clonedInterface <-
           descriptorToClone.interface.fold(Future.successful[Option[CatalogDocument]](None))(interface =>
-            interface.cloneDocument(fileManager)(uuidSupplier.get, eServiceId, descriptorId).map(d => Some(d))
+            interface.cloneDocument(catalogFileManager)(uuidSupplier.get).map(d => Some(d))
           )
         clonedDocuments <- Future.traverse(descriptorToClone.docs)(
-          _.cloneDocument(fileManager)(uuidSupplier.get, eServiceId, descriptorId)
+          _.cloneDocument(catalogFileManager)(uuidSupplier.get)
         )
         clonedService <- cloneItemAsNewDraft(serviceToClone, descriptorToClone, clonedInterface, clonedDocuments)
         cloned        <- getCommander(getShard(clonedService.id.toString)).ask(ref => AddClonedCatalogItem(clonedService, ref))

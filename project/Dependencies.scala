@@ -1,4 +1,5 @@
 import Versions._
+import PDNDVersions._
 import sbt._
 
 object Dependencies {
@@ -44,6 +45,12 @@ object Dependencies {
   private[this] object awssdk {
     lazy val namespace = "software.amazon.awssdk"
     lazy val s3        = namespace % "s3" % awsSdkVersion
+  }
+
+  private[this] object pagopa {
+    lazy val namespace   = "it.pagopa"
+    lazy val commons     = namespace %% "pdnd-interop-commons-utils"        % commonsVersion
+    lazy val fileManager = namespace %% "pdnd-interop-commons-file-manager" % commonsVersion
   }
 
   lazy val Protobuf = "protobuf"
@@ -140,6 +147,8 @@ object Dependencies {
       logback.classic              % Compile,
       mustache.compiler            % Compile,
       openapi4j.operationValidator % Compile,
+      pagopa.commons               % Compile,
+      pagopa.fileManager           % Compile,
       postgres.jdbc                % Compile,
       akka.testkit                 % Test,
       scalamock.core               % Test,
