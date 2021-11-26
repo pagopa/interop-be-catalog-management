@@ -30,6 +30,7 @@ import it.pagopa.pdnd.interop.uservice.catalogmanagement.model.persistence.{
 }
 import it.pagopa.pdnd.interop.uservice.catalogmanagement.server.Controller
 import it.pagopa.pdnd.interop.uservice.catalogmanagement.service.CatalogFileManager
+import it.pagopa.pdnd.interop.uservice.catalogmanagement.service.impl.CatalogFileManagerImpl
 import kamon.Kamon
 import slick.basic.DatabaseConfig
 import slick.jdbc.JdbcProfile
@@ -93,7 +94,7 @@ object Main extends App {
         }
 
         val uuidSupplier: UUIDSupplier      = new UUIDSupplierImpl
-        val fileManager: CatalogFileManager = new CatalogFileManager(runtimeFileManager)
+        val fileManager: CatalogFileManager = new CatalogFileManagerImpl(runtimeFileManager)
         val eServiceApiMarshallerImpl       = new EServiceApiMarshallerImpl()
 
         val eServiceApi = new EServiceApi(

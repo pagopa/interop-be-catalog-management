@@ -7,52 +7,21 @@ import it.pagopa.pdnd.interop.commons.utils.Digester
 import it.pagopa.pdnd.interop.uservice.catalogmanagement.model.{CatalogDocument, CatalogItem, Rest, Soap}
 
 import java.io.File
-import java.time.OffsetDateTime
 import java.util.UUID
 import scala.concurrent.{ExecutionContext, Future}
 
-/** Decorates the common fileManager adding some modeling features as needed by Catalog Management
-  * @param fileManager
-  */
-class CatalogFileManager(val fileManager: FileManager) {
+trait CatalogFileManager {
+  val fileManager: FileManager
 
   def store(id: UUID, description: String, fileParts: (FileInfo, File))(implicit
     ec: ExecutionContext
-  ): Future[CatalogDocument] = {
-    fileManager
-      .store(id, fileParts)
-      .map(filePath =>
-        CatalogDocument(
-          id = id,
-          name = fileParts._1.getFileName,
-          contentType = fileParts._1.getContentType.toString(),
-          description = description,
-          path = filePath,
-          checksum = Digester.createMD5Hash(fileParts._2),
-          uploadDate = OffsetDateTime.now()
-        )
-      )
-  }
+  ): Future[CatalogDocument]
 
   def copy(
     filePathToCopy: String
   )(documentId: UUID, description: String, checksum: String, contentType: String, fileName: String)(implicit
     ec: ExecutionContext
-  ): Future[CatalogDocument] = {
-    fileManager
-      .copy(filePathToCopy)(documentId, contentType, fileName)
-      .map(copiedPath =>
-        CatalogDocument(
-          id = documentId,
-          name = fileName,
-          contentType = contentType,
-          description = description,
-          path = copiedPath,
-          checksum = checksum,
-          uploadDate = OffsetDateTime.now()
-        )
-      )
-  }
+  ): Future[CatalogDocument]
 }
 
 object CatalogFileManager {

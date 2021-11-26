@@ -19,7 +19,8 @@ import it.pagopa.pdnd.interop.uservice.catalogmanagement.common.system._
 import it.pagopa.pdnd.interop.uservice.catalogmanagement.error._
 import it.pagopa.pdnd.interop.uservice.catalogmanagement.model._
 import it.pagopa.pdnd.interop.uservice.catalogmanagement.model.persistence._
-import it.pagopa.pdnd.interop.uservice.catalogmanagement.service.{CatalogFileManager, VersionGenerator}
+import it.pagopa.pdnd.interop.uservice.catalogmanagement.service.VersionGenerator
+import it.pagopa.pdnd.interop.uservice.catalogmanagement.service.CatalogFileManager
 
 import java.io.File
 import java.nio.file.Paths
