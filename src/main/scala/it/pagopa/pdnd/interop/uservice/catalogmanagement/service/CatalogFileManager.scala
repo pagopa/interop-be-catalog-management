@@ -2,7 +2,7 @@ package it.pagopa.pdnd.interop.uservice.catalogmanagement.service
 
 import akka.http.scaladsl.model.{HttpCharsets, MediaType, MediaTypes}
 import akka.http.scaladsl.server.directives.FileInfo
-import it.pagopa.pdnd.interop.commons.files.service.FileManager
+import it.pagopa.pdnd.interop.commons.files.service.{FileManager, StorageFilePath}
 import it.pagopa.pdnd.interop.commons.utils.Digester
 import it.pagopa.pdnd.interop.uservice.catalogmanagement.model.{CatalogDocument, CatalogItem, Rest, Soap}
 
@@ -22,6 +22,8 @@ trait CatalogFileManager {
   )(documentId: UUID, description: String, checksum: String, contentType: String, fileName: String)(implicit
     ec: ExecutionContext
   ): Future[CatalogDocument]
+
+  def delete(filePath: StorageFilePath): Future[Boolean]
 }
 
 object CatalogFileManager {

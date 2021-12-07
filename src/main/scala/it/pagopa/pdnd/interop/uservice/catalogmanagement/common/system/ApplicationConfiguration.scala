@@ -8,4 +8,6 @@ object ApplicationConfiguration {
 
   def serverPort: Int = config.getInt("uservice-catalog-management.port")
 
+  def storageContainer: String = config.getString("pdnd-interop-commons.storage.container")
+
 }
