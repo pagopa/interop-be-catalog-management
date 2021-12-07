@@ -1,8 +1,9 @@
 package it.pagopa.pdnd.interop.uservice.catalogmanagement.service.impl
 
 import akka.http.scaladsl.server.directives.FileInfo
-import it.pagopa.pdnd.interop.commons.files.service.FileManager
+import it.pagopa.pdnd.interop.commons.files.service.{FileManager, StorageFilePath}
 import it.pagopa.pdnd.interop.commons.utils.Digester
+import it.pagopa.pdnd.interop.uservice.catalogmanagement.common.system.ApplicationConfiguration
 import it.pagopa.pdnd.interop.uservice.catalogmanagement.model.CatalogDocument
 import it.pagopa.pdnd.interop.uservice.catalogmanagement.service.CatalogFileManager
 
@@ -20,7 +21,7 @@ final class CatalogFileManagerImpl(val fileManager: FileManager) extends Catalog
     ec: ExecutionContext
   ): Future[CatalogDocument] = {
     fileManager
-      .store(id, fileParts)
+      .store(ApplicationConfiguration.storageContainer)(id, fileParts)
       .map(filePath =>
         CatalogDocument(
           id = id,
@@ -40,7 +41,7 @@ final class CatalogFileManagerImpl(val fileManager: FileManager) extends Catalog
     ec: ExecutionContext
   ): Future[CatalogDocument] = {
     fileManager
-      .copy(filePathToCopy)(documentId, contentType, fileName)
+      .copy(ApplicationConfiguration.storageContainer)(filePathToCopy, documentId, contentType, fileName)
       .map(copiedPath =>
         CatalogDocument(
           id = documentId,
@@ -53,4 +54,7 @@ final class CatalogFileManagerImpl(val fileManager: FileManager) extends Catalog
         )
       )
   }
+
+  override def delete(filePath: StorageFilePath): Future[Boolean] =
+    fileManager.delete(ApplicationConfiguration.storageContainer)(filePath)
 }

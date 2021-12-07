@@ -254,12 +254,10 @@ class EServiceApiServiceImpl(
       _         <- descriptorDeletable(current, descriptorId)
       _ <- current
         .getInterfacePath(descriptorId)
-        .fold(Future.successful(true))(path => catalogFileManager.fileManager.delete(path))
+        .fold(Future.successful(true))(path => catalogFileManager.delete(path))
       _ <- current
         .getDocumentPaths(descriptorId)
-        .fold(Future.successful(Seq.empty[Boolean]))(path =>
-          Future.traverse(path)(catalogFileManager.fileManager.delete)
-        )
+        .fold(Future.successful(Seq.empty[Boolean]))(path => Future.traverse(path)(catalogFileManager.delete))
       deleted <- commander.ask(ref => DeleteCatalogItemWithDescriptor(current, descriptorId, ref))
     } yield deleted
 
@@ -445,7 +443,7 @@ class EServiceApiServiceImpl(
       catalogItem   <- found.toFuture(EServiceNotFoundError(eServiceId))
       document      <- extractDocument(catalogItem, descriptorId, documentId)
       extractedFile <- extractFile(document)
-      _             <- catalogFileManager.fileManager.delete(extractedFile.path.toString)
+      _             <- catalogFileManager.delete(extractedFile.path.toString)
       updated       <- commander.ask(ref => DeleteCatalogItemDocument(catalogItem.id.toString, descriptorId, documentId, ref))
     } yield updated
 
