@@ -5,7 +5,7 @@ import akka.actor.typed.ActorSystem
 import akka.cluster.sharding.typed.scaladsl.{ClusterSharding, Entity, EntityRef}
 import akka.cluster.sharding.typed.{ClusterShardingSettings, ShardingEnvelope}
 import akka.http.scaladsl.marshalling.ToEntityMarshaller
-import akka.http.scaladsl.model.ContentType
+import akka.http.scaladsl.model.{ContentType, StatusCodes}
 import akka.http.scaladsl.server.Directives.{onComplete, onSuccess}
 import akka.http.scaladsl.server.Route
 import akka.http.scaladsl.server.directives.FileInfo
@@ -68,7 +68,7 @@ class EServiceApiServiceImpl(
       case statusReply if statusReply.isSuccess =>
         createEService200(statusReply.getValue.toApi)
       case statusReply if statusReply.isError =>
-        createEService400(Problem(Option(statusReply.getError.getMessage), status = 405, "some error"))
+        createEService400(problemOf(StatusCodes.BadRequest, "0001", statusReply.getError))
     }
   }
 
@@ -107,11 +107,11 @@ class EServiceApiServiceImpl(
 
     onComplete(result) {
       case Success(catalogItem) =>
-        catalogItem.fold(createEServiceDocument404(Problem(None, status = 404, "some error")))(ci =>
+        catalogItem.fold(createEServiceDocument404(problemOf(StatusCodes.NotFound, "0002")))(ci =>
           createEServiceDocument200(ci.toApi)
         )
       case Failure(exception) =>
-        createEServiceDocument400(Problem(Option(exception.getMessage), status = 400, "some error"))
+        createEServiceDocument400(problemOf(StatusCodes.BadRequest, "0003", exception))
     }
   }
 
@@ -131,7 +131,7 @@ class EServiceApiServiceImpl(
 
     onSuccess(result) {
       case Some(catalogItem) => getEService200(catalogItem.toApi)
-      case None              => getEService404(Problem(None, status = 404, "some error"))
+      case None              => getEService404(problemOf(StatusCodes.NotFound, "0004"))
     }
   }
 
@@ -175,7 +175,8 @@ class EServiceApiServiceImpl(
 
     result match {
       case Right(items) => getEServices200(items.map(_.toApi))
-      case Left(error)  => getEServices400(Problem(Option(error.getMessage), 400, "Catalog Items retrieve error"))
+      case Left(error) =>
+        getEServices400(problemOf(StatusCodes.BadRequest, "0005", error, "Catalog Items retrieve error"))
     }
 
   }
@@ -207,8 +208,8 @@ class EServiceApiServiceImpl(
       case Failure(exception) =>
         exception match {
           case ex: EServiceNotFoundError =>
-            getEService400(Problem(Option(ex.getMessage), status = 404, s"EService $eServiceId not found"))
-          case ex => getEService400(Problem(Option(ex.getMessage), status = 400, s"Invalid request"))
+            getEService404(problemOf(StatusCodes.NotFound, "0006", ex, s"EService $eServiceId not found"))
+          case ex => getEService400(problemOf(StatusCodes.BadRequest, "0007", ex))
         }
 
     }
@@ -264,9 +265,9 @@ class EServiceApiServiceImpl(
     onComplete(result) {
       case Success(statusReply) =>
         if (statusReply.isSuccess) deleteDraft204
-        else deleteDraft400(Problem(Option(statusReply.getError.getMessage), status = 400, "some error"))
+        else deleteDraft400(problemOf(StatusCodes.BadRequest, "0008", statusReply.getError))
       case Failure(exception) =>
-        deleteDraft400(Problem(Option(exception.getMessage), status = 400, "some error"))
+        deleteDraft400(problemOf(StatusCodes.BadRequest, "0009", exception))
     }
   }
 
@@ -317,24 +318,30 @@ class EServiceApiServiceImpl(
       case Success(catalogItem) =>
         catalogItem.fold(
           updateDescriptor400(
-            Problem(None, status = 500, s"Error on update of descriptor $descriptorId on E-Service $eServiceId")
+            problemOf(
+              StatusCodes.BadRequest,
+              "0010",
+              defaultMessage = s"Error on update of descriptor $descriptorId on E-Service $eServiceId"
+            )
           )
         )(ci => updateDescriptor200(ci.toApi))
       case Failure(exception) =>
         exception match {
           case ex @ (_: EServiceNotFoundError | _: EServiceDescriptorNotFoundError) =>
             updateDescriptor404(
-              Problem(
-                Option(ex.getMessage),
-                status = 404,
+              problemOf(
+                StatusCodes.NotFound,
+                "0011",
+                ex,
                 s"Error on update of descriptor $descriptorId on E-Service $eServiceId"
               )
             )
           case ex =>
             updateDescriptor400(
-              Problem(
-                Option(ex.getMessage),
-                status = 400,
+              problemOf(
+                StatusCodes.BadRequest,
+                "0012",
+                ex,
                 s"Error on update of descriptor $descriptorId on E-Service $eServiceId"
               )
             )
@@ -364,11 +371,11 @@ class EServiceApiServiceImpl(
 
     onComplete(result) {
       case Success(catalogItem) =>
-        catalogItem.fold(updateEServiceById404(Problem(None, status = 404, "some error")))(ci =>
+        catalogItem.fold(updateEServiceById404(problemOf(StatusCodes.NotFound, "0013")))(ci =>
           updateEServiceById200(ci.toApi)
         )
       case Failure(exception) =>
-        updateEServiceById400(Problem(Option(exception.getMessage), status = 400, "some error"))
+        updateEServiceById400(problemOf(StatusCodes.BadRequest, "0014", exception))
     }
   }
 
@@ -422,7 +429,7 @@ class EServiceApiServiceImpl(
     onComplete(result) {
       case Success(descriptor) => createDescriptor200(descriptor.toApi)
       case Failure(exception) =>
-        createDescriptor400(Problem(Option(exception.getMessage), status = 400, "some error"))
+        createDescriptor400(problemOf(StatusCodes.BadRequest, "0015", exception))
     }
   }
 
@@ -452,10 +459,10 @@ class EServiceApiServiceImpl(
         if (statusReply.isSuccess) deleteEServiceDocument204
         else
           deleteEServiceDocument400(
-            Problem(
-              None,
-              status = 404,
-              s"Error on deletion of $documentId on descriptor $descriptorId on E-Service $eServiceId"
+            problemOf(
+              StatusCodes.BadRequest,
+              "0016",
+              defaultMessage = s"Error on deletion of $documentId on descriptor $descriptorId on E-Service $eServiceId"
             )
           )
 
@@ -463,17 +470,19 @@ class EServiceApiServiceImpl(
         exception match {
           case ex @ (_: EServiceNotFoundError | _: EServiceDescriptorNotFoundError) =>
             deleteEServiceDocument404(
-              Problem(
-                Option(ex.getMessage),
-                status = 404,
+              problemOf(
+                StatusCodes.NotFound,
+                "0017",
+                ex,
                 s"$documentId on descriptor $descriptorId on E-Service $eServiceId not found"
               )
             )
           case ex =>
             deleteEServiceDocument400(
-              Problem(
-                Option(ex.getMessage),
-                status = 400,
+              problemOf(
+                StatusCodes.BadRequest,
+                "0018",
+                ex,
                 s"Error on deletion of $documentId on descriptor $descriptorId on E-Service $eServiceId"
               )
             )
@@ -494,12 +503,16 @@ class EServiceApiServiceImpl(
       case Success(catalogItem) =>
         catalogItem.fold(
           archiveDescriptor400(
-            Problem(None, status = 404, s"Error on archiving of $descriptorId on E-Service $eServiceId")
+            problemOf(
+              StatusCodes.BadRequest,
+              "0019",
+              defaultMessage = s"Error on archiving of $descriptorId on E-Service $eServiceId"
+            )
           )
         )(_ => archiveDescriptor204)
       case Failure(ex) =>
         archiveDescriptor400(
-          Problem(Option(ex.getMessage), status = 400, s"Error on archiving of $descriptorId on E-Service $eServiceId")
+          problemOf(StatusCodes.BadRequest, "0020", ex, s"Error on archiving of $descriptorId on E-Service $eServiceId")
         )
     }
   }
@@ -517,14 +530,19 @@ class EServiceApiServiceImpl(
       case Success(catalogItem) =>
         catalogItem.fold(
           deprecateDescriptor400(
-            Problem(None, status = 404, s"Error on deprecating of $descriptorId on E-Service $eServiceId")
+            problemOf(
+              StatusCodes.BadRequest,
+              "0021",
+              defaultMessage = s"Error on deprecating of $descriptorId on E-Service $eServiceId"
+            )
           )
         )(_ => deprecateDescriptor204)
       case Failure(ex) =>
         deprecateDescriptor400(
-          Problem(
-            Option(ex.getMessage),
-            status = 400,
+          problemOf(
+            StatusCodes.BadRequest,
+            "0022",
+            ex,
             s"Error on deprecating of $descriptorId on E-Service $eServiceId"
           )
         )
@@ -544,12 +562,21 @@ class EServiceApiServiceImpl(
       case Success(catalogItem) =>
         catalogItem.fold(
           suspendDescriptor400(
-            Problem(None, status = 404, s"Error on suspending of $descriptorId on E-Service $eServiceId")
+            problemOf(
+              StatusCodes.BadRequest,
+              "0022",
+              defaultMessage = s"Error on suspending of $descriptorId on E-Service $eServiceId"
+            )
           )
         )(_ => suspendDescriptor204)
       case Failure(ex) =>
         suspendDescriptor400(
-          Problem(Option(ex.getMessage), status = 400, s"Error on suspending of $descriptorId on E-Service $eServiceId")
+          problemOf(
+            StatusCodes.BadRequest,
+            "0023",
+            ex,
+            s"Error on suspending of $descriptorId on E-Service $eServiceId"
+          )
         )
     }
   }
@@ -567,14 +594,19 @@ class EServiceApiServiceImpl(
       case Success(catalogItem) =>
         catalogItem.fold(
           draftDescriptor400(
-            Problem(None, status = 404, s"Error on change state to draft of $descriptorId on E-Service $eServiceId")
+            problemOf(
+              StatusCodes.BadRequest,
+              "0024",
+              defaultMessage = s"Error on change state to draft of $descriptorId on E-Service $eServiceId"
+            )
           )
         )(_ => draftDescriptor204)
       case Failure(ex) =>
         draftDescriptor400(
-          Problem(
-            Option(ex.getMessage),
-            status = 400,
+          problemOf(
+            StatusCodes.BadRequest,
+            "0025",
+            ex,
             s"Error on change state to draft of $descriptorId on E-Service $eServiceId"
           )
         )
@@ -595,14 +627,19 @@ class EServiceApiServiceImpl(
       case Success(catalogItem) =>
         catalogItem.fold(
           publishDescriptor400(
-            Problem(None, status = 404, s"Error on publication of $descriptorId on E-Service $eServiceId")
+            problemOf(
+              StatusCodes.BadRequest,
+              "0026",
+              defaultMessage = s"Error on publication of $descriptorId on E-Service $eServiceId"
+            )
           )
         )(_ => publishDescriptor204)
       case Failure(ex) =>
         publishDescriptor400(
-          Problem(
-            Option(ex.getMessage),
-            status = 400,
+          problemOf(
+            StatusCodes.BadRequest,
+            "0027",
+            ex,
             s"Error on publication of $descriptorId on E-Service $eServiceId"
           )
         )
@@ -677,10 +714,10 @@ class EServiceApiServiceImpl(
       case Success(document) =>
         document.fold(
           updateEServiceDocument404(
-            Problem(
-              None,
-              status = 404,
-              s"Error on update of $documentId on descriptor $descriptorId on E-Service $eServiceId"
+            problemOf(
+              StatusCodes.NotFound,
+              "0028",
+              defaultMessage = s"Error on update of $documentId on descriptor $descriptorId on E-Service $eServiceId"
             )
           )
         )(catalogDocument => updateEServiceDocument200(catalogDocument.toApi))
@@ -688,17 +725,19 @@ class EServiceApiServiceImpl(
         exception match {
           case ex @ (_: EServiceNotFoundError | _: EServiceDescriptorNotFoundError) =>
             deleteEServiceDocument404(
-              Problem(
-                Option(ex.getMessage),
-                status = 404,
-                s"$documentId on descriptor $descriptorId on E-Service $eServiceId not found"
+              problemOf(
+                StatusCodes.NotFound,
+                "0029",
+                ex,
+                s"Document $documentId on descriptor $descriptorId on E-Service $eServiceId not found"
               )
             )
           case ex =>
             deleteEServiceDocument400(
-              Problem(
-                Option(ex.getMessage),
-                status = 400,
+              problemOf(
+                StatusCodes.BadRequest,
+                "0030",
+                ex,
                 s"Error on deletion of $documentId on descriptor $descriptorId on E-Service $eServiceId"
               )
             )
@@ -744,20 +783,21 @@ class EServiceApiServiceImpl(
           case statusReply if statusReply.isSuccess =>
             cloneEServiceByDescriptor200(statusReply.getValue.toApi)
           case statusReply if statusReply.isError =>
-            cloneEServiceByDescriptor400(Problem(Option(statusReply.getError.getMessage), status = 405, "some error"))
+            cloneEServiceByDescriptor400(problemOf(StatusCodes.BadRequest, "0031", statusReply.getError))
         }
 
       case Failure(exception) =>
         exception match {
           case ex @ (_: EServiceNotFoundError | _: EServiceDescriptorNotFoundError) =>
             cloneEServiceByDescriptor404(
-              Problem(Option(ex.getMessage), status = 404, s"$descriptorId on E-Service $eServiceId not found")
+              problemOf(StatusCodes.NotFound, "0032", ex, s"$descriptorId on E-Service $eServiceId not found")
             )
           case ex =>
             cloneEServiceByDescriptor400(
-              Problem(
-                Option(ex.getMessage),
-                status = 400,
+              problemOf(
+                StatusCodes.BadRequest,
+                "0033",
+                ex,
                 s"Error on cloning descriptor $descriptorId on E-Service $eServiceId"
               )
             )
@@ -816,9 +856,9 @@ class EServiceApiServiceImpl(
     onComplete(result) {
       case Success(statusReply) =>
         if (statusReply.isSuccess) deleteEService204
-        else deleteEService400(Problem(Option(statusReply.getError.getMessage), status = 400, "some error"))
+        else deleteEService400(problemOf(StatusCodes.BadRequest, "0034", statusReply.getError))
       case Failure(exception) =>
-        deleteEService400(Problem(Option(exception.getMessage), status = 400, "some error"))
+        deleteEService400(problemOf(StatusCodes.BadRequest, "0034", exception))
     }
   }
 
