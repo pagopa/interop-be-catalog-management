@@ -7,6 +7,7 @@ import akka.cluster.sharding.typed.scaladsl.{ClusterSharding, Entity, ShardedDae
 import akka.cluster.sharding.typed.{ClusterShardingSettings, ShardingEnvelope}
 import akka.cluster.typed.{Cluster, Subscribe}
 import akka.http.scaladsl.Http
+import akka.http.scaladsl.model.StatusCodes
 import akka.http.scaladsl.server.Directives.complete
 import akka.http.scaladsl.server.directives.SecurityDirectives
 import akka.management.cluster.bootstrap.ClusterBootstrap
@@ -22,7 +23,6 @@ import it.pagopa.pdnd.interop.commons.utils.service.impl.UUIDSupplierImpl
 import it.pagopa.pdnd.interop.uservice.catalogmanagement.api.EServiceApi
 import it.pagopa.pdnd.interop.uservice.catalogmanagement.api.impl.{EServiceApiMarshallerImpl, EServiceApiServiceImpl, _}
 import it.pagopa.pdnd.interop.uservice.catalogmanagement.common.system.ApplicationConfiguration
-import it.pagopa.pdnd.interop.uservice.catalogmanagement.model.Problem
 import it.pagopa.pdnd.interop.uservice.catalogmanagement.model.persistence.{
   CatalogPersistentBehavior,
   CatalogPersistentProjection,
@@ -34,7 +34,6 @@ import it.pagopa.pdnd.interop.uservice.catalogmanagement.service.impl.CatalogFil
 import kamon.Kamon
 import slick.basic.DatabaseConfig
 import slick.jdbc.JdbcProfile
-import spray.json._
 
 import scala.concurrent.ExecutionContextExecutor
 import scala.jdk.CollectionConverters._
@@ -119,9 +118,9 @@ object Main extends App {
               println(item.message())
               println(item.severity())
             })
-            val message =
-              Problem(results.map(_.items().asScala.map(_.message()).mkString("\n")), 400, "some error").toJson
-            complete((400, message))
+            val message = e.results().items().asScala.map(_.message()).mkString("\n")
+            val error   = problemOf(StatusCodes.BadRequest, "0000", defaultMessage = message)
+            complete(error.status, error)(eServiceApiMarshallerImpl.toEntityMarshallerProblem)
           })
         )
 
