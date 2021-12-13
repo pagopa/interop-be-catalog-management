@@ -17,6 +17,7 @@ postgresSchema=$POSTGRES_SCHEMA
 storageType=$STORAGE_TYPE
 storageContainer=$STORAGE_CONTAINER
 storageEndpoint=$STORAGE_ENDPOINT
+wellKnownURL=$WELL_KNOWN_URL
 
 replicas=$REPLICAS_NR
 
