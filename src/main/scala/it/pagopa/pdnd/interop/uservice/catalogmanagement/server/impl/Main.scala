@@ -9,7 +9,6 @@ import akka.cluster.typed.{Cluster, Subscribe}
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.model.StatusCodes
 import akka.http.scaladsl.server.Directives.complete
-import akka.http.scaladsl.server.directives.SecurityDirectives
 import akka.management.cluster.bootstrap.ClusterBootstrap
 import akka.management.scaladsl.AkkaManagement
 import akka.persistence.typed.PersistenceId
@@ -17,7 +16,9 @@ import akka.projection.ProjectionBehavior
 import akka.{actor => classic}
 import it.pagopa.pdnd.interop.commons.files.StorageConfiguration
 import it.pagopa.pdnd.interop.commons.files.service.FileManager
-import it.pagopa.pdnd.interop.commons.utils.AkkaUtils
+import it.pagopa.pdnd.interop.commons.jwt.service.JWTReader
+import it.pagopa.pdnd.interop.commons.jwt.service.impl.DefaultJWTReader
+import it.pagopa.pdnd.interop.commons.jwt.{JWTConfiguration, PublicKeysHolder}
 import it.pagopa.pdnd.interop.commons.utils.service.UUIDSupplier
 import it.pagopa.pdnd.interop.commons.utils.service.impl.UUIDSupplierImpl
 import it.pagopa.pdnd.interop.uservice.catalogmanagement.api.EServiceApi
@@ -37,6 +38,7 @@ import slick.jdbc.JdbcProfile
 
 import scala.concurrent.ExecutionContextExecutor
 import scala.jdk.CollectionConverters._
+import scala.util.Try
 
 object Main extends App {
 
@@ -48,8 +50,16 @@ object Main extends App {
       )
     }
 
-  //end of the world here. It must break the execution if no concrete implementation is provided
-  val runtimeFileManager = FileManager.getConcreteImplementation(StorageConfiguration.runtimeFileManager).get
+  val dependenciesLoaded: Try[(FileManager, JWTReader)] = for {
+    fileManager <- FileManager.getConcreteImplementation(StorageConfiguration.runtimeFileManager)
+    keyset      <- JWTConfiguration.jwtReader.loadKeyset()
+    jwtValidator = new DefaultJWTReader with PublicKeysHolder {
+      var publicKeyset = keyset
+    }
+  } yield (fileManager, jwtValidator)
+
+  val (runtimeFileManager, jwtValidator) =
+    dependenciesLoaded.get //THIS IS THE END OF THE WORLD. Exceptions are welcomed here.
 
   Kamon.init()
 
@@ -99,7 +109,7 @@ object Main extends App {
         val eServiceApi = new EServiceApi(
           new EServiceApiServiceImpl(context.system, sharding, catalogPersistentEntity, uuidSupplier, fileManager),
           eServiceApiMarshallerImpl,
-          SecurityDirectives.authenticateOAuth2("SecurityRealm", AkkaUtils.Authenticator)
+          jwtValidator.OAuth2JWTValidatorAsContexts
         )
 
         val _ = AkkaManagement.get(classicSystem).start()
