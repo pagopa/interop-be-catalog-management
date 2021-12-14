@@ -8,9 +8,6 @@ import java.nio.file.{Files, Paths}
   */
 trait SpecConfiguration {
 
-  System.setProperty("AWS_ACCESS_KEY_ID", "foo")
-  System.setProperty("AWS_SECRET_ACCESS_KEY", "bar")
-
   val testData: Config = ConfigFactory.parseString(s"""
       akka.actor.provider = cluster
 
