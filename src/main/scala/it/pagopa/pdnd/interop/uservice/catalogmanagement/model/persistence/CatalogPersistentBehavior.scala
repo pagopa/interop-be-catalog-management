@@ -202,7 +202,7 @@ object CatalogPersistentBehavior {
 
       case Idle =>
         shard ! ClusterSharding.Passivate(context.self)
-        context.log.error(s"Passivate shard: ${shard.path.name}")
+        context.log.info(s"Passivate shard: ${shard.path.name}")
         Effect.none[Event, State]
     }
   }
@@ -231,7 +231,7 @@ object CatalogPersistentBehavior {
 
   def apply(shard: ActorRef[ClusterSharding.ShardCommand], persistenceId: PersistenceId): Behavior[Command] = {
     Behaviors.setup { context =>
-      context.log.error(s"Starting EService Shard ${persistenceId.id}")
+      context.log.info(s"Starting EService Shard ${persistenceId.id}")
       val numberOfEvents =
         context.system.settings.config
           .getInt("uservice-catalog-management.number-of-events-before-snapshot")

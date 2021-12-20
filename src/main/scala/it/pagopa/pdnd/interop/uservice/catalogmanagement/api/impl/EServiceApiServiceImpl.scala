@@ -11,6 +11,8 @@ import akka.http.scaladsl.server.Route
 import akka.http.scaladsl.server.directives.FileInfo
 import akka.pattern.StatusReply
 import cats.implicits.toTraverseOps
+import com.typesafe.scalalogging.Logger
+import it.pagopa.pdnd.interop.commons.logging.{CanLogContextFields, ContextFieldsToLog}
 import it.pagopa.pdnd.interop.commons.utils.AkkaUtils
 import it.pagopa.pdnd.interop.commons.utils.TypeConversions.{EitherOps, OptionOps}
 import it.pagopa.pdnd.interop.commons.utils.service.UUIDSupplier
@@ -21,6 +23,7 @@ import it.pagopa.pdnd.interop.uservice.catalogmanagement.model._
 import it.pagopa.pdnd.interop.uservice.catalogmanagement.model.persistence._
 import it.pagopa.pdnd.interop.uservice.catalogmanagement.service.VersionGenerator
 import it.pagopa.pdnd.interop.uservice.catalogmanagement.service.CatalogFileManager
+import org.slf4j.LoggerFactory
 
 import java.io.File
 import java.nio.file.Paths
@@ -36,6 +39,8 @@ class EServiceApiServiceImpl(
   catalogFileManager: CatalogFileManager
 )(implicit ec: ExecutionContext)
     extends EServiceApiService {
+
+  val logger = Logger.takingImplicit[ContextFieldsToLog](LoggerFactory.getLogger(this.getClass))
 
   private lazy val INTERFACE = "interface"
   private lazy val DOCUMENT  = "document"
@@ -55,7 +60,7 @@ class EServiceApiServiceImpl(
     toEntityMarshallerEService: ToEntityMarshaller[EService],
     contexts: Seq[(String, String)]
   ): Route = {
-    contexts.foreach(println)
+    logger.info("Creating e-service {} for producer {}", eServiceSeed.name, eServiceSeed.producerId)
 
     val result: Future[StatusReply[CatalogItem]] =
       for {
@@ -68,6 +73,12 @@ class EServiceApiServiceImpl(
       case statusReply if statusReply.isSuccess =>
         createEService200(statusReply.getValue.toApi)
       case statusReply if statusReply.isError =>
+        logger.error(
+          "Error while creating e-service {} for producer {} - {}",
+          eServiceSeed.name,
+          eServiceSeed.producerId,
+          statusReply.getError
+        )
         createEService400(problemOf(StatusCodes.BadRequest, "0001", statusReply.getError))
     }
   }
@@ -87,6 +98,12 @@ class EServiceApiServiceImpl(
     toEntityMarshallerEService: ToEntityMarshaller[EService],
     contexts: Seq[(String, String)]
   ): Route = {
+    logger.info(
+      "Creating e-service document of kind {} for e-service {} and descriptor {}",
+      kind,
+      eServiceId,
+      descriptorId
+    )
 
     val shard: String = getShard(eServiceId)
 
@@ -107,10 +124,23 @@ class EServiceApiServiceImpl(
 
     onComplete(result) {
       case Success(catalogItem) =>
-        catalogItem.fold(createEServiceDocument404(problemOf(StatusCodes.NotFound, "0002")))(ci =>
-          createEServiceDocument200(ci.toApi)
-        )
+        catalogItem.fold({
+          logger.error(
+            "Failure in creation of e-service document of kind {} for e-service {} and descriptor {} - not found",
+            kind,
+            eServiceId,
+            descriptorId
+          )
+          createEServiceDocument404(problemOf(StatusCodes.NotFound, "0002"))
+        })(ci => createEServiceDocument200(ci.toApi))
       case Failure(exception) =>
+        logger.error(
+          "Failure in creation of e-service document of kind {} for e-service {} and descriptor {} - {}",
+          kind,
+          eServiceId,
+          descriptorId,
+          exception.getMessage
+        )
         createEServiceDocument400(problemOf(StatusCodes.BadRequest, "0003", exception))
     }
   }
@@ -124,14 +154,17 @@ class EServiceApiServiceImpl(
     toEntityMarshallerEService: ToEntityMarshaller[EService],
     contexts: Seq[(String, String)]
   ): Route = {
-    contexts.foreach(println)
+    logger.info("Getting e-service {}", eServiceId)
 
     val shard: String                       = getShard(eServiceId)
     val result: Future[Option[CatalogItem]] = getCommander(shard).ask(ref => GetCatalogItem(eServiceId, ref))
 
     onSuccess(result) {
       case Some(catalogItem) => getEService200(catalogItem.toApi)
-      case None              => getEService404(problemOf(StatusCodes.NotFound, "0004"))
+      case None => {
+        logger.error("E-service {} not found", eServiceId)
+        getEService404(problemOf(StatusCodes.NotFound, "0004"))
+      }
     }
   }
 
@@ -142,7 +175,7 @@ class EServiceApiServiceImpl(
     toEntityMarshallerProblem: ToEntityMarshaller[Problem],
     contexts: Seq[(String, String)]
   ): Route = {
-    contexts.foreach(println)
+    logger.info("Getting e-service for producer {} and state {}", producerId.toString, state.toString)
     val sliceSize = 100
 
     val commanders: Seq[EntityRef[Command]] =
@@ -176,6 +209,12 @@ class EServiceApiServiceImpl(
     result match {
       case Right(items) => getEServices200(items.map(_.toApi))
       case Left(error) =>
+        logger.error(
+          "Error while getting e-service for producer {} and state {} - {}",
+          producerId.toString,
+          state.toString,
+          error.getMessage
+        )
         getEServices400(problemOf(StatusCodes.BadRequest, "0005", error, "Catalog Items retrieve error"))
     }
 
@@ -190,7 +229,12 @@ class EServiceApiServiceImpl(
     toEntityMarshallerProblem: ToEntityMarshaller[Problem],
     contexts: Seq[(String, String)]
   ): Route = {
-    contexts.foreach(println)
+    logger.info(
+      "Getting e-service document {} for e-service {} and descriptor {}",
+      documentId,
+      eServiceId,
+      descriptorId
+    )
 
     val shard: String = getShard(eServiceId)
 
@@ -206,6 +250,13 @@ class EServiceApiServiceImpl(
     onComplete(result) {
       case Success(doc) => getEServiceDocument200(doc)
       case Failure(exception) =>
+        logger.error(
+          "Error while getting e-service document {} for e-service {} and descriptor {} - {}",
+          documentId,
+          eServiceId,
+          descriptorId,
+          exception.getMessage
+        )
         exception match {
           case ex: EServiceNotFoundError =>
             getEService404(problemOf(StatusCodes.NotFound, "0006", ex, s"EService $eServiceId not found"))
@@ -245,6 +296,8 @@ class EServiceApiServiceImpl(
     contexts: Seq[(String, String)]
   ): Route = {
 
+    logger.info("Deleting draft version of descriptor {} for e-service {}", descriptorId, eServiceId)
+
     val shard: String = getShard(eServiceId)
 
     val commander: EntityRef[Command] = getCommander(shard)
@@ -265,8 +318,22 @@ class EServiceApiServiceImpl(
     onComplete(result) {
       case Success(statusReply) =>
         if (statusReply.isSuccess) deleteDraft204
-        else deleteDraft400(problemOf(StatusCodes.BadRequest, "0008", statusReply.getError))
+        else {
+          logger.error(
+            "Error while deleting draft version of descriptor {} for e-service {} - {}",
+            descriptorId,
+            eServiceId,
+            statusReply.getError
+          )
+          deleteDraft400(problemOf(StatusCodes.BadRequest, "0008", statusReply.getError))
+        }
       case Failure(exception) =>
+        logger.error(
+          "Error while deleting draft version of descriptor {} for e-service {} - {}",
+          descriptorId,
+          eServiceId,
+          exception.getMessage
+        )
         deleteDraft400(problemOf(StatusCodes.BadRequest, "0009", exception))
     }
   }
@@ -285,6 +352,7 @@ class EServiceApiServiceImpl(
     contexts: Seq[(String, String)]
   ): Route = {
 
+    logger.info("Updating descriptor {} for e-service {}", descriptorId, eServiceId)
     val shard: String = getShard(eServiceId)
 
     val commander: EntityRef[Command] = getCommander(shard)
@@ -316,7 +384,9 @@ class EServiceApiServiceImpl(
 
     onComplete(result) {
       case Success(catalogItem) =>
-        catalogItem.fold(
+        catalogItem.fold({
+          logger
+            .error("Error while updating descriptor {} for e-service {} - {} - bad request", descriptorId, eServiceId)
           updateDescriptor400(
             problemOf(
               StatusCodes.BadRequest,
@@ -324,8 +394,14 @@ class EServiceApiServiceImpl(
               defaultMessage = s"Error on update of descriptor $descriptorId on E-Service $eServiceId"
             )
           )
-        )(ci => updateDescriptor200(ci.toApi))
+        })(ci => updateDescriptor200(ci.toApi))
       case Failure(exception) =>
+        logger.error(
+          "Error while updating descriptor {} for e-service {} - {}",
+          descriptorId,
+          eServiceId,
+          exception.getMessage
+        )
         exception match {
           case ex @ (_: EServiceNotFoundError | _: EServiceDescriptorNotFoundError) =>
             updateDescriptor404(
@@ -359,6 +435,7 @@ class EServiceApiServiceImpl(
     toEntityMarshallerEService: ToEntityMarshaller[EService],
     contexts: Seq[(String, String)]
   ): Route = {
+    logger.info("Updating e-service by id {}", eServiceId)
     val shard: String = getShard(eServiceId)
 
     val commander: EntityRef[Command] = getCommander(shard)
@@ -371,10 +448,12 @@ class EServiceApiServiceImpl(
 
     onComplete(result) {
       case Success(catalogItem) =>
-        catalogItem.fold(updateEServiceById404(problemOf(StatusCodes.NotFound, "0013")))(ci =>
-          updateEServiceById200(ci.toApi)
-        )
+        catalogItem.fold({
+          logger.error("Error while updating e-service by id {} - not found", eServiceId)
+          updateEServiceById404(problemOf(StatusCodes.NotFound, "0013"))
+        })(ci => updateEServiceById200(ci.toApi))
       case Failure(exception) =>
+        logger.error("Error while updating e-service by id {} - {}", eServiceId, exception.getMessage)
         updateEServiceById400(problemOf(StatusCodes.BadRequest, "0014", exception))
     }
   }
@@ -406,6 +485,7 @@ class EServiceApiServiceImpl(
     toEntityMarshallerProblem: ToEntityMarshaller[Problem],
     contexts: Seq[(String, String)]
   ): Route = {
+    logger.info("Creating descriptor for e-service {}", eServiceId)
     val shard: String = getShard(eServiceId)
 
     val commander: EntityRef[Command] = getCommander(shard)
@@ -429,6 +509,7 @@ class EServiceApiServiceImpl(
     onComplete(result) {
       case Success(descriptor) => createDescriptor200(descriptor.toApi)
       case Failure(exception) =>
+        logger.error("Error while creating descriptor for e-service {} - {}", eServiceId, exception.getMessage)
         createDescriptor400(problemOf(StatusCodes.BadRequest, "0015", exception))
     }
   }
@@ -441,6 +522,7 @@ class EServiceApiServiceImpl(
     toEntityMarshallerProblem: ToEntityMarshaller[Problem],
     contexts: Seq[(String, String)]
   ): Route = {
+    logger.info("Delete document {} of descriptor {} for e-service {}", documentId, descriptorId, eServiceId)
     val shard: String = getShard(eServiceId)
 
     val commander: EntityRef[Command] = getCommander(shard)
@@ -458,15 +540,28 @@ class EServiceApiServiceImpl(
       case Success(statusReply) =>
         if (statusReply.isSuccess) deleteEServiceDocument204
         else
-          deleteEServiceDocument400(
+          deleteEServiceDocument400({
+            logger.error(
+              "Error while deleting document {} of descriptor {} for e-service {} - bad request",
+              documentId,
+              descriptorId,
+              eServiceId
+            )
             problemOf(
               StatusCodes.BadRequest,
               "0016",
               defaultMessage = s"Error on deletion of $documentId on descriptor $descriptorId on E-Service $eServiceId"
             )
-          )
+          })
 
       case Failure(exception) =>
+        logger.error(
+          "Error while deleting document {} of descriptor {} for e-service {} - {}",
+          documentId,
+          descriptorId,
+          eServiceId,
+          exception.getMessage
+        )
         exception match {
           case ex @ (_: EServiceNotFoundError | _: EServiceDescriptorNotFoundError) =>
             deleteEServiceDocument404(
@@ -498,10 +593,13 @@ class EServiceApiServiceImpl(
     toEntityMarshallerProblem: ToEntityMarshaller[Problem],
     contexts: Seq[(String, String)]
   ): Route = {
+    logger.info("Archiviation of descriptor {} of e-service {}", descriptorId, eServiceId)
     val result = updateDescriptorState(eServiceId, descriptorId, Archived)
     onComplete(result) {
       case Success(catalogItem) =>
-        catalogItem.fold(
+        catalogItem.fold({
+          logger
+            .error("Error during archiviation of descriptor {} of e-service {} - bad request", descriptorId, eServiceId)
           archiveDescriptor400(
             problemOf(
               StatusCodes.BadRequest,
@@ -509,8 +607,14 @@ class EServiceApiServiceImpl(
               defaultMessage = s"Error on archiving of $descriptorId on E-Service $eServiceId"
             )
           )
-        )(_ => archiveDescriptor204)
+        })(_ => archiveDescriptor204)
       case Failure(ex) =>
+        logger.error(
+          "Error during archiviation of descriptor {} of e-service {} - {}",
+          descriptorId,
+          eServiceId,
+          ex.getMessage
+        )
         archiveDescriptor400(
           problemOf(StatusCodes.BadRequest, "0020", ex, s"Error on archiving of $descriptorId on E-Service $eServiceId")
         )
@@ -525,10 +629,13 @@ class EServiceApiServiceImpl(
     toEntityMarshallerProblem: ToEntityMarshaller[Problem],
     contexts: Seq[(String, String)]
   ): Route = {
+    logger.info("Deprecating descriptor {} of e-service {}", descriptorId, eServiceId)
     val result = updateDescriptorState(eServiceId, descriptorId, Deprecated)
     onComplete(result) {
       case Success(catalogItem) =>
-        catalogItem.fold(
+        catalogItem.fold({
+          logger
+            .error("Error during deprecation of descriptor {} of e-service {} - bad request", descriptorId, eServiceId)
           deprecateDescriptor400(
             problemOf(
               StatusCodes.BadRequest,
@@ -536,8 +643,14 @@ class EServiceApiServiceImpl(
               defaultMessage = s"Error on deprecating of $descriptorId on E-Service $eServiceId"
             )
           )
-        )(_ => deprecateDescriptor204)
+        })(_ => deprecateDescriptor204)
       case Failure(ex) =>
+        logger.error(
+          "Error during deprecation of descriptor {} of e-service {} - {}",
+          descriptorId,
+          eServiceId,
+          ex.getMessage
+        )
         deprecateDescriptor400(
           problemOf(
             StatusCodes.BadRequest,
@@ -557,10 +670,13 @@ class EServiceApiServiceImpl(
     toEntityMarshallerProblem: ToEntityMarshaller[Problem],
     contexts: Seq[(String, String)]
   ): Route = {
+    logger.info("Suspending descriptor {} of e-service {}", descriptorId, eServiceId)
     val result = updateDescriptorState(eServiceId, descriptorId, Suspended)
     onComplete(result) {
       case Success(catalogItem) =>
-        catalogItem.fold(
+        catalogItem.fold({
+          logger
+            .error("Error during suspension of descriptor {} of e-service {} - bad request", descriptorId, eServiceId)
           suspendDescriptor400(
             problemOf(
               StatusCodes.BadRequest,
@@ -568,8 +684,14 @@ class EServiceApiServiceImpl(
               defaultMessage = s"Error on suspending of $descriptorId on E-Service $eServiceId"
             )
           )
-        )(_ => suspendDescriptor204)
+        })(_ => suspendDescriptor204)
       case Failure(ex) =>
+        logger.error(
+          "Error during suspension of descriptor {} of e-service {} - {}",
+          descriptorId,
+          eServiceId,
+          ex.getMessage
+        )
         suspendDescriptor400(
           problemOf(
             StatusCodes.BadRequest,
@@ -589,10 +711,13 @@ class EServiceApiServiceImpl(
     toEntityMarshallerProblem: ToEntityMarshaller[Problem],
     contexts: Seq[(String, String)]
   ): Route = {
+    logger.info("Moving descriptor {} of e-service {} to draft state", descriptorId, eServiceId)
     val result = updateDescriptorState(eServiceId, descriptorId, Draft)
     onComplete(result) {
       case Success(catalogItem) =>
-        catalogItem.fold(
+        catalogItem.fold({
+          logger
+            .error("Error while making descriptor {} of e-service {} as draft - bad request", descriptorId, eServiceId)
           draftDescriptor400(
             problemOf(
               StatusCodes.BadRequest,
@@ -600,8 +725,14 @@ class EServiceApiServiceImpl(
               defaultMessage = s"Error on change state to draft of $descriptorId on E-Service $eServiceId"
             )
           )
-        )(_ => draftDescriptor204)
+        })(_ => draftDescriptor204)
       case Failure(ex) =>
+        logger.error(
+          "Error while making descriptor {} of e-service {} as draft - {}",
+          descriptorId,
+          eServiceId,
+          ex.getMessage
+        )
         draftDescriptor400(
           problemOf(
             StatusCodes.BadRequest,
@@ -621,11 +752,13 @@ class EServiceApiServiceImpl(
     toEntityMarshallerProblem: ToEntityMarshaller[Problem],
     contexts: Seq[(String, String)]
   ): Route = {
+    logger.info("Publishing descriptor {} of e-service {}", descriptorId, eServiceId)
     val result = updateDescriptorState(eServiceId, descriptorId, Published)
 
     onComplete(result) {
       case Success(catalogItem) =>
-        catalogItem.fold(
+        catalogItem.fold({
+          logger.error("Error while publishing descriptor {} of e-service {} - bad request", descriptorId, eServiceId)
           publishDescriptor400(
             problemOf(
               StatusCodes.BadRequest,
@@ -633,8 +766,14 @@ class EServiceApiServiceImpl(
               defaultMessage = s"Error on publication of $descriptorId on E-Service $eServiceId"
             )
           )
-        )(_ => publishDescriptor204)
+        })(_ => publishDescriptor204)
       case Failure(ex) =>
+        logger.error(
+          "Error while publishing descriptor {} of e-service {} - {}",
+          descriptorId,
+          eServiceId,
+          ex.getMessage
+        )
         publishDescriptor400(
           problemOf(
             StatusCodes.BadRequest,
@@ -690,6 +829,7 @@ class EServiceApiServiceImpl(
     toEntityMarshallerProblem: ToEntityMarshaller[Problem],
     contexts: Seq[(String, String)]
   ): Route = {
+    logger.info("Updating document {} of descriptor {} of e-service {}", documentId, descriptorId, eServiceId)
     val shard: String = getShard(eServiceId)
 
     val commander: EntityRef[Command] = getCommander(shard)
@@ -712,7 +852,13 @@ class EServiceApiServiceImpl(
 
     onComplete(result) {
       case Success(document) =>
-        document.fold(
+        document.fold({
+          logger.error(
+            "Error while updating document {} of descriptor {} of e-service {} - not found",
+            documentId,
+            descriptorId,
+            eServiceId
+          )
           updateEServiceDocument404(
             problemOf(
               StatusCodes.NotFound,
@@ -720,8 +866,15 @@ class EServiceApiServiceImpl(
               defaultMessage = s"Error on update of $documentId on descriptor $descriptorId on E-Service $eServiceId"
             )
           )
-        )(catalogDocument => updateEServiceDocument200(catalogDocument.toApi))
+        })(catalogDocument => updateEServiceDocument200(catalogDocument.toApi))
       case Failure(exception) =>
+        logger.error(
+          "Error while updating document {} of descriptor {} of e-service {} - {}",
+          documentId,
+          descriptorId,
+          eServiceId,
+          exception.getMessage
+        )
         exception match {
           case ex @ (_: EServiceNotFoundError | _: EServiceDescriptorNotFoundError) =>
             deleteEServiceDocument404(
@@ -755,8 +908,7 @@ class EServiceApiServiceImpl(
     toEntityMarshallerEService: ToEntityMarshaller[EService],
     contexts: Seq[(String, String)]
   ): Route = {
-    contexts.foreach(println)
-
+    logger.info("Cloning descriptor {} of e-service {}", descriptorId, eServiceId)
     val shard = getShard(eServiceId)
 
     val result: Future[StatusReply[CatalogItem]] =
@@ -783,10 +935,22 @@ class EServiceApiServiceImpl(
           case statusReply if statusReply.isSuccess =>
             cloneEServiceByDescriptor200(statusReply.getValue.toApi)
           case statusReply if statusReply.isError =>
+            logger.error(
+              "Error while cloning descriptor {} of e-service {} - {}",
+              descriptorId,
+              eServiceId,
+              statusReply.getError.getMessage
+            )
             cloneEServiceByDescriptor400(problemOf(StatusCodes.BadRequest, "0031", statusReply.getError))
         }
 
       case Failure(exception) =>
+        logger.error(
+          "Error while cloning descriptor {} of e-service {} - {}",
+          descriptorId,
+          eServiceId,
+          exception.getMessage
+        )
         exception match {
           case ex @ (_: EServiceNotFoundError | _: EServiceDescriptorNotFoundError) =>
             cloneEServiceByDescriptor404(
@@ -842,6 +1006,7 @@ class EServiceApiServiceImpl(
   override def deleteEService(
     eServiceId: String
   )(implicit toEntityMarshallerProblem: ToEntityMarshaller[Problem], contexts: Seq[(String, String)]): Route = {
+    logger.info("Deleting e-service {}", eServiceId)
     val shard: String = getShard(eServiceId)
 
     val commander: EntityRef[Command] = getCommander(shard)
@@ -856,8 +1021,12 @@ class EServiceApiServiceImpl(
     onComplete(result) {
       case Success(statusReply) =>
         if (statusReply.isSuccess) deleteEService204
-        else deleteEService400(problemOf(StatusCodes.BadRequest, "0034", statusReply.getError))
+        else {
+          logger.error("Error while deleting e-service {} - {}", eServiceId, statusReply.getError.getMessage)
+          deleteEService400(problemOf(StatusCodes.BadRequest, "0034", statusReply.getError))
+        }
       case Failure(exception) =>
+        logger.error("Error while deleting e-service {} - {}", eServiceId, exception.getMessage)
         deleteEService400(problemOf(StatusCodes.BadRequest, "0034", exception))
     }
   }

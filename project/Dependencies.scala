@@ -30,6 +30,10 @@ object Dependencies {
     lazy val slf4j            = namespace            %% "akka-slf4j"                   % akkaVersion
     lazy val stream           = namespace            %% "akka-stream-typed"            % akkaVersion
     lazy val testkit          = namespace            %% "akka-actor-testkit-typed"     % akkaVersion
+
+    lazy val management = "com.lightbend.akka.management" %% "akka-management" % akkaManagementVersion
+    lazy val managementLogLevels =
+      "com.lightbend.akka.management" %% "akka-management-loglevels-logback" % akkaManagementVersion
   }
 
   private[this] object postgres {
@@ -132,6 +136,8 @@ object Dependencies {
       akka.http                    % Compile,
       akka.httpJson                % Compile,
       akka.persistence             % Compile,
+      akka.management              % Compile,
+      akka.managementLogLevels     % Compile,
       akka.persistenceJdbc         % Compile,
       akka.persistenceQuery        % Compile,
       akka.projection              % Compile,
