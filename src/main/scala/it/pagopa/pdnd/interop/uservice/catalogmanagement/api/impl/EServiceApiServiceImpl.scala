@@ -74,7 +74,7 @@ class EServiceApiServiceImpl(
         createEService200(statusReply.getValue.toApi)
       case statusReply if statusReply.isError =>
         logger.error(
-          "Error while creating e-service {} for producer {} - {}",
+          "Error while creating e-service {} for producer {}",
           eServiceSeed.name,
           eServiceSeed.producerId,
           statusReply.getError
@@ -135,11 +135,11 @@ class EServiceApiServiceImpl(
         })(ci => createEServiceDocument200(ci.toApi))
       case Failure(exception) =>
         logger.error(
-          "Failure in creation of e-service document of kind {} for e-service {} and descriptor {} - {}",
+          "Failure in creation of e-service document of kind {} for e-service {} and descriptor {}",
           kind,
           eServiceId,
           descriptorId,
-          exception.getMessage
+          exception
         )
         createEServiceDocument400(problemOf(StatusCodes.BadRequest, "0003", exception))
     }
@@ -210,10 +210,10 @@ class EServiceApiServiceImpl(
       case Right(items) => getEServices200(items.map(_.toApi))
       case Left(error) =>
         logger.error(
-          "Error while getting e-service for producer {} and state {} - {}",
+          "Error while getting e-service for producer {} and state {}",
           producerId.toString,
           state.toString,
-          error.getMessage
+          error
         )
         getEServices400(problemOf(StatusCodes.BadRequest, "0005", error, "Catalog Items retrieve error"))
     }
@@ -251,11 +251,11 @@ class EServiceApiServiceImpl(
       case Success(doc) => getEServiceDocument200(doc)
       case Failure(exception) =>
         logger.error(
-          "Error while getting e-service document {} for e-service {} and descriptor {} - {}",
+          "Error while getting e-service document {} for e-service {} and descriptor {}",
           documentId,
           eServiceId,
           descriptorId,
-          exception.getMessage
+          exception
         )
         exception match {
           case ex: EServiceNotFoundError =>
@@ -320,7 +320,7 @@ class EServiceApiServiceImpl(
         if (statusReply.isSuccess) deleteDraft204
         else {
           logger.error(
-            "Error while deleting draft version of descriptor {} for e-service {} - {}",
+            "Error while deleting draft version of descriptor {} for e-service {}",
             descriptorId,
             eServiceId,
             statusReply.getError
@@ -329,10 +329,10 @@ class EServiceApiServiceImpl(
         }
       case Failure(exception) =>
         logger.error(
-          "Error while deleting draft version of descriptor {} for e-service {} - {}",
+          "Error while deleting draft version of descriptor {} for e-service {}",
           descriptorId,
           eServiceId,
-          exception.getMessage
+          exception
         )
         deleteDraft400(problemOf(StatusCodes.BadRequest, "0009", exception))
     }
@@ -397,10 +397,10 @@ class EServiceApiServiceImpl(
         })(ci => updateDescriptor200(ci.toApi))
       case Failure(exception) =>
         logger.error(
-          "Error while updating descriptor {} for e-service {} - {}",
+          "Error while updating descriptor {} for e-service {}",
           descriptorId,
           eServiceId,
-          exception.getMessage
+          exception
         )
         exception match {
           case ex @ (_: EServiceNotFoundError | _: EServiceDescriptorNotFoundError) =>
@@ -453,7 +453,7 @@ class EServiceApiServiceImpl(
           updateEServiceById404(problemOf(StatusCodes.NotFound, "0013"))
         })(ci => updateEServiceById200(ci.toApi))
       case Failure(exception) =>
-        logger.error("Error while updating e-service by id {} - {}", eServiceId, exception.getMessage)
+        logger.error("Error while updating e-service by id {}", eServiceId, exception)
         updateEServiceById400(problemOf(StatusCodes.BadRequest, "0014", exception))
     }
   }
@@ -509,7 +509,7 @@ class EServiceApiServiceImpl(
     onComplete(result) {
       case Success(descriptor) => createDescriptor200(descriptor.toApi)
       case Failure(exception) =>
-        logger.error("Error while creating descriptor for e-service {} - {}", eServiceId, exception.getMessage)
+        logger.error("Error while creating descriptor for e-service {}", eServiceId, exception)
         createDescriptor400(problemOf(StatusCodes.BadRequest, "0015", exception))
     }
   }
@@ -556,11 +556,11 @@ class EServiceApiServiceImpl(
 
       case Failure(exception) =>
         logger.error(
-          "Error while deleting document {} of descriptor {} for e-service {} - {}",
+          "Error while deleting document {} of descriptor {} for e-service {}",
           documentId,
           descriptorId,
           eServiceId,
-          exception.getMessage
+          exception
         )
         exception match {
           case ex @ (_: EServiceNotFoundError | _: EServiceDescriptorNotFoundError) =>
@@ -610,10 +610,10 @@ class EServiceApiServiceImpl(
         })(_ => archiveDescriptor204)
       case Failure(ex) =>
         logger.error(
-          "Error during archiviation of descriptor {} of e-service {} - {}",
+          "Error during archiviation of descriptor {} of e-service {}",
           descriptorId,
           eServiceId,
-          ex.getMessage
+          ex
         )
         archiveDescriptor400(
           problemOf(StatusCodes.BadRequest, "0020", ex, s"Error on archiving of $descriptorId on E-Service $eServiceId")
@@ -646,10 +646,10 @@ class EServiceApiServiceImpl(
         })(_ => deprecateDescriptor204)
       case Failure(ex) =>
         logger.error(
-          "Error during deprecation of descriptor {} of e-service {} - {}",
+          "Error during deprecation of descriptor {} of e-service {}",
           descriptorId,
           eServiceId,
-          ex.getMessage
+          ex
         )
         deprecateDescriptor400(
           problemOf(
@@ -687,10 +687,10 @@ class EServiceApiServiceImpl(
         })(_ => suspendDescriptor204)
       case Failure(ex) =>
         logger.error(
-          "Error during suspension of descriptor {} of e-service {} - {}",
+          "Error during suspension of descriptor {} of e-service {}",
           descriptorId,
           eServiceId,
-          ex.getMessage
+          ex
         )
         suspendDescriptor400(
           problemOf(
@@ -728,10 +728,10 @@ class EServiceApiServiceImpl(
         })(_ => draftDescriptor204)
       case Failure(ex) =>
         logger.error(
-          "Error while making descriptor {} of e-service {} as draft - {}",
+          "Error while making descriptor {} of e-service {} as draft",
           descriptorId,
           eServiceId,
-          ex.getMessage
+          ex
         )
         draftDescriptor400(
           problemOf(
@@ -769,10 +769,10 @@ class EServiceApiServiceImpl(
         })(_ => publishDescriptor204)
       case Failure(ex) =>
         logger.error(
-          "Error while publishing descriptor {} of e-service {} - {}",
+          "Error while publishing descriptor {} of e-service {}",
           descriptorId,
           eServiceId,
-          ex.getMessage
+          ex
         )
         publishDescriptor400(
           problemOf(
@@ -869,11 +869,11 @@ class EServiceApiServiceImpl(
         })(catalogDocument => updateEServiceDocument200(catalogDocument.toApi))
       case Failure(exception) =>
         logger.error(
-          "Error while updating document {} of descriptor {} of e-service {} - {}",
+          "Error while updating document {} of descriptor {} of e-service {}",
           documentId,
           descriptorId,
           eServiceId,
-          exception.getMessage
+          exception
         )
         exception match {
           case ex @ (_: EServiceNotFoundError | _: EServiceDescriptorNotFoundError) =>
@@ -936,20 +936,20 @@ class EServiceApiServiceImpl(
             cloneEServiceByDescriptor200(statusReply.getValue.toApi)
           case statusReply if statusReply.isError =>
             logger.error(
-              "Error while cloning descriptor {} of e-service {} - {}",
+              "Error while cloning descriptor {} of e-service {}",
               descriptorId,
               eServiceId,
-              statusReply.getError.getMessage
+              statusReply.getError
             )
             cloneEServiceByDescriptor400(problemOf(StatusCodes.BadRequest, "0031", statusReply.getError))
         }
 
       case Failure(exception) =>
         logger.error(
-          "Error while cloning descriptor {} of e-service {} - {}",
+          "Error while cloning descriptor {} of e-service {}",
           descriptorId,
           eServiceId,
-          exception.getMessage
+          exception
         )
         exception match {
           case ex @ (_: EServiceNotFoundError | _: EServiceDescriptorNotFoundError) =>
@@ -1022,11 +1022,11 @@ class EServiceApiServiceImpl(
       case Success(statusReply) =>
         if (statusReply.isSuccess) deleteEService204
         else {
-          logger.error("Error while deleting e-service {} - {}", eServiceId, statusReply.getError.getMessage)
+          logger.error("Error while deleting e-service {}", eServiceId, statusReply.getError)
           deleteEService400(problemOf(StatusCodes.BadRequest, "0034", statusReply.getError))
         }
       case Failure(exception) =>
-        logger.error("Error while deleting e-service {} - {}", eServiceId, exception.getMessage)
+        logger.error("Error while deleting e-service {}", eServiceId, exception)
         deleteEService400(problemOf(StatusCodes.BadRequest, "0034", exception))
     }
   }
