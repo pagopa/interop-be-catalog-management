@@ -69,17 +69,25 @@ class EServiceApiServiceImpl(
         added <- getCommander(shard).ask(ref => AddCatalogItem(catalogItem, ref))
       } yield added
 
-    onSuccess(result) {
-      case statusReply if statusReply.isSuccess =>
+    onComplete(result) {
+      case Success(statusReply) if statusReply.isSuccess =>
         createEService200(statusReply.getValue.toApi)
-      case statusReply if statusReply.isError =>
+      case Success(statusReply) =>
         logger.error(
           "Error while creating e-service {} for producer {}",
           eServiceSeed.name,
           eServiceSeed.producerId,
           statusReply.getError
         )
-        createEService400(problemOf(StatusCodes.BadRequest, "0001", statusReply.getError))
+        createEService400(problemOf(StatusCodes.Conflict, "0035", statusReply.getError))
+      case Failure(ex) =>
+        logger.error(
+          "Error while creating e-service {} for producer {}",
+          eServiceSeed.name,
+          eServiceSeed.producerId,
+          ex
+        )
+        createEService400(problemOf(StatusCodes.BadRequest, "0001", ex))
     }
   }
 
@@ -396,12 +404,7 @@ class EServiceApiServiceImpl(
           )
         })(ci => updateDescriptor200(ci.toApi))
       case Failure(exception) =>
-        logger.error(
-          "Error while updating descriptor {} for e-service {}",
-          descriptorId,
-          eServiceId,
-          exception
-        )
+        logger.error("Error while updating descriptor {} for e-service {}", descriptorId, eServiceId, exception)
         exception match {
           case ex @ (_: EServiceNotFoundError | _: EServiceDescriptorNotFoundError) =>
             updateDescriptor404(
@@ -609,12 +612,7 @@ class EServiceApiServiceImpl(
           )
         })(_ => archiveDescriptor204)
       case Failure(ex) =>
-        logger.error(
-          "Error during archiviation of descriptor {} of e-service {}",
-          descriptorId,
-          eServiceId,
-          ex
-        )
+        logger.error("Error during archiviation of descriptor {} of e-service {}", descriptorId, eServiceId, ex)
         archiveDescriptor400(
           problemOf(StatusCodes.BadRequest, "0020", ex, s"Error on archiving of $descriptorId on E-Service $eServiceId")
         )
@@ -645,12 +643,7 @@ class EServiceApiServiceImpl(
           )
         })(_ => deprecateDescriptor204)
       case Failure(ex) =>
-        logger.error(
-          "Error during deprecation of descriptor {} of e-service {}",
-          descriptorId,
-          eServiceId,
-          ex
-        )
+        logger.error("Error during deprecation of descriptor {} of e-service {}", descriptorId, eServiceId, ex)
         deprecateDescriptor400(
           problemOf(
             StatusCodes.BadRequest,
@@ -686,12 +679,7 @@ class EServiceApiServiceImpl(
           )
         })(_ => suspendDescriptor204)
       case Failure(ex) =>
-        logger.error(
-          "Error during suspension of descriptor {} of e-service {}",
-          descriptorId,
-          eServiceId,
-          ex
-        )
+        logger.error("Error during suspension of descriptor {} of e-service {}", descriptorId, eServiceId, ex)
         suspendDescriptor400(
           problemOf(
             StatusCodes.BadRequest,
@@ -727,12 +715,7 @@ class EServiceApiServiceImpl(
           )
         })(_ => draftDescriptor204)
       case Failure(ex) =>
-        logger.error(
-          "Error while making descriptor {} of e-service {} as draft",
-          descriptorId,
-          eServiceId,
-          ex
-        )
+        logger.error("Error while making descriptor {} of e-service {} as draft", descriptorId, eServiceId, ex)
         draftDescriptor400(
           problemOf(
             StatusCodes.BadRequest,
@@ -768,12 +751,7 @@ class EServiceApiServiceImpl(
           )
         })(_ => publishDescriptor204)
       case Failure(ex) =>
-        logger.error(
-          "Error while publishing descriptor {} of e-service {}",
-          descriptorId,
-          eServiceId,
-          ex
-        )
+        logger.error("Error while publishing descriptor {} of e-service {}", descriptorId, eServiceId, ex)
         publishDescriptor400(
           problemOf(
             StatusCodes.BadRequest,
@@ -945,12 +923,7 @@ class EServiceApiServiceImpl(
         }
 
       case Failure(exception) =>
-        logger.error(
-          "Error while cloning descriptor {} of e-service {}",
-          descriptorId,
-          eServiceId,
-          exception
-        )
+        logger.error("Error while cloning descriptor {} of e-service {}", descriptorId, eServiceId, exception)
         exception match {
           case ex @ (_: EServiceNotFoundError | _: EServiceDescriptorNotFoundError) =>
             cloneEServiceByDescriptor404(
