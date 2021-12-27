@@ -94,9 +94,9 @@ object Dependencies {
     lazy val compiler  = namespace % "compiler" % mustacheVersion
   }
 
-  private[this] object openapi4j {
-    lazy val namespace          = "org.openapi4j"
-    lazy val operationValidator = namespace % "openapi-operation-validator" % openapi4jVersion
+  private[this] object atlassian {
+    lazy val namespace        = "com.atlassian.oai"
+    lazy val swaggerValidator = namespace % "swagger-request-validator-core" % swaggerValidatorVersion
   }
 
   private[this] object scalatest {
@@ -125,44 +125,44 @@ object Dependencies {
       // For making Java 12 happy
       "javax.annotation" % "javax.annotation-api" % "1.3.2" % "compile",
       //
-      akka.actorTyped              % Compile,
-      akka.clusterBootstrap        % Compile,
-      akka.clusterHttp             % Compile,
-      akka.clusterSharding         % Compile,
-      akka.clusterTools            % Compile,
-      akka.clusterTyped            % Compile,
-      akka.discovery               % Compile,
-      akka.discoveryKubernetesApi  % Compile,
-      akka.http                    % Compile,
-      akka.httpJson                % Compile,
-      akka.persistence             % Compile,
-      akka.management              % Compile,
-      akka.managementLogLevels     % Compile,
-      akka.persistenceJdbc         % Compile,
-      akka.persistenceQuery        % Compile,
-      akka.projection              % Compile,
-      akka.projectionSlick         % Compile,
-      akka.s3Journal               % Compile,
-      akka.s3Snapshot              % Compile,
-      akka.slf4j                   % Compile,
-      akka.stream                  % Compile,
-      awssdk.s3                    % Compile,
-      cats.core                    % Compile,
-      commons.fileUpload           % Compile,
-      kamon.bundle                 % Compile,
-      kamon.prometheus             % Compile,
-      logback.classic              % Compile,
-      mustache.compiler            % Compile,
-      openapi4j.operationValidator % Compile,
-      pagopa.commons               % Compile,
-      pagopa.fileManager           % Compile,
-      pagopa.commonsJWT            % Compile,
-      postgres.jdbc                % Compile,
-      akka.testkit                 % Test,
-      scalamock.core               % Test,
-      scalapact.core               % Test,
-      scalaprotobuf.core           % Protobuf,
-      scalatest.core               % Test
+      akka.actorTyped             % Compile,
+      akka.clusterBootstrap       % Compile,
+      akka.clusterHttp            % Compile,
+      akka.clusterSharding        % Compile,
+      akka.clusterTools           % Compile,
+      akka.clusterTyped           % Compile,
+      akka.discovery              % Compile,
+      akka.discoveryKubernetesApi % Compile,
+      akka.http                   % Compile,
+      akka.httpJson               % Compile,
+      akka.persistence            % Compile,
+      akka.management             % Compile,
+      akka.managementLogLevels    % Compile,
+      akka.persistenceJdbc        % Compile,
+      akka.persistenceQuery       % Compile,
+      akka.projection             % Compile,
+      akka.projectionSlick        % Compile,
+      akka.s3Journal              % Compile,
+      akka.s3Snapshot             % Compile,
+      akka.slf4j                  % Compile,
+      akka.stream                 % Compile,
+      atlassian.swaggerValidator  % Compile,
+      awssdk.s3                   % Compile,
+      cats.core                   % Compile,
+      commons.fileUpload          % Compile,
+      kamon.bundle                % Compile,
+      kamon.prometheus            % Compile,
+      logback.classic             % Compile,
+      mustache.compiler           % Compile,
+      pagopa.commons              % Compile,
+      pagopa.fileManager          % Compile,
+      pagopa.commonsJWT           % Compile,
+      postgres.jdbc               % Compile,
+      akka.testkit                % Test,
+      scalamock.core              % Test,
+      scalapact.core              % Test,
+      scalaprotobuf.core          % Protobuf,
+      scalatest.core              % Test
     )
     lazy val client: Seq[ModuleID] = Seq(
       akka.stream     % Compile,

@@ -14,6 +14,7 @@ import akka.management.scaladsl.AkkaManagement
 import akka.persistence.typed.PersistenceId
 import akka.projection.ProjectionBehavior
 import akka.{actor => classic}
+import com.atlassian.oai.validator.report.ValidationReport
 import it.pagopa.pdnd.interop.commons.files.StorageConfiguration
 import it.pagopa.pdnd.interop.commons.files.service.FileManager
 import it.pagopa.pdnd.interop.commons.jwt.service.JWTReader
@@ -33,14 +34,18 @@ import it.pagopa.pdnd.interop.uservice.catalogmanagement.server.Controller
 import it.pagopa.pdnd.interop.uservice.catalogmanagement.service.CatalogFileManager
 import it.pagopa.pdnd.interop.uservice.catalogmanagement.service.impl.CatalogFileManagerImpl
 import kamon.Kamon
+import org.slf4j.LoggerFactory
 import slick.basic.DatabaseConfig
 import slick.jdbc.JdbcProfile
 
 import scala.concurrent.ExecutionContextExecutor
 import scala.jdk.CollectionConverters._
+import scala.jdk.OptionConverters._
 import scala.util.Try
 
 object Main extends App {
+
+  private val logger = LoggerFactory.getLogger(this.getClass)
 
   def buildPersistentEntity(): Entity[Command, ShardingEnvelope[Command]] =
     Entity(typeKey = CatalogPersistentBehavior.TypeKey) { entityContext =>
@@ -116,20 +121,9 @@ object Main extends App {
 
         val controller = new Controller(
           eServiceApi,
-          validationExceptionToRoute = Some(e => {
-            val results = Option(e.results())
-            results.foreach(_.crumbs().asScala.foreach { crumb =>
-              println(crumb.crumb())
-            })
-            results.foreach(_.items().asScala.foreach { item =>
-              println(item.dataCrumbs())
-              println(item.dataJsonPointer())
-              println(item.schemaCrumbs())
-              println(item.message())
-              println(item.severity())
-            })
-            val message = e.results().items().asScala.map(_.message()).mkString("\n")
-            val error   = problemOf(StatusCodes.BadRequest, "0000", defaultMessage = message)
+          validationExceptionToRoute = Some(report => {
+            val error =
+              problemOf(StatusCodes.BadRequest, "0000", defaultMessage = errorFromRequestValidationReport(report))
             complete(error.status, error)(eServiceApiMarshallerImpl.toEntityMarshallerProblem)
           })
         )
@@ -152,6 +146,20 @@ object Main extends App {
       },
       "pdnd-interop-uservice-catalog-management"
     )
+  }
 
+  private def errorFromRequestValidationReport(report: ValidationReport): String = {
+    val messageStrings = report.getMessages.asScala.foldLeft[List[String]](List.empty)((tail, m) => {
+      val context = m.getContext.toScala.map(c =>
+        Seq(c.getRequestMethod.toScala, c.getRequestPath.toScala, c.getLocation.toScala).flatten
+      )
+      s"""${m.getAdditionalInfo.asScala.mkString(",")}
+         |${m.getLevel} - ${m.getMessage}
+         |${context.getOrElse(Seq.empty).mkString(" - ")}
+         |""".stripMargin :: tail
+    })
+
+    logger.error("Request failed: {}", messageStrings.mkString)
+    report.getMessages().asScala.map(_.getMessage).mkString(", ")
   }
 }
