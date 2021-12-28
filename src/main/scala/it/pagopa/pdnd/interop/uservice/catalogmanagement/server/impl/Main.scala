@@ -19,6 +19,7 @@ import it.pagopa.pdnd.interop.commons.files.service.FileManager
 import it.pagopa.pdnd.interop.commons.jwt.service.JWTReader
 import it.pagopa.pdnd.interop.commons.jwt.service.impl.DefaultJWTReader
 import it.pagopa.pdnd.interop.commons.jwt.{JWTConfiguration, PublicKeysHolder}
+import it.pagopa.pdnd.interop.commons.utils.OpenapiUtils
 import it.pagopa.pdnd.interop.commons.utils.service.UUIDSupplier
 import it.pagopa.pdnd.interop.commons.utils.service.impl.UUIDSupplierImpl
 import it.pagopa.pdnd.interop.uservice.catalogmanagement.api.EServiceApi
@@ -37,7 +38,6 @@ import slick.basic.DatabaseConfig
 import slick.jdbc.JdbcProfile
 
 import scala.concurrent.ExecutionContextExecutor
-import scala.jdk.CollectionConverters._
 import scala.util.Try
 
 object Main extends App {
@@ -116,20 +116,13 @@ object Main extends App {
 
         val controller = new Controller(
           eServiceApi,
-          validationExceptionToRoute = Some(e => {
-            val results = Option(e.results())
-            results.foreach(_.crumbs().asScala.foreach { crumb =>
-              println(crumb.crumb())
-            })
-            results.foreach(_.items().asScala.foreach { item =>
-              println(item.dataCrumbs())
-              println(item.dataJsonPointer())
-              println(item.schemaCrumbs())
-              println(item.message())
-              println(item.severity())
-            })
-            val message = e.results().items().asScala.map(_.message()).mkString("\n")
-            val error   = problemOf(StatusCodes.BadRequest, "0000", defaultMessage = message)
+          validationExceptionToRoute = Some(report => {
+            val error =
+              problemOf(
+                StatusCodes.BadRequest,
+                "0000",
+                defaultMessage = OpenapiUtils.errorFromRequestValidationReport(report)
+              )
             complete(error.status, error)(eServiceApiMarshallerImpl.toEntityMarshallerProblem)
           })
         )
@@ -152,6 +145,6 @@ object Main extends App {
       },
       "pdnd-interop-uservice-catalog-management"
     )
-
   }
+
 }
