@@ -3,6 +3,7 @@ package it.pagopa.pdnd.interop.uservice.catalogmanagement.api
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import akka.http.scaladsl.model.StatusCode
 import it.pagopa.pdnd.interop.commons.utils.SprayCommonFormats.uuidFormat
+import it.pagopa.pdnd.interop.commons.utils.errors.ComponentError
 import it.pagopa.pdnd.interop.uservice.catalogmanagement.model._
 import spray.json.{DefaultJsonProtocol, RootJsonFormat}
 
@@ -28,17 +29,19 @@ package object impl extends SprayJsonSupport with DefaultJsonProtocol {
     UpdateEServiceDescriptorDocumentSeed
   )
 
-  def problemOf(
-    httpError: StatusCode,
-    errorCode: String,
-    exception: Throwable = new RuntimeException(),
-    defaultMessage: String = "Unknown error"
-  ): Problem =
+  final val serviceErrorCodePrefix: String = "008"
+  final val defaultProblemType: String     = "about:blank"
+
+  def problemOf(httpError: StatusCode, error: ComponentError, defaultMessage: String = "Unknown error"): Problem =
     Problem(
-      `type` = "about:blank",
+      `type` = defaultProblemType,
       status = httpError.intValue,
       title = httpError.defaultMessage,
-      errors =
-        Seq(ProblemError(code = s"008-$errorCode", detail = Option(exception.getMessage).getOrElse(defaultMessage)))
+      errors = Seq(
+        ProblemError(
+          code = s"$serviceErrorCodePrefix-${error.code}",
+          detail = Option(error.getMessage).getOrElse(defaultMessage)
+        )
+      )
     )
 }
