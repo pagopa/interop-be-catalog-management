@@ -1,6 +1,6 @@
 package it.pagopa.pdnd.interop.uservice.catalogmanagement.service
 
-import it.pagopa.pdnd.interop.uservice.catalogmanagement.error.VersionError
+import it.pagopa.pdnd.interop.uservice.catalogmanagement.error.CatalogManagementErrors.VersionError
 
 trait VersionGenerator {
 
