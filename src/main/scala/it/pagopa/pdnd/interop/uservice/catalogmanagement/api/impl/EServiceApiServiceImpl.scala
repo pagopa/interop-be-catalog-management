@@ -41,8 +41,8 @@ class EServiceApiServiceImpl(
 
   val logger = Logger.takingImplicit[ContextFieldsToLog](LoggerFactory.getLogger(this.getClass))
 
-  private lazy val INTERFACE = "interface"
-  private lazy val DOCUMENT  = "document"
+  private lazy val INTERFACE = "INTERFACE"
+  private lazy val DOCUMENT  = "DOCUMENT"
 
   private val settings: ClusterShardingSettings = entity.settings match {
     case None    => ClusterShardingSettings(system)
