@@ -4,6 +4,7 @@ import "scalapb/scalapb.proto";
 
 option (scalapb.options) = {
   package_name: "it.pagopa.pdnd.interop.uservice.catalogmanagement.model.persistence.serializer.v1"
+  no_default_values_in_constructor : true
 };
 
 message CatalogItemV1 {
@@ -41,6 +42,7 @@ message CatalogDescriptorV1 {
   optional CatalogDocumentV1 interface = 6;
   repeated string audience = 7;
   required int32 voucherLifespan = 8;
+  required int32 dailyCallsMaxNumber = 9;
 }
 
 message CatalogDocumentV1 {

@@ -377,6 +377,7 @@ class EServiceApiServiceImpl(
           description = eServiceDescriptorSeed.description,
           audience = eServiceDescriptorSeed.audience,
           voucherLifespan = eServiceDescriptorSeed.voucherLifespan,
+          dailyCallsMaxNumber = eServiceDescriptorSeed.dailyCallsMaxNumber,
           state = CatalogDescriptorState.fromApi(eServiceDescriptorSeed.state)
         )
 
@@ -489,7 +490,8 @@ class EServiceApiServiceImpl(
         docs = Seq.empty[CatalogDocument],
         state = Draft,
         voucherLifespan = eServiceDescriptorSeed.voucherLifespan,
-        audience = eServiceDescriptorSeed.audience
+        audience = eServiceDescriptorSeed.audience,
+        dailyCallsMaxNumber = eServiceDescriptorSeed.dailyCallsMaxNumber
       )
       _ <- commander.ask(ref => AddCatalogItemDescriptor(current.id.toString, createdCatalogDescriptor, ref))
     } yield createdCatalogDescriptor
@@ -866,7 +868,8 @@ class EServiceApiServiceImpl(
         docs = clonedDocuments,
         state = Draft,
         audience = descriptorToClone.audience,
-        voucherLifespan = descriptorToClone.voucherLifespan
+        voucherLifespan = descriptorToClone.voucherLifespan,
+        dailyCallsMaxNumber = descriptorToClone.dailyCallsMaxNumber
       )
     } yield CatalogItem(
       id = uuidSupplier.get,

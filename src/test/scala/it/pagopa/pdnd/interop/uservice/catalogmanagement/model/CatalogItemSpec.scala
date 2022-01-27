@@ -33,7 +33,8 @@ class CatalogItemSpec extends AnyWordSpecLike with Matchers {
       docs = documents,
       state = Draft,
       audience = Seq("a"),
-      voucherLifespan = 0
+      voucherLifespan = 0,
+      dailyCallsMaxNumber = 10
     )
 
   private[this] def descriptorDocumentGen(id: UUID = UUID.randomUUID()) =

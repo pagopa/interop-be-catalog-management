@@ -91,7 +91,8 @@ object utils {
         },
         state = convertDescriptorStateToV1(descriptor.state),
         audience = descriptor.audience,
-        voucherLifespan = descriptor.voucherLifespan
+        voucherLifespan = descriptor.voucherLifespan,
+        dailyCallsMaxNumber = descriptor.dailyCallsMaxNumber
       )
     )
   }
@@ -132,7 +133,8 @@ object utils {
         },
         state = state,
         audience = ver1.audience,
-        voucherLifespan = ver1.voucherLifespan
+        voucherLifespan = ver1.voucherLifespan,
+        dailyCallsMaxNumber = ver1.dailyCallsMaxNumber
       )
     }
   }
