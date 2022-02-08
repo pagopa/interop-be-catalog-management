@@ -18,6 +18,7 @@ storageType=$STORAGE_TYPE
 storageContainer=$STORAGE_CONTAINER
 storageEndpoint=$STORAGE_ENDPOINT
 wellKnownURL=$WELL_KNOWN_URL
+mainAudience=$MAIN_AUDIENCE
 
 replicas=$REPLICAS_NR
 
