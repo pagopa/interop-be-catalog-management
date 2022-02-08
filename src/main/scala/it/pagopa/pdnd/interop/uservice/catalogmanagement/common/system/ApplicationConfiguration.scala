@@ -8,12 +8,12 @@ object ApplicationConfiguration {
 
   lazy val config: Config = ConfigFactory.load()
 
-  lazy val serverPort: Int = config.getInt("uservice-catalog-management.port")
+  lazy val serverPort: Int = config.getInt("catalog-management.port")
 
-  lazy val storageContainer: String = config.getString("uservice-catalog-management.storage.container")
+  lazy val storageContainer: String = config.getString("catalog-management.storage.container")
 
-  lazy val eserviceDocsPath: String = config.getString("uservice-catalog-management.storage.eservice-docs-path")
+  lazy val eserviceDocsPath: String = config.getString("catalog-management.storage.eservice-docs-path")
 
-  lazy val jwtAudience: Set[String] = config.getStringList("uservice-catalog-management.jwt.audience").asScala.toSet
+  lazy val jwtAudience: Set[String] = config.getStringList("catalog-management.jwt.audience").asScala.toSet
 
 }

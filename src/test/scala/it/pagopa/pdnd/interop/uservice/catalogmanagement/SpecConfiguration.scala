@@ -30,7 +30,7 @@ trait SpecConfiguration {
     .withFallback(testData)
 
   def serviceURL: String =
-    s"${config.getString("pdnd-interop-uservice-catalog-management.url")}/${buildinfo.BuildInfo.interfaceVersion}"
+    s"${config.getString("catalog-management.url")}/${buildinfo.BuildInfo.interfaceVersion}"
 
   def getPact(path: String): String = {
     val provider = Files.readString(Paths.get(path))

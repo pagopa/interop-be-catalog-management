@@ -234,7 +234,7 @@ object CatalogPersistentBehavior {
       context.log.info(s"Starting EService Shard ${persistenceId.id}")
       val numberOfEvents =
         context.system.settings.config
-          .getInt("uservice-catalog-management.number-of-events-before-snapshot")
+          .getInt("catalog-management.number-of-events-before-snapshot")
       EventSourcedBehavior[Command, Event, State](
         persistenceId = persistenceId,
         emptyState = State.empty,
