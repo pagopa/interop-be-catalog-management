@@ -20,7 +20,7 @@ object CatalogPersistentBehavior {
     context: ActorContext[Command]
   ): (State, Command) => Effect[Event, State] = { (state, command) =>
     val idleTimeout =
-      context.system.settings.config.getDuration("uservice-catalog-management.idle-timeout")
+      context.system.settings.config.getDuration("catalog-management.idle-timeout")
     context.setReceiveTimeout(idleTimeout.get(ChronoUnit.SECONDS) seconds, Idle)
     command match {
       case AddCatalogItem(newCatalogItem, replyTo) =>
