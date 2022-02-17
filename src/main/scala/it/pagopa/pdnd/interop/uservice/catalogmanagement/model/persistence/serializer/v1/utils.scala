@@ -177,4 +177,17 @@ object utils {
       case Soap => CatalogItemTechnologyV1.SOAP
     }
 
+  def convertEServiceKindFromV1(protobufEserviceKind: CatalogItemKindV1): Either[Throwable, CatalogItemKind] =
+    protobufEserviceKind match {
+      case CatalogItemKindV1.PUBLIC  => Right(Public)
+      case CatalogItemKindV1.PRIVATE => Right(Private)
+      case CatalogItemKindV1.Unrecognized(value) =>
+        Left(new RuntimeException(s"Unable to deserialize catalog kind state value $value"))
+    }
+
+  def convertEServiceKindToV1(eserviceKind: CatalogItemKind): CatalogItemKindV1 =
+    eserviceKind match {
+      case Public  => CatalogItemKindV1.PUBLIC
+      case Private => CatalogItemKindV1.PRIVATE
+    }
 }

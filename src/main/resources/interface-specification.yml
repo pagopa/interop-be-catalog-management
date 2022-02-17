@@ -746,6 +746,7 @@ components:
         - description
         - technology
         - attributes
+        - kind
       properties:
         producerId:
           type: string
@@ -758,6 +759,8 @@ components:
           $ref: '#/components/schemas/EServiceTechnology'
         attributes:
           $ref: '#/components/schemas/Attributes'
+        kind:
+          $ref: '#/components/schemas/EServiceKind'
     EService:
       type: object
       required:
@@ -768,6 +771,7 @@ components:
         - technology
         - attributes
         - descriptors
+        - kind
       properties:
         id:
           type: string
@@ -787,6 +791,8 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/EServiceDescriptor'
+        kind:
+          $ref: '#/components/schemas/EServiceKind'
     EServiceDoc:
       type: object
       required:
@@ -961,6 +967,12 @@ components:
       enum:
         - REST
         - SOAP
+    EServiceKind:
+      type: string
+      description: kind of EService
+      enum:
+        - PRIVATE
+        - PUBLIC
     EServiceDescriptorState:
       type: string
       description: EService Descriptor state

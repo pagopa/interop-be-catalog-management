@@ -23,6 +23,7 @@ package object v1 {
           technology  <- convertItemTechnologyFromV1(itemsV1.value.technology)
           uuid        <- itemsV1.value.id.toUUID.toEither
           producerId  <- itemsV1.value.producerId.toUUID.toEither
+          kind        <- convertEServiceKindFromV1(itemsV1.value.kind)
         } yield itemsV1.key -> CatalogItem(
           id = uuid,
           producerId = producerId,
@@ -30,7 +31,8 @@ package object v1 {
           description = itemsV1.value.description,
           technology = technology,
           attributes = attributes,
-          descriptors = descriptors
+          descriptors = descriptors,
+          kind = kind
         )
       }
       items.map(its => State(its.toMap))
@@ -51,7 +53,8 @@ package object v1 {
               description = catalogItem.description,
               technology = convertItemTechnologyToV1(catalogItem.technology),
               attributes = convertAttributesToV1(catalogItem.attributes),
-              descriptors = descriptors
+              descriptors = descriptors,
+              kind = convertEServiceKindToV1(catalogItem.kind)
             )
           )
 
@@ -69,6 +72,7 @@ package object v1 {
         technology  <- convertItemTechnologyFromV1(event.catalogItem.technology)
         uuid        <- event.catalogItem.id.toUUID.toEither
         producerId  <- event.catalogItem.producerId.toUUID.toEither
+        kind        <- convertEServiceKindFromV1(event.catalogItem.kind)
       } yield CatalogItemAdded(catalogItem =
         CatalogItem(
           id = uuid,
@@ -77,7 +81,8 @@ package object v1 {
           description = event.catalogItem.description,
           technology = technology,
           attributes = attributes,
-          descriptors = descriptors
+          descriptors = descriptors,
+          kind = kind
         )
       )
 
@@ -97,7 +102,8 @@ package object v1 {
             description = event.catalogItem.description,
             technology = convertItemTechnologyToV1(event.catalogItem.technology),
             attributes = convertAttributesToV1(event.catalogItem.attributes),
-            descriptors = descriptors
+            descriptors = descriptors,
+            kind = convertEServiceKindToV1(event.catalogItem.kind)
           )
         )
     }
@@ -111,6 +117,7 @@ package object v1 {
         technology  <- convertItemTechnologyFromV1(event.catalogItem.technology)
         uuid        <- event.catalogItem.id.toUUID.toEither
         producerId  <- event.catalogItem.producerId.toUUID.toEither
+        kind        <- convertEServiceKindFromV1(event.catalogItem.kind)
       } yield ClonedCatalogItemAdded(catalogItem =
         CatalogItem(
           id = uuid,
@@ -119,7 +126,8 @@ package object v1 {
           description = event.catalogItem.description,
           technology = technology,
           attributes = attributes,
-          descriptors = descriptors
+          descriptors = descriptors,
+          kind = kind
         )
       )
 
@@ -139,7 +147,8 @@ package object v1 {
             description = event.catalogItem.description,
             technology = convertItemTechnologyToV1(event.catalogItem.technology),
             attributes = convertAttributesToV1(event.catalogItem.attributes),
-            descriptors = descriptors
+            descriptors = descriptors,
+            kind = convertEServiceKindToV1(event.catalogItem.kind)
           )
         )
     }
@@ -153,6 +162,7 @@ package object v1 {
         technology  <- convertItemTechnologyFromV1(event.catalogItem.technology)
         uuid        <- event.catalogItem.id.toUUID.toEither
         producerId  <- event.catalogItem.producerId.toUUID.toEither
+        kind        <- convertEServiceKindFromV1(event.catalogItem.kind)
       } yield CatalogItemWithDescriptorsDeleted(
         catalogItem = CatalogItem(
           id = uuid,
@@ -161,7 +171,8 @@ package object v1 {
           description = event.catalogItem.description,
           technology = technology,
           attributes = attributes,
-          descriptors = descriptors
+          descriptors = descriptors,
+          kind = kind
         ),
         descriptorId = event.descriptorId
       )
@@ -182,7 +193,8 @@ package object v1 {
             description = event.catalogItem.description,
             technology = convertItemTechnologyToV1(event.catalogItem.technology),
             attributes = convertAttributesToV1(event.catalogItem.attributes),
-            descriptors = descriptors
+            descriptors = descriptors,
+            kind = convertEServiceKindToV1(event.catalogItem.kind)
           ),
           descriptorId = event.descriptorId
         )
@@ -205,6 +217,7 @@ package object v1 {
         technology  <- convertItemTechnologyFromV1(event.catalogItem.technology)
         uuid        <- event.catalogItem.id.toUUID.toEither
         producerId  <- event.catalogItem.producerId.toUUID.toEither
+        kind        <- convertEServiceKindFromV1(event.catalogItem.kind)
       } yield CatalogItemUpdated(catalogItem =
         CatalogItem(
           id = uuid,
@@ -213,7 +226,8 @@ package object v1 {
           description = event.catalogItem.description,
           technology = technology,
           attributes = attributes,
-          descriptors = descriptors
+          descriptors = descriptors,
+          kind = kind
         )
       )
 
@@ -233,7 +247,8 @@ package object v1 {
             description = event.catalogItem.description,
             technology = convertItemTechnologyToV1(event.catalogItem.technology),
             attributes = convertAttributesToV1(event.catalogItem.attributes),
-            descriptors = descriptors
+            descriptors = descriptors,
+            kind = convertEServiceKindToV1(event.catalogItem.kind)
           )
         )
     }

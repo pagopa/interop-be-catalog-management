@@ -58,6 +58,7 @@ trait SpecHelper extends SpecConfiguration with AnyWordSpecLike with MockFactory
         |	"producerId": "24772a3d-e6f2-47f2-96e5-4cbd1e4e9999",
         |	"name": "string",
         |	"description": "string",
+        |   "kind": "PUBLIC",
         |	"audience": [
         |		"pippo"
         |	],

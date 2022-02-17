@@ -16,7 +16,8 @@ class CatalogItemSpec extends AnyWordSpecLike with Matchers {
     description = "String",
     technology = Rest,
     attributes = CatalogAttributes(certified = Seq.empty, declared = Seq.empty, verified = Seq.empty),
-    descriptors = descriptors
+    descriptors = descriptors,
+    kind = Public
   )
 
   private[this] def descriptorGen(

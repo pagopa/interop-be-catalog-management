@@ -1,6 +1,7 @@
 package it.pagopa.pdnd.interop.uservice.catalogmanagement.model
 
 import it.pagopa.pdnd.interop.commons.utils.service.UUIDSupplier
+
 import java.util.UUID
 import scala.concurrent.Future
 
@@ -11,7 +12,8 @@ final case class CatalogItem(
   description: String,
   technology: CatalogItemTechnology,
   attributes: CatalogAttributes,
-  descriptors: Seq[CatalogDescriptor]
+  descriptors: Seq[CatalogDescriptor],
+  kind: CatalogItemKind
 ) extends Convertable[EService] {
 
   def toApi: EService = {
@@ -22,7 +24,8 @@ final case class CatalogItem(
       description = description,
       technology = technology.toApi,
       attributes = attributes.toApi,
-      descriptors = descriptors.map(_.toApi)
+      descriptors = descriptors.map(_.toApi),
+      kind = kind.toApi
     )
   }
 
@@ -70,7 +73,8 @@ object CatalogItem {
         description = seed.description,
         technology = CatalogItemTechnology.fromApi(seed.technology),
         attributes = attributes,
-        descriptors = Seq.empty[CatalogDescriptor]
+        descriptors = Seq.empty[CatalogDescriptor],
+        kind = CatalogItemKind.fromApi(seed.kind)
       )
     }
   }

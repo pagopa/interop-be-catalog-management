@@ -878,7 +878,8 @@ class EServiceApiServiceImpl(
       description = serviceToClone.description,
       technology = serviceToClone.technology,
       attributes = serviceToClone.attributes,
-      descriptors = Seq(descriptor)
+      descriptors = Seq(descriptor),
+      kind = serviceToClone.kind
     )
   }
 
