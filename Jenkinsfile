@@ -60,6 +60,7 @@ pipeline {
       agent { label 'sbt-template' }
       environment {
         POSTGRES = credentials('postgres-db')
+        STORAGE = credentials('jenkins-aws')
         DOCKER_REPO = "${env.DOCKER_REPO}"
         MAIN_AUDIENCE = "${env.MAIN_AUDIENCE}"
         REPLICAS_NR = 1
