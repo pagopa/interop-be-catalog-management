@@ -22,7 +22,9 @@ mainAudience=$MAIN_AUDIENCE
 
 replicas=$REPLICAS_NR
 
-name=$(cat $SCRIPT_PATH/../build.sbt | grep "name :=" | awk -F:= '{ print $2 }' | sed 's/\"//' | sed 's/\",//' | sed 's/ //' | tr '[:upper:]' '[:lower:]' | grep -v client)
+#name=$(cat $SCRIPT_PATH/../build.sbt | grep "name :=" | awk -F:= '{ print $2 }' | sed 's/\"//' | sed 's/\",//' | sed 's/ //' | tr '[:upper:]' '[:lower:]' | grep -v client)
+# Temporary solution
+name=interop-be-catalog-management
 
 #getting version from sbt
 cd $SCRIPT_PATH/..

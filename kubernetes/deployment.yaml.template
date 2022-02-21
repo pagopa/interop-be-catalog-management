@@ -6,7 +6,7 @@ metadata:
   name: {{name}}
   namespace: {{name}}
 spec:
-  replicas: 1
+  replicas: {{replicas}}
   selector:
     matchLabels:
       app: {{name}}
@@ -20,7 +20,7 @@ spec:
         - name: regcred
       containers:
         - name: {{name}}
-          image: {{repository}}/services/{{name}}:{{version}}
+          image: {{repository}}/{{name}}:{{version}}
           command: ["bin/{{name}}"]
           args: ["-Dconfig.override_with_env_vars=true"]
           imagePullPolicy: Always
@@ -60,22 +60,6 @@ spec:
               value : "{{postgresDb}}"
             - name: POSTGRES_SCHEMA
               value : "{{postgresSchema}}"
-            - name: STORAGE_TYPE
-              value: {{storageType}}
-            - name: STORAGE_CONTAINER
-              value: {{storageContainer}}
-            - name: STORAGE_ENDPOINT
-              value: {{storageEndpoint}}
-            - name: STORAGE_CREDENTIAL_ID
-              valueFrom:
-                secretKeyRef:
-                  name: storage
-                  key: STORAGE_USR
-            - name: STORAGE_CREDENTIAL_SECRET
-              valueFrom:
-                secretKeyRef:
-                  name: storage
-                  key: STORAGE_PSW
             - name: POSTGRES_USR
               valueFrom:
                 secretKeyRef:
