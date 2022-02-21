@@ -34,6 +34,8 @@ pipeline {
     stage('Test and Deploy µservice') {
       agent { label 'sbt-template' }
       environment {
+        NEXUS = "${env.NEXUS}"
+        NEXUS_CREDENTIALS = credentials('pdnd-nexus')
         DOCKER_REPO = "${env.DOCKER_REPO}"
         MAVEN_REPO = "${env.MAVEN_REPO}"
         ECR_RW = credentials('ecr-rw')
@@ -58,6 +60,7 @@ pipeline {
       agent { label 'sbt-template' }
       environment {
         POSTGRES = credentials('postgres-db')
+        STORAGE = credentials('jenkins-aws')
         DOCKER_REPO = "${env.DOCKER_REPO}"
         MAIN_AUDIENCE = "${env.MAIN_AUDIENCE}"
         REPLICAS_NR = 1
