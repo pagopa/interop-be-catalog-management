@@ -11,7 +11,7 @@
       "description" : "Fetching e-service by id",
       "request" : {
         "method" : "GET",
-        "path" : "/pdnd-interop-uservice-catalog-management/:version:/eservices/24772a3d-e6f2-47f2-96e5-4cbd1e4e8c84",
+        "path" : "/catalog-management/:version:/eservices/24772a3d-e6f2-47f2-96e5-4cbd1e4e8c84",
         "headers" : {
           "Authorization" : "Bearer 1234"
         }
