@@ -25,5 +25,5 @@ object Versions {
 }
 
 object PDNDVersions {
-  lazy val commonsVersion = "0.1.1-SNAPSHOT"
+  lazy val commonsVersion = "0.0.0"
 }
