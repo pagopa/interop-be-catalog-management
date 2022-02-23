@@ -53,9 +53,9 @@ object Dependencies {
 
   private[this] object pagopa {
     lazy val namespace   = "it.pagopa"
-    lazy val commons     = namespace %% "pdnd-interop-commons-utils"        % commonsVersion
-    lazy val fileManager = namespace %% "pdnd-interop-commons-file-manager" % commonsVersion
-    lazy val commonsJWT  = namespace %% "pdnd-interop-commons-jwt"          % commonsVersion
+    lazy val commons     = namespace %% "interop-commons-utils"        % commonsVersion
+    lazy val fileManager = namespace %% "interop-commons-file-manager" % commonsVersion
+    lazy val commonsJWT  = namespace %% "interop-commons-jwt"          % commonsVersion
   }
 
   lazy val Protobuf = "protobuf"

@@ -10,22 +10,27 @@ ThisBuild / libraryDependencies := Dependencies.Jars.`server`.map(m =>
   else
     m
 )
+
+ThisBuild / dependencyOverrides ++= Dependencies.Jars.overrides
 ThisBuild / version := ComputeVersion.version
-
-val generateCode = taskKey[Unit]("A task for generating the code starting from the swagger definition")
-
-val packagePrefix = settingKey[String]("The package prefix derived from the uservice name")
 
 ThisBuild / resolvers += "Pagopa Nexus Snapshots" at s"https://gateway.interop.pdnd.dev/nexus/repository/maven-snapshots/"
 ThisBuild / resolvers += "Pagopa Nexus Releases" at s"https://gateway.interop.pdnd.dev/nexus/repository/maven-releases/"
 
-packagePrefix := {
-  name.value
-    .replaceFirst("pdnd-", "pdnd.")
-    .replaceFirst("interop-", "interop.")
-    .replaceFirst("uservice-", "uservice.")
-    .replaceAll("-", "")
-}
+lazy val generateCode = taskKey[Unit]("A task for generating the code starting from the swagger definition")
+
+val packagePrefix = settingKey[String]("The package prefix derived from the uservice name")
+
+packagePrefix := name.value
+  .replaceFirst("interop-", "interop.")
+  .replaceFirst("be-", "")
+  .replaceAll("-", "")
+
+val projectName = settingKey[String]("The project name prefix derived from the uservice name")
+
+projectName:= name.value
+  .replaceFirst("interop-", "")
+  .replaceFirst("be-", "")
 
 generateCode := {
   import sys.process._
@@ -33,27 +38,27 @@ generateCode := {
   Process(s"""openapi-generator-cli generate -t template/scala-akka-http-server
              |                               -i src/main/resources/interface-specification.yml
              |                               -g scala-akka-http-server
-             |                               -p projectName=${name.value}
+             |                               -p projectName=${projectName.value}
              |                               -p invokerPackage=it.pagopa.${packagePrefix.value}.server
              |                               -p modelPackage=it.pagopa.${packagePrefix.value}.model
              |                               -p apiPackage=it.pagopa.${packagePrefix.value}.api
-             |                               -p entityStrictnessTimeout=15
              |                               -p dateLibrary=java8
-             |                               -o generated
-             |                               -v """.stripMargin).!!
+             |                               -p entityStrictnessTimeout=15
+             |                               -o generated""".stripMargin).!!
 
   Process(s"""openapi-generator-cli generate -t template/scala-akka-http-client
              |                               -i src/main/resources/interface-specification.yml
              |                               -g scala-akka
-             |                               -p projectName=${name.value}
+             |                               -p projectName=${projectName.value}
              |                               -p invokerPackage=it.pagopa.${packagePrefix.value}.client.invoker
              |                               -p modelPackage=it.pagopa.${packagePrefix.value}.client.model
              |                               -p apiPackage=it.pagopa.${packagePrefix.value}.client.api
              |                               -p dateLibrary=java8
-             |                               -o client
-             |                               -v """.stripMargin).!!
+             |                               -o client""".stripMargin).!!
 
 }
+
+(Compile / compile) := ((Compile / compile) dependsOn generateCode).value
 
 Compile / PB.targets := Seq(scalapb.gen() -> (Compile / sourceManaged).value / "protobuf")
 
@@ -67,15 +72,15 @@ cleanFiles += baseDirectory.value / "client" / "target"
 
 lazy val generated = project
   .in(file("generated"))
-  .settings(scalacOptions := Seq())
+  .settings(scalacOptions := Seq(), scalafmtOnCompile := true)
   .setupBuildInfo
 
 lazy val client = project
   .in(file("client"))
   .settings(
-    name := "pdnd-interop-uservice-catalog-management-client",
+    name := "interop-be-catalog-management-client",
     scalacOptions := Seq(),
-    scalafmtOnCompile:= true,
+    scalafmtOnCompile := true,
     libraryDependencies := Dependencies.Jars.client.map(m =>
       if (scalaVersion.value.startsWith("3.0"))
         m.withDottyCompat(scalaVersion.value)
@@ -97,9 +102,9 @@ lazy val client = project
 
 lazy val root = (project in file("."))
   .settings(
-    name := "pdnd-interop-uservice-catalog-management",
+    name := "interop-be-catalog-management",
     Test / parallelExecution := false,
-    scalafmtOnCompile:= true,
+    scalafmtOnCompile := true,
     dockerBuildOptions ++= Seq("--network=host"),
     dockerRepository := Some(System.getenv("DOCKER_REPO")),
     dockerBaseImage := "adoptopenjdk:11-jdk-hotspot",
@@ -111,9 +116,7 @@ lazy val root = (project in file("."))
       else
         s"$buildVersion"
     }".toLowerCase,
-    // Temporary solution
-//    Docker / packageName := s"services/${name.value}",
-    Docker / packageName := "interop-be-catalog-management",
+    Docker / packageName := s"${name.value}",
     Docker / dockerExposedPorts := Seq(8080),
     Docker / maintainer := "https://pagopa.it",
     dockerCommands += Cmd("LABEL", s"org.opencontainers.image.source https://github.com/pagopa/${name.value}")
@@ -124,6 +127,5 @@ lazy val root = (project in file("."))
   .setupBuildInfo
 
 javaAgents += "io.kamon" % "kanela-agent" % "1.0.11"
-
 Test / fork := true
 Test / javaOptions += "-Dconfig.file=src/test/resources/application-test.conf"
