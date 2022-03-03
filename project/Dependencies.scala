@@ -1,5 +1,5 @@
 import Versions._
-import PDNDVersions._
+import PagopaVersions._
 import sbt._
 
 object Dependencies {
@@ -36,39 +36,14 @@ object Dependencies {
       "com.lightbend.akka.management" %% "akka-management-loglevels-logback" % akkaManagementVersion
   }
 
-  private[this] object postgres {
-    lazy val namespace = "org.postgresql"
-    lazy val jdbc      = namespace % "postgresql" % "42.2.21"
-  }
-
-  private[this] object cats {
-    lazy val namespace = "org.typelevel"
-    lazy val core      = namespace %% "cats-core" % catsVersion
-  }
-
   private[this] object awssdk {
     lazy val namespace = "software.amazon.awssdk"
     lazy val s3        = namespace % "s3" % awsSdkVersion
   }
 
-  private[this] object pagopa {
-    lazy val namespace   = "it.pagopa"
-    lazy val commons     = namespace %% "interop-commons-utils"        % commonsVersion
-    lazy val fileManager = namespace %% "interop-commons-file-manager" % commonsVersion
-    lazy val commonsJWT  = namespace %% "interop-commons-jwt"          % commonsVersion
-  }
-
-  lazy val Protobuf = "protobuf"
-
-  private[this] object scalaprotobuf {
-    lazy val namespace = "com.thesamet.scalapb"
-    lazy val core      = namespace %% "scalapb-runtime" % scalapb.compiler.Version.scalapbVersion
-  }
-
-  private[this] object json4s {
-    lazy val namespace = "org.json4s"
-    lazy val ext       = namespace %% "json4s-ext"     % json4sVersion
-    lazy val jackson   = namespace %% "json4s-jackson" % json4sVersion
+  private[this] object cats {
+    lazy val namespace = "org.typelevel"
+    lazy val core      = namespace %% "cats-core" % catsVersion
   }
 
   private[this] object jackson {
@@ -78,9 +53,10 @@ object Dependencies {
     lazy val databind    = namespace % "jackson-databind"    % jacksonVersion
   }
 
-  private[this] object logback {
-    lazy val namespace = "ch.qos.logback"
-    lazy val classic   = namespace % "logback-classic" % logbackVersion
+  private[this] object json4s {
+    lazy val namespace = "org.json4s"
+    lazy val ext       = namespace %% "json4s-ext"     % json4sVersion
+    lazy val jackson   = namespace %% "json4s-jackson" % json4sVersion
   }
 
   private[this] object kamon {
@@ -89,9 +65,33 @@ object Dependencies {
     lazy val prometheus = namespace %% "kamon-prometheus" % kamonVersion
   }
 
+  private[this] object logback {
+    lazy val namespace = "ch.qos.logback"
+    lazy val classic   = namespace % "logback-classic" % logbackVersion
+  }
+
   private[this] object mustache {
     lazy val namespace = "com.github.spullara.mustache.java"
     lazy val compiler  = namespace % "compiler" % mustacheVersion
+  }
+
+  private[this] object pagopa {
+    lazy val namespace   = "it.pagopa"
+    lazy val commons     = namespace %% "interop-commons-utils"        % commonsVersion
+    lazy val fileManager = namespace %% "interop-commons-file-manager" % commonsVersion
+    lazy val commonsJWT  = namespace %% "interop-commons-jwt"          % commonsVersion
+  }
+
+  private[this] object postgres {
+    lazy val namespace = "org.postgresql"
+    lazy val jdbc      = namespace % "postgresql" % "42.2.21"
+  }
+
+  lazy val Protobuf = "protobuf"
+
+  private[this] object scalaprotobuf {
+    lazy val namespace = "com.thesamet.scalapb"
+    lazy val core      = namespace %% "scalapb-runtime" % scalapb.compiler.Version.scalapbVersion
   }
 
   private[this] object scalatest {
@@ -109,7 +109,12 @@ object Dependencies {
     lazy val core      = namespace %% "scalapact-scalatest-suite" % scalaPactVersion
   }
 
-  private[this] object commons {
+  private[this] object tika {
+    lazy val namespace = "org.apache.tika"
+    lazy val core      = namespace % "tika-core" % tikaVersion
+  }
+
+  private[this] object commonsFileUpload {
     lazy val fileUpload = "commons-fileupload" % "commons-fileupload" % commonsFileUploadVersion
   }
 
@@ -120,43 +125,44 @@ object Dependencies {
       // For making Java 12 happy
       "javax.annotation" % "javax.annotation-api" % "1.3.2" % "compile",
       //
-      akka.actorTyped             % Compile,
-      akka.clusterBootstrap       % Compile,
-      akka.clusterHttp            % Compile,
-      akka.clusterSharding        % Compile,
-      akka.clusterTools           % Compile,
-      akka.clusterTyped           % Compile,
-      akka.discovery              % Compile,
-      akka.discoveryKubernetesApi % Compile,
-      akka.http                   % Compile,
-      akka.httpJson               % Compile,
-      akka.persistence            % Compile,
-      akka.management             % Compile,
-      akka.managementLogLevels    % Compile,
-      akka.persistenceJdbc        % Compile,
-      akka.persistenceQuery       % Compile,
-      akka.projection             % Compile,
-      akka.projectionSlick        % Compile,
-      akka.s3Journal              % Compile,
-      akka.s3Snapshot             % Compile,
-      akka.slf4j                  % Compile,
-      akka.stream                 % Compile,
-      awssdk.s3                   % Compile,
-      cats.core                   % Compile,
-      commons.fileUpload          % Compile,
-      kamon.bundle                % Compile,
-      kamon.prometheus            % Compile,
-      logback.classic             % Compile,
-      mustache.compiler           % Compile,
-      pagopa.commons              % Compile,
-      pagopa.fileManager          % Compile,
-      pagopa.commonsJWT           % Compile,
-      postgres.jdbc               % Compile,
-      akka.testkit                % Test,
-      scalamock.core              % Test,
-      scalapact.core              % Test,
-      scalaprotobuf.core          % Protobuf,
-      scalatest.core              % Test
+      akka.actorTyped              % Compile,
+      akka.clusterBootstrap        % Compile,
+      akka.clusterHttp             % Compile,
+      akka.clusterSharding         % Compile,
+      akka.clusterTools            % Compile,
+      akka.clusterTyped            % Compile,
+      akka.discovery               % Compile,
+      akka.discoveryKubernetesApi  % Compile,
+      akka.http                    % Compile,
+      akka.httpJson                % Compile,
+      akka.persistence             % Compile,
+      akka.management              % Compile,
+      akka.managementLogLevels     % Compile,
+      akka.persistenceJdbc         % Compile,
+      akka.persistenceQuery        % Compile,
+      akka.projection              % Compile,
+      akka.projectionSlick         % Compile,
+      akka.s3Journal               % Compile,
+      akka.s3Snapshot              % Compile,
+      akka.slf4j                   % Compile,
+      akka.stream                  % Compile,
+      awssdk.s3                    % Compile,
+      cats.core                    % Compile,
+      commonsFileUpload.fileUpload % Compile,
+      kamon.bundle                 % Compile,
+      kamon.prometheus             % Compile,
+      logback.classic              % Compile,
+      mustache.compiler            % Compile,
+      pagopa.commons               % Compile,
+      pagopa.fileManager           % Compile,
+      pagopa.commonsJWT            % Compile,
+      postgres.jdbc                % Compile,
+      tika.core                    % Compile,
+      akka.testkit                 % Test,
+      scalamock.core               % Test,
+      scalapact.core               % Test,
+      scalaprotobuf.core           % Protobuf,
+      scalatest.core               % Test
     )
     lazy val client: Seq[ModuleID] = Seq(
       akka.stream     % Compile,

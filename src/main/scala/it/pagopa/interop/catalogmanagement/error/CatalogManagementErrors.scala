@@ -1,7 +1,7 @@
 package it.pagopa.interop.catalogmanagement.error
 
 import akka.http.scaladsl.model.ErrorInfo
-import it.pagopa.interop.catalogmanagement.model.CatalogDocument
+import it.pagopa.interop.catalogmanagement.model.{Attribute, CatalogDocument}
 import it.pagopa.interop.commons.utils.errors.ComponentError
 
 object CatalogManagementErrors {
@@ -145,4 +145,30 @@ object CatalogManagementErrors {
 
   final case class DeleteEServiceError(eServiceId: String)
       extends ComponentError("0033", s"Failure in deleting e-service $eServiceId")
+
+  final case class InvalidInterfaceFileDetected(eServiceId: String, contentType: String, technology: String)
+      extends ComponentError(
+        "0034",
+        s"The interface file for eservice $eServiceId has a contentType $contentType not admitted for $technology technology"
+      )
+
+  final case class DocumentAlreadyUploaded(eServiceId: String, fileName: String)
+      extends ComponentError("0035", s"File $fileName already uploaded for eservice $eServiceId")
+
+  final case class InvalidAttribute(attribute: Attribute)
+      extends ComponentError(
+        "0036",
+        s"Invalid attribute: single:${attribute.single.map(_.id).getOrElse("None")} / " +
+          s"group:${attribute.group.map(_.map(_.id).mkString(", ")).getOrElse("None")}"
+      )
+
+  final case class DescriptorDeletionForbidden(eserviceId: String, descriptorId: String)
+      extends ComponentError(
+        "0037",
+        s"Can't delete descriptor eservice=$eserviceId/descriptor=$descriptorId - no draft descriptor found"
+      )
+
+  final case class EserviceDeletionForbidden(eserviceId: String)
+      extends ComponentError("0038", s"E-Service $eserviceId cannot be deleted because it contains descriptors")
+
 }

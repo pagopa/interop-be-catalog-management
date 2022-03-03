@@ -22,8 +22,9 @@ object Versions {
   lazy val scalapbVersion              = "0.11.1"
   lazy val scalatestVersion            = "3.2.8"
   lazy val slickProjectionVersion      = "1.2.2"
+  lazy val tikaVersion                 = "2.3.0"
 }
 
-object PDNDVersions {
+object PagopaVersions {
   lazy val commonsVersion = "0.1.1-SNAPSHOT"
 }
