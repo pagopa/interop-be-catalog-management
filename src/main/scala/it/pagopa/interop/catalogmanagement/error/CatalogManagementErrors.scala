@@ -162,13 +162,13 @@ object CatalogManagementErrors {
           s"group:${attribute.group.map(_.map(_.id).mkString(", ")).getOrElse("None")}"
       )
 
-  final case class DescriptorDeletionForbidden(eserviceId: String, descriptorId: String)
+  final case class DescriptorNotInDraft(eserviceId: String, descriptorId: String)
       extends ComponentError(
         "0037",
         s"Can't delete descriptor eservice=$eserviceId/descriptor=$descriptorId - Descriptor status is not Draft"
       )
 
-  final case class EserviceDeletionForbidden(eserviceId: String)
+  final case class EserviceWithDescriptorsNotDeletable(eserviceId: String)
       extends ComponentError("0038", s"E-Service $eserviceId cannot be deleted because it contains descriptors")
 
 }

@@ -451,7 +451,7 @@ class EServiceApiServiceImpl(
     if (catalogItem.descriptors.exists(descriptor => descriptor.id.toString == descriptorId && descriptor.isDraft))
       Future.successful(true)
     else
-      Future.failed(DescriptorDeletionForbidden(catalogItem.id.toString, descriptorId))
+      Future.failed(DescriptorNotInDraft(catalogItem.id.toString, descriptorId))
   }
 
   private def getCommander(shard: String): EntityRef[Command] =
@@ -917,7 +917,7 @@ class EServiceApiServiceImpl(
   private def canBeDeleted(catalogItem: CatalogItem): Future[Boolean] = {
     catalogItem.descriptors match {
       case Nil => Future.successful(true)
-      case _   => Future.failed(EserviceDeletionForbidden(catalogItem.id.toString))
+      case _   => Future.failed(EserviceWithDescriptorsNotDeletable(catalogItem.id.toString))
     }
   }
 
