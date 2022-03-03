@@ -1,12 +1,17 @@
 package it.pagopa.interop.catalogmanagement.service
 
-import akka.http.scaladsl.model.{HttpCharsets, MediaType, MediaTypes}
 import akka.http.scaladsl.server.directives.FileInfo
+import it.pagopa.interop.catalogmanagement.error.CatalogManagementErrors.{
+  DocumentAlreadyUploaded,
+  InvalidInterfaceFileDetected
+}
+import it.pagopa.interop.catalogmanagement.model.{CatalogDocument, CatalogItem, Rest, Soap}
 import it.pagopa.interop.commons.files.service.{FileManager, StorageFilePath}
 import it.pagopa.interop.commons.utils.Digester
-import it.pagopa.interop.catalogmanagement.model.{CatalogDocument, CatalogItem, Rest, Soap}
+import org.apache.tika.Tika
 
 import java.io.File
+import java.nio.file.Files
 import java.util.UUID
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -27,6 +32,9 @@ trait CatalogFileManager {
 }
 
 object CatalogFileManager {
+
+  private final val tika: Tika = new Tika()
+
   def verify(fileParts: (FileInfo, File), catalogItem: CatalogItem, descriptorId: String, isInterface: Boolean)(implicit
     ec: ExecutionContext
   ): Future[CatalogItem] = for {
@@ -49,33 +57,26 @@ object CatalogFileManager {
       )
 
     if (alreadyUploaded)
-      Future.failed[CatalogItem](new RuntimeException(s"File ${fileParts._1.getFileName} already uploaded"))
+      Future.failed[CatalogItem](DocumentAlreadyUploaded(catalogItem.id.toString, fileParts._1.fileName))
     else Future.successful(catalogItem)
   }
 
-  //TODO use Apache Tika
   private def verifyTechnology(fileParts: (FileInfo, File), catalogItem: CatalogItem): Future[CatalogItem] = {
-    val restContentTypes: Set[MediaType] = Set(
-      MediaType.textWithFixedCharset("yaml", HttpCharsets.`UTF-8`, "yaml", "yml"),
-      MediaType.applicationWithFixedCharset("yaml", HttpCharsets.`UTF-8`, "yaml", "yml"),
-      MediaType.applicationWithFixedCharset("x-yaml", HttpCharsets.`UTF-8`, "yaml", "yml"),
-      MediaTypes.`application/octet-stream`
-    )
+    val restContentTypes: Set[String] = Set("text/x-yaml", "application/x-yaml")
+    val soapContentTypes: Set[String] = Set("application/soap+xml", "application/wsdl+xml")
 
-    val soapContentTypes: Set[MediaType] = Set(MediaTypes.`application/soap+xml`)
+    val detectedContentTypes: String = tika.detect(Files.readAllBytes(fileParts._2.toPath), fileParts._1.fileName)
 
     val isValidTechnology = catalogItem.technology match {
-      case Rest => restContentTypes.contains(fileParts._1.contentType.mediaType)
-      case Soap => soapContentTypes.contains(fileParts._1.contentType.mediaType)
+      case Rest => restContentTypes.contains(detectedContentTypes)
+      case Soap => soapContentTypes.contains(detectedContentTypes)
     }
 
     if (isValidTechnology)
       Future.successful(catalogItem)
     else
       Future.failed[CatalogItem](
-        new RuntimeException(
-          s"ContentType ${fileParts._1.contentType.toString} is not valid for ${catalogItem.technology}"
-        )
+        InvalidInterfaceFileDetected(catalogItem.id.toString, detectedContentTypes, catalogItem.technology.toString)
       )
   }
 }

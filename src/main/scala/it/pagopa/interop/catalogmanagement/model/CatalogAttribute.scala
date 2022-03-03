@@ -1,5 +1,7 @@
 package it.pagopa.interop.catalogmanagement.model
 
+import it.pagopa.interop.catalogmanagement.error.CatalogManagementErrors.InvalidAttribute
+
 import scala.util.{Failure, Success, Try}
 
 sealed trait CatalogAttribute extends Convertable[Attribute] {
@@ -22,14 +24,7 @@ object CatalogAttribute {
     (single, group) match {
       case (Some(attr), None)  => Success[CatalogAttribute](SingleAttribute(attr))
       case (None, Some(attrs)) => Success[CatalogAttribute](GroupAttribute(attrs))
-      case _ =>
-        Failure[CatalogAttribute] {
-          new RuntimeException(s"""
-                                  |Invalid attribute:
-                                  |- single:${attribute.single.map(_.id).getOrElse("None")}
-                                  |- group:${attribute.group.map(_.map(_.id).mkString(", ")).getOrElse("None")}
-                                  |""".stripMargin)
-        }
+      case _                   => Failure[CatalogAttribute](InvalidAttribute(attribute))
     }
   }
 }

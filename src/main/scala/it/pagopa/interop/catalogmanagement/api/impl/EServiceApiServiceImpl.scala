@@ -315,7 +315,7 @@ class EServiceApiServiceImpl(
 
     val result: Future[StatusReply[Done]] = for {
       retrieved <- commander.ask(ref => GetCatalogItem(eServiceId, ref))
-      current   <- retrieved.toFuture(new RuntimeException("EService non found"))
+      current   <- retrieved.toFuture(EServiceNotFoundError(eServiceId))
       _         <- descriptorDeletable(current, descriptorId)
       _ <- current
         .getInterfacePath(descriptorId)
@@ -451,7 +451,7 @@ class EServiceApiServiceImpl(
     if (catalogItem.descriptors.exists(descriptor => descriptor.id.toString == descriptorId && descriptor.isDraft))
       Future.successful(true)
     else
-      Future.failed(new RuntimeException(s"Descriptor $descriptorId cannot be deleted"))
+      Future.failed(DescriptorNotInDraft(catalogItem.id.toString, descriptorId))
   }
 
   private def getCommander(shard: String): EntityRef[Command] =
@@ -460,7 +460,7 @@ class EServiceApiServiceImpl(
   private def retrieveCatalogItem(commander: EntityRef[Command], eServiceId: String): Future[CatalogItem] = {
     for {
       retrieved <- commander.ask(ref => GetCatalogItem(eServiceId, ref))
-      current   <- retrieved.toFuture(new RuntimeException("EService non found"))
+      current   <- retrieved.toFuture(EServiceNotFoundError(eServiceId))
     } yield current
   }
 
@@ -917,12 +917,7 @@ class EServiceApiServiceImpl(
   private def canBeDeleted(catalogItem: CatalogItem): Future[Boolean] = {
     catalogItem.descriptors match {
       case Nil => Future.successful(true)
-      case _ =>
-        Future.failed(
-          new RuntimeException(
-            s"E-Service ${catalogItem.id.toString} cannot be deleted because it contains descriptors"
-          )
-        )
+      case _   => Future.failed(EserviceWithDescriptorsNotDeletable(catalogItem.id.toString))
     }
   }
 
