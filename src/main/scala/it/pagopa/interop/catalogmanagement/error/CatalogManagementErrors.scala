@@ -165,7 +165,7 @@ object CatalogManagementErrors {
   final case class DescriptorDeletionForbidden(eserviceId: String, descriptorId: String)
       extends ComponentError(
         "0037",
-        s"Can't delete descriptor eservice=$eserviceId/descriptor=$descriptorId - no draft descriptor found"
+        s"Can't delete descriptor eservice=$eserviceId/descriptor=$descriptorId - Descriptor status is not Draft"
       )
 
   final case class EserviceDeletionForbidden(eserviceId: String)
