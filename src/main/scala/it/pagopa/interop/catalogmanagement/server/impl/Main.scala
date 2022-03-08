@@ -49,11 +49,11 @@ import scala.util.Try
 object Main extends App {
 
   lazy val behaviorFactory: EntityContext[Command] => Behavior[Command] = { entityContext =>
-    val i = math.abs(entityContext.entityId.hashCode % numberOfProjectionTags)
+    val index = math.abs(entityContext.entityId.hashCode % numberOfProjectionTags)
     CatalogPersistentBehavior(
       entityContext.shard,
       PersistenceId(entityContext.entityTypeKey.name, entityContext.entityId),
-      projectionTag(i)
+      projectionTag(index)
     )
   }
 
