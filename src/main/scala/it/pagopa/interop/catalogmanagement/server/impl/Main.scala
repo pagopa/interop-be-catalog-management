@@ -1,10 +1,9 @@
 package it.pagopa.interop.catalogmanagement.server.impl
 
-import akka.actor.typed.ActorSystem
 import akka.actor.typed.scaladsl.Behaviors
+import akka.actor.typed.{ActorSystem, Behavior}
 import akka.cluster.ClusterEvent
-import akka.cluster.sharding.typed.scaladsl.{ClusterSharding, Entity, ShardedDaemonProcess}
-import akka.cluster.sharding.typed.{ClusterShardingSettings, ShardingEnvelope}
+import akka.cluster.sharding.typed.scaladsl.{ClusterSharding, Entity, EntityContext, ShardedDaemonProcess}
 import akka.cluster.typed.{Cluster, Subscribe}
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.model.StatusCodes
@@ -19,6 +18,10 @@ import com.nimbusds.jwt.proc.DefaultJWTClaimsVerifier
 import it.pagopa.interop.catalogmanagement.api.EServiceApi
 import it.pagopa.interop.catalogmanagement.api.impl.{EServiceApiMarshallerImpl, EServiceApiServiceImpl, _}
 import it.pagopa.interop.catalogmanagement.common.system.ApplicationConfiguration
+import it.pagopa.interop.catalogmanagement.common.system.ApplicationConfiguration.{
+  numberOfProjectionTags,
+  projectionTag
+}
 import it.pagopa.interop.catalogmanagement.model.persistence.{
   CatalogPersistentBehavior,
   CatalogPersistentProjection,
@@ -45,13 +48,14 @@ import scala.util.Try
 
 object Main extends App {
 
-  def buildPersistentEntity(): Entity[Command, ShardingEnvelope[Command]] =
-    Entity(typeKey = CatalogPersistentBehavior.TypeKey) { entityContext =>
-      CatalogPersistentBehavior(
-        entityContext.shard,
-        PersistenceId(entityContext.entityTypeKey.name, entityContext.entityId)
-      )
-    }
+  lazy val behaviorFactory: EntityContext[Command] => Behavior[Command] = { entityContext =>
+    val i = math.abs(entityContext.entityId.hashCode % numberOfProjectionTags)
+    CatalogPersistentBehavior(
+      entityContext.shard,
+      PersistenceId(entityContext.entityTypeKey.name, entityContext.entityId),
+      projectionTag(i)
+    )
+  }
 
   val dependenciesLoaded: Try[(FileManager, JWTReader)] = for {
     fileManager <- FileManager.getConcreteImplementation(StorageConfiguration.runtimeFileManager)
@@ -82,14 +86,9 @@ object Main extends App {
 
         val sharding: ClusterSharding = ClusterSharding(context.system)
 
-        val catalogPersistentEntity = buildPersistentEntity()
+        val catalogPersistentEntity = Entity(CatalogPersistentBehavior.TypeKey)(behaviorFactory)
 
         val _ = sharding.init(catalogPersistentEntity)
-
-        val settings: ClusterShardingSettings = catalogPersistentEntity.settings match {
-          case None    => ClusterShardingSettings(context.system)
-          case Some(s) => s
-        }
 
         val persistence = classicSystem.classicSystem.settings.config.getString("akka.persistence.journal.plugin")
 
@@ -97,12 +96,13 @@ object Main extends App {
           val dbConfig: DatabaseConfig[JdbcProfile] =
             DatabaseConfig.forConfig("akka-persistence-jdbc.shared-databases.slick")
 
-          val userPersistentProjection = CatalogPersistentProjection(context.system, catalogPersistentEntity, dbConfig)
+          val catalogPersistentProjection =
+            CatalogPersistentProjection(context.system, catalogPersistentEntity, dbConfig)
 
           ShardedDaemonProcess(context.system).init[ProjectionBehavior.Command](
             name = "catalog-projections",
-            numberOfInstances = settings.numberOfShards,
-            behaviorFactory = (i: Int) => ProjectionBehavior(userPersistentProjection.projections(i)),
+            numberOfInstances = numberOfProjectionTags,
+            behaviorFactory = (i: Int) => ProjectionBehavior(catalogPersistentProjection.projection(projectionTag(i))),
             stopMessage = ProjectionBehavior.Stop
           )
         }

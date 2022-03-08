@@ -4,7 +4,8 @@ import akka.actor
 import akka.actor.testkit.typed.scaladsl.{ActorTestKit, ScalaTestWithActorTestKit}
 import akka.actor.typed.ActorSystem
 import akka.actor.typed.scaladsl.Behaviors
-import akka.cluster.sharding.typed.scaladsl.ClusterSharding
+import akka.cluster.sharding.typed.ShardingEnvelope
+import akka.cluster.sharding.typed.scaladsl.{ClusterSharding, Entity}
 import akka.cluster.typed.{Cluster, Join}
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.model._
@@ -15,8 +16,9 @@ import com.itv.scalapact.shared.ProviderStateResult
 import it.pagopa.interop.catalogmanagement.api.impl.{EServiceApiMarshallerImpl, EServiceApiServiceImpl}
 import it.pagopa.interop.catalogmanagement.api.{EServiceApi, EServiceApiMarshaller}
 import it.pagopa.interop.catalogmanagement.model._
+import it.pagopa.interop.catalogmanagement.model.persistence.{CatalogPersistentBehavior, Command}
 import it.pagopa.interop.catalogmanagement.server.Controller
-import it.pagopa.interop.catalogmanagement.server.impl.Main
+import it.pagopa.interop.catalogmanagement.server.impl.Main.behaviorFactory
 import it.pagopa.interop.catalogmanagement.service.CatalogFileManager
 import it.pagopa.interop.catalogmanagement.{SpecConfiguration, SpecHelper}
 import it.pagopa.interop.commons.utils.AkkaUtils
@@ -62,7 +64,8 @@ class CatalogManagementServiceSpec
 
   override def beforeAll(): Unit = {
 
-    val persistentEntity = Main.buildPersistentEntity()
+    val persistentEntity: Entity[Command, ShardingEnvelope[Command]] =
+      Entity(CatalogPersistentBehavior.TypeKey)(behaviorFactory)
 
     Cluster(system).manager ! Join(Cluster(system).selfMember.address)
     sharding.init(persistentEntity)
