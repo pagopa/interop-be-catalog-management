@@ -92,12 +92,13 @@ object Main extends App {
 
         val persistence = classicSystem.classicSystem.settings.config.getString("akka.persistence.journal.plugin")
 
-        if (persistence == "jdbc-journal") {
+        val enabled = false
+        if (persistence == "jdbc-journal" && enabled) {
           val dbConfig: DatabaseConfig[JdbcProfile] =
             DatabaseConfig.forConfig("akka-persistence-jdbc.shared-databases.slick")
 
           val catalogPersistentProjection =
-            CatalogPersistentProjection(context.system, catalogPersistentEntity, dbConfig)
+            new CatalogPersistentProjection(context.system, dbConfig)
 
           ShardedDaemonProcess(context.system).init[ProjectionBehavior.Command](
             name = "catalog-projections",
