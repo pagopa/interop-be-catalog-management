@@ -20,7 +20,8 @@ import it.pagopa.interop.catalogmanagement.api.impl.{EServiceApiMarshallerImpl, 
 import it.pagopa.interop.catalogmanagement.common.system.ApplicationConfiguration
 import it.pagopa.interop.catalogmanagement.common.system.ApplicationConfiguration.{
   numberOfProjectionTags,
-  projectionTag
+  projectionTag,
+  projectionsEnabled
 }
 import it.pagopa.interop.catalogmanagement.model.persistence.{
   CatalogPersistentBehavior,
@@ -90,10 +91,7 @@ object Main extends App {
 
         val _ = sharding.init(catalogPersistentEntity)
 
-        val persistence = classicSystem.classicSystem.settings.config.getString("akka.persistence.journal.plugin")
-
-        val enabled = false
-        if (persistence == "jdbc-journal" && enabled) {
+        if (projectionsEnabled) {
           val dbConfig: DatabaseConfig[JdbcProfile] =
             DatabaseConfig.forConfig("akka-persistence-jdbc.shared-databases.slick")
 
