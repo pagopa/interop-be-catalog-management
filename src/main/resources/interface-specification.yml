@@ -840,6 +840,7 @@ components:
           format: int32
           minimum: 0
         throughput:
+          description: 'throughput of calls for this e-service.'
           type: integer
           format: int32
           minimum: 0
@@ -874,6 +875,7 @@ components:
           format: int32
           minimum: 0
         throughput:
+          description: 'throughput of calls for this e-service.'
           type: integer
           format: int32
           minimum: 0
@@ -898,11 +900,12 @@ components:
           type: integer
           format: int32
         dailyCallsPerConsumer:
-          description: 'maximum number of daily calls that this descriptor can afford.'
+          description: 'maximum number of daily calls that this descriptor can afford for the consumer.'
           type: integer
           format: int32
           minimum: 0
         throughput:
+          description: 'throughput of calls for this e-service.'
           type: integer
           format: int32
           minimum: 0
