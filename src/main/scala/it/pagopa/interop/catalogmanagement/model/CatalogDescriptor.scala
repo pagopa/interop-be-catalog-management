@@ -11,7 +11,8 @@ final case class CatalogDescriptor(
   state: CatalogDescriptorState,
   audience: Seq[String],
   voucherLifespan: Int,
-  dailyCallsMaxNumber: Int
+  dailyCallsPerConsumer: Int,
+  throughput: Int
 ) extends Convertable[EServiceDescriptor] {
   def toApi: EServiceDescriptor = {
     EServiceDescriptor(
@@ -23,7 +24,8 @@ final case class CatalogDescriptor(
       state = state.toApi,
       audience = audience,
       voucherLifespan = voucherLifespan,
-      dailyCallsMaxNumber = dailyCallsMaxNumber
+      dailyCallsPerConsumer = dailyCallsPerConsumer,
+      throughput = throughput
     )
   }
 

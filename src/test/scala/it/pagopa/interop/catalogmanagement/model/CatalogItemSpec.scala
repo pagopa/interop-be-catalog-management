@@ -16,8 +16,7 @@ class CatalogItemSpec extends AnyWordSpecLike with Matchers {
     description = "String",
     technology = Rest,
     attributes = CatalogAttributes(certified = Seq.empty, declared = Seq.empty, verified = Seq.empty),
-    descriptors = descriptors,
-    dailyCallsPerConsumer = 300L
+    descriptors = descriptors
   )
 
   private[this] def descriptorGen(
@@ -35,7 +34,8 @@ class CatalogItemSpec extends AnyWordSpecLike with Matchers {
       state = Draft,
       audience = Seq("a"),
       voucherLifespan = 0,
-      dailyCallsMaxNumber = 10
+      throughput = 10,
+      dailyCallsPerConsumer = 10
     )
 
   private[this] def descriptorDocumentGen(id: UUID = UUID.randomUUID()) =

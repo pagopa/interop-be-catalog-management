@@ -746,16 +746,12 @@ components:
         - description
         - technology
         - attributes
-        - dailyCallsPerConsumer
       properties:
         producerId:
           type: string
           format: uuid
         name:
           type: string
-        dailyCallsPerConsumer:
-          type: integer
-          format: int64
         description:
           type: string
         technology:
@@ -772,7 +768,6 @@ components:
         - technology
         - attributes
         - descriptors
-        - dailyCallsPerConsumer
       properties:
         id:
           type: string
@@ -784,9 +779,6 @@ components:
           type: string
         description:
           type: string
-        dailyCallsPerConsumer:
-          type: integer
-          format: int64
         technology:
           $ref: '#/components/schemas/EServiceTechnology'
         attributes:
@@ -825,7 +817,8 @@ components:
         - creationDate
         - audience
         - voucherLifespan
-        - dailyCallsMaxNumber
+        - dailyCallsPerConsumer
+        - throughput
       properties:
         id:
           type: string
@@ -841,8 +834,12 @@ components:
         voucherLifespan:
           type: integer
           format: int32
-        dailyCallsMaxNumber:
+        dailyCallsPerConsumer:
           description: 'maximum number of daily calls that this descriptor can afford.'
+          type: integer
+          format: int32
+          minimum: 0
+        throughput:
           type: integer
           format: int32
           minimum: 0
@@ -858,7 +855,8 @@ components:
       required:
         - audience
         - voucherLifespan
-        - dailyCallsMaxNumber
+        - dailyCallsPerConsumer
+        - throughput
       type: object
       properties:
         description:
@@ -870,8 +868,12 @@ components:
         voucherLifespan:
           type: integer
           format: int32
-        dailyCallsMaxNumber:
+        dailyCallsPerConsumer:
           description: 'maximum number of daily calls that this descriptor can afford.'
+          type: integer
+          format: int32
+          minimum: 0
+        throughput:
           type: integer
           format: int32
           minimum: 0
@@ -880,7 +882,8 @@ components:
         - state
         - audience
         - voucherLifespan
-        - dailyCallsMaxNumber
+        - dailyCallsPerConsumer
+        - throughput
       type: object
       properties:
         description:
@@ -894,8 +897,12 @@ components:
         voucherLifespan:
           type: integer
           format: int32
-        dailyCallsMaxNumber:
+        dailyCallsPerConsumer:
           description: 'maximum number of daily calls that this descriptor can afford.'
+          type: integer
+          format: int32
+          minimum: 0
+        throughput:
           type: integer
           format: int32
           minimum: 0
@@ -954,15 +961,11 @@ components:
         - description
         - technology
         - attributes
-        - dailyCallsPerConsumer
       properties:
         name:
           type: string
         description:
           type: string
-        dailyCallsPerConsumer:
-          type: integer
-          format: int64
         technology:
           $ref: '#/components/schemas/EServiceTechnology'
         attributes:

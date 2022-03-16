@@ -64,7 +64,8 @@
               "id" : "24772a3d-e6f2-47f2-96e5-4cbd1e4e9999",
               "version" : "1",
               "voucherLifespan" : 124,
-              "dailyCallsMaxNumber" : 2022,
+              "dailyCallsPerConsumer": 2022,
+              "throughput": 2099,
               "audience" : [
                 "pippo"
               ],

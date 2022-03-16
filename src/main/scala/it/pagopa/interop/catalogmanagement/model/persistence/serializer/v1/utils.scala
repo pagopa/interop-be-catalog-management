@@ -92,7 +92,8 @@ object utils {
         state = convertDescriptorStateToV1(descriptor.state),
         audience = descriptor.audience,
         voucherLifespan = descriptor.voucherLifespan,
-        dailyCallsMaxNumber = descriptor.dailyCallsMaxNumber
+        dailyCallsPerConsumer = descriptor.dailyCallsPerConsumer,
+        throughput = descriptor.throughput
       )
     )
   }
@@ -134,7 +135,8 @@ object utils {
         state = state,
         audience = ver1.audience,
         voucherLifespan = ver1.voucherLifespan,
-        dailyCallsMaxNumber = ver1.dailyCallsMaxNumber
+        dailyCallsPerConsumer = ver1.dailyCallsPerConsumer,
+        throughput = ver1.throughput
       )
     }
   }

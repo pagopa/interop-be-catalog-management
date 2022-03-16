@@ -27,7 +27,8 @@ trait SpecHelper extends SpecConfiguration with AnyWordSpecLike with MockFactory
         |{
         |	"audience": ["audience"],
         |	"voucherLifespan": 1984,
-        |	"dailyCallsMaxNumber": 2022,
+        |	"dailyCallsPerConsumer": 2022,
+        |	"throughput": 2099,
         |	"description": "string"
         |	}
         |""".stripMargin
@@ -58,7 +59,6 @@ trait SpecHelper extends SpecConfiguration with AnyWordSpecLike with MockFactory
         |	"producerId": "24772a3d-e6f2-47f2-96e5-4cbd1e4e9999",
         |	"name": "string",
         |	"description": "string",
-        |   "dailyCallsPerConsumer": 300,
         |	"audience": [
         |		"pippo"
         |	],

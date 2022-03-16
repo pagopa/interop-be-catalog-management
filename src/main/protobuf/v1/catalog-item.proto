@@ -15,7 +15,6 @@ message CatalogItemV1 {
   required CatalogItemTechnologyV1 technology = 5;
   required CatalogAttributesV1  attributes = 6;
   repeated CatalogDescriptorV1 descriptors = 7;
-  required int64 dailyCallsPerConsumer = 8;
 }
 
 message CatalogAttributeValueV1 {
@@ -43,7 +42,8 @@ message CatalogDescriptorV1 {
   optional CatalogDocumentV1 interface = 6;
   repeated string audience = 7;
   required int32 voucherLifespan = 8;
-  required int32 dailyCallsMaxNumber = 9;
+  required int32 dailyCallsPerConsumer = 9;
+  required int32 throughput = 10;
 }
 
 message CatalogDocumentV1 {
