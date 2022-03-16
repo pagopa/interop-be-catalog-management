@@ -137,7 +137,8 @@ class CatalogManagementServiceSpec
         """{
           |     "description": "NewDescription"
           |   , "voucherLifespan": 30
-          |   , "dailyCallsMaxNumber": 30000
+          |   , "dailyCallsPerConsumer": 30000
+          |   , "dailyCallsTotal": 900
           |   , "audience": ["a", "b", "c"]
           |   , "state": "ARCHIVED"
           |}""".stripMargin
@@ -162,7 +163,8 @@ class CatalogManagementServiceSpec
       val updatedDescriptor = updatedEService.descriptors.head
       updatedDescriptor.description shouldBe Some("NewDescription")
       updatedDescriptor.voucherLifespan shouldBe 30
-      updatedDescriptor.dailyCallsMaxNumber shouldBe 30000
+      updatedDescriptor.dailyCallsPerConsumer shouldBe 30000
+      updatedDescriptor.dailyCallsTotal shouldBe 900
       updatedDescriptor.audience shouldBe Seq("a", "b", "c")
       updatedDescriptor.state shouldBe EServiceDescriptorState.ARCHIVED
     }
@@ -178,7 +180,8 @@ class CatalogManagementServiceSpec
           |  "description": "NewDescription",
           |  "audience": ["1"],
           |  "voucherLifespan": 20,
-          |  "dailyCallsMaxNumber": 30000,
+          |  "dailyCallsPerConsumer": 30000,
+          |  "dailyCallsTotal": 30000,
           |  "state": "DRAFT"
           |}""".stripMargin
 
@@ -204,7 +207,8 @@ class CatalogManagementServiceSpec
           |  "description": "NewDescription",
           |  "audience": ["1"],
           |  "voucherLifespan": 20,
-          |  "dailyCallsMaxNumber": 30000,
+          |  "dailyCallsPerConsumer": 30000,
+          |  "dailyCallsTotal": 30000,
           |  "state": "DRAFT"
           |}""".stripMargin
 
@@ -235,7 +239,8 @@ class CatalogManagementServiceSpec
           |  "description": "NewDescription",
           |  "audience": ["1"],
           |  "voucherLifespan": 20,
-          |  "dailyCallsMaxNumber": 30000,
+          |  "dailyCallsPerConsumer": 30000,
+          |  "dailyCallsTotal": 30000,
           |  "state": "not_existing_state"
           |}""".stripMargin
 

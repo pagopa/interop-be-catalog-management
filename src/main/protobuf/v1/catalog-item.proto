@@ -42,7 +42,8 @@ message CatalogDescriptorV1 {
   optional CatalogDocumentV1 interface = 6;
   repeated string audience = 7;
   required int32 voucherLifespan = 8;
-  required int32 dailyCallsMaxNumber = 9;
+  required int32 dailyCallsPerConsumer = 9;
+  required int32 dailyCallsTotal = 10;
 }
 
 message CatalogDocumentV1 {
