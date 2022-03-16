@@ -350,7 +350,7 @@ class EServiceApiServiceImpl(
           voucherLifespan = eServiceDescriptorSeed.voucherLifespan,
           dailyCallsPerConsumer = eServiceDescriptorSeed.dailyCallsPerConsumer,
           state = CatalogDescriptorState.fromApi(eServiceDescriptorSeed.state),
-          throughput = eServiceDescriptorSeed.throughput
+          dailyCallsTotal = eServiceDescriptorSeed.dailyCallsTotal
         )
 
     val result: Future[Option[CatalogItem]] = for {
@@ -464,7 +464,7 @@ class EServiceApiServiceImpl(
         voucherLifespan = eServiceDescriptorSeed.voucherLifespan,
         audience = eServiceDescriptorSeed.audience,
         dailyCallsPerConsumer = eServiceDescriptorSeed.dailyCallsPerConsumer,
-        throughput = eServiceDescriptorSeed.throughput
+        dailyCallsTotal = eServiceDescriptorSeed.dailyCallsTotal
       )
       _ <- commander.ask(ref => AddCatalogItemDescriptor(current.id.toString, createdCatalogDescriptor, ref))
     } yield createdCatalogDescriptor
@@ -834,7 +834,7 @@ class EServiceApiServiceImpl(
         audience = descriptorToClone.audience,
         voucherLifespan = descriptorToClone.voucherLifespan,
         dailyCallsPerConsumer = descriptorToClone.dailyCallsPerConsumer,
-        throughput = descriptorToClone.throughput
+        dailyCallsTotal = descriptorToClone.dailyCallsTotal
       )
     } yield CatalogItem(
       id = uuidSupplier.get,

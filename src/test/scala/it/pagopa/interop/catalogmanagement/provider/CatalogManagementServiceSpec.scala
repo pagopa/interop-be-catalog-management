@@ -138,7 +138,7 @@ class CatalogManagementServiceSpec
           |     "description": "NewDescription"
           |   , "voucherLifespan": 30
           |   , "dailyCallsPerConsumer": 30000
-          |   , "throughput": 900
+          |   , "dailyCallsTotal": 900
           |   , "audience": ["a", "b", "c"]
           |   , "state": "ARCHIVED"
           |}""".stripMargin
@@ -164,7 +164,7 @@ class CatalogManagementServiceSpec
       updatedDescriptor.description shouldBe Some("NewDescription")
       updatedDescriptor.voucherLifespan shouldBe 30
       updatedDescriptor.dailyCallsPerConsumer shouldBe 30000
-      updatedDescriptor.throughput shouldBe 900
+      updatedDescriptor.dailyCallsTotal shouldBe 900
       updatedDescriptor.audience shouldBe Seq("a", "b", "c")
       updatedDescriptor.state shouldBe EServiceDescriptorState.ARCHIVED
     }
@@ -181,7 +181,7 @@ class CatalogManagementServiceSpec
           |  "audience": ["1"],
           |  "voucherLifespan": 20,
           |  "dailyCallsPerConsumer": 30000,
-          |  "throughput": 30000,
+          |  "dailyCallsTotal": 30000,
           |  "state": "DRAFT"
           |}""".stripMargin
 
@@ -208,7 +208,7 @@ class CatalogManagementServiceSpec
           |  "audience": ["1"],
           |  "voucherLifespan": 20,
           |  "dailyCallsPerConsumer": 30000,
-          |  "throughput": 30000,
+          |  "dailyCallsTotal": 30000,
           |  "state": "DRAFT"
           |}""".stripMargin
 
@@ -240,7 +240,7 @@ class CatalogManagementServiceSpec
           |  "audience": ["1"],
           |  "voucherLifespan": 20,
           |  "dailyCallsPerConsumer": 30000,
-          |  "throughput": 30000,
+          |  "dailyCallsTotal": 30000,
           |  "state": "not_existing_state"
           |}""".stripMargin
 

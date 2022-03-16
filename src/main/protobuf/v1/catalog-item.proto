@@ -43,7 +43,7 @@ message CatalogDescriptorV1 {
   repeated string audience = 7;
   required int32 voucherLifespan = 8;
   required int32 dailyCallsPerConsumer = 9;
-  required int32 throughput = 10;
+  required int32 dailyCallsTotal = 10;
 }
 
 message CatalogDocumentV1 {

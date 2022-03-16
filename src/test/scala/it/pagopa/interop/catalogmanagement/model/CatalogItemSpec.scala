@@ -34,7 +34,7 @@ class CatalogItemSpec extends AnyWordSpecLike with Matchers {
       state = Draft,
       audience = Seq("a"),
       voucherLifespan = 0,
-      throughput = 10,
+      dailyCallsTotal = 10,
       dailyCallsPerConsumer = 10
     )
 

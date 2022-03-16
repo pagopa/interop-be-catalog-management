@@ -93,7 +93,7 @@ object utils {
         audience = descriptor.audience,
         voucherLifespan = descriptor.voucherLifespan,
         dailyCallsPerConsumer = descriptor.dailyCallsPerConsumer,
-        throughput = descriptor.throughput
+        dailyCallsTotal = descriptor.dailyCallsTotal
       )
     )
   }
@@ -136,7 +136,7 @@ object utils {
         audience = ver1.audience,
         voucherLifespan = ver1.voucherLifespan,
         dailyCallsPerConsumer = ver1.dailyCallsPerConsumer,
-        throughput = ver1.throughput
+        dailyCallsTotal = ver1.dailyCallsTotal
       )
     }
   }

@@ -818,7 +818,7 @@ components:
         - audience
         - voucherLifespan
         - dailyCallsPerConsumer
-        - throughput
+        - dailyCallsTotal
       properties:
         id:
           type: string
@@ -839,8 +839,8 @@ components:
           type: integer
           format: int32
           minimum: 0
-        throughput:
-          description: 'throughput of calls for this e-service.'
+        dailyCallsTotal:
+          description: 'total daily calls available for this e-service.'
           type: integer
           format: int32
           minimum: 0
@@ -857,7 +857,7 @@ components:
         - audience
         - voucherLifespan
         - dailyCallsPerConsumer
-        - throughput
+        - dailyCallsTotal
       type: object
       properties:
         description:
@@ -874,8 +874,8 @@ components:
           type: integer
           format: int32
           minimum: 0
-        throughput:
-          description: 'throughput of calls for this e-service.'
+        dailyCallsTotal:
+          description: 'total daily calls available for this e-service.'
           type: integer
           format: int32
           minimum: 0
@@ -885,7 +885,7 @@ components:
         - audience
         - voucherLifespan
         - dailyCallsPerConsumer
-        - throughput
+        - dailyCallsTotal
       type: object
       properties:
         description:
@@ -904,8 +904,8 @@ components:
           type: integer
           format: int32
           minimum: 0
-        throughput:
-          description: 'throughput of calls for this e-service.'
+        dailyCallsTotal:
+          description: 'total daily calls available for this e-service.'
           type: integer
           format: int32
           minimum: 0
