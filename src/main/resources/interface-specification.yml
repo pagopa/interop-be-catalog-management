@@ -870,7 +870,7 @@ components:
           type: integer
           format: int32
         dailyCallsPerConsumer:
-          description: 'maximum number of daily calls that this descriptor can afford.'
+          description: 'maximum number of daily calls that this descriptor can afford per consumer.'
           type: integer
           format: int32
           minimum: 0
