@@ -30,7 +30,8 @@ package object v1 {
           description = itemsV1.value.description,
           technology = technology,
           attributes = attributes,
-          descriptors = descriptors
+          descriptors = descriptors,
+          dailyCallsPerConsumer = itemsV1.value.dailyCallsPerConsumer
         )
       }
       items.map(its => State(its.toMap))
@@ -51,7 +52,8 @@ package object v1 {
               description = catalogItem.description,
               technology = convertItemTechnologyToV1(catalogItem.technology),
               attributes = convertAttributesToV1(catalogItem.attributes),
-              descriptors = descriptors
+              descriptors = descriptors,
+              dailyCallsPerConsumer = catalogItem.dailyCallsPerConsumer
             )
           )
 
@@ -77,7 +79,8 @@ package object v1 {
           description = event.catalogItem.description,
           technology = technology,
           attributes = attributes,
-          descriptors = descriptors
+          descriptors = descriptors,
+          dailyCallsPerConsumer = event.catalogItem.dailyCallsPerConsumer
         )
       )
 
@@ -97,7 +100,8 @@ package object v1 {
             description = event.catalogItem.description,
             technology = convertItemTechnologyToV1(event.catalogItem.technology),
             attributes = convertAttributesToV1(event.catalogItem.attributes),
-            descriptors = descriptors
+            descriptors = descriptors,
+            dailyCallsPerConsumer = event.catalogItem.dailyCallsPerConsumer
           )
         )
     }
@@ -119,7 +123,8 @@ package object v1 {
           description = event.catalogItem.description,
           technology = technology,
           attributes = attributes,
-          descriptors = descriptors
+          descriptors = descriptors,
+          dailyCallsPerConsumer = event.catalogItem.dailyCallsPerConsumer
         )
       )
 
@@ -139,7 +144,8 @@ package object v1 {
             description = event.catalogItem.description,
             technology = convertItemTechnologyToV1(event.catalogItem.technology),
             attributes = convertAttributesToV1(event.catalogItem.attributes),
-            descriptors = descriptors
+            descriptors = descriptors,
+            dailyCallsPerConsumer = event.catalogItem.dailyCallsPerConsumer
           )
         )
     }
@@ -161,7 +167,8 @@ package object v1 {
           description = event.catalogItem.description,
           technology = technology,
           attributes = attributes,
-          descriptors = descriptors
+          descriptors = descriptors,
+          dailyCallsPerConsumer = event.catalogItem.dailyCallsPerConsumer
         ),
         descriptorId = event.descriptorId
       )
@@ -182,7 +189,8 @@ package object v1 {
             description = event.catalogItem.description,
             technology = convertItemTechnologyToV1(event.catalogItem.technology),
             attributes = convertAttributesToV1(event.catalogItem.attributes),
-            descriptors = descriptors
+            descriptors = descriptors,
+            dailyCallsPerConsumer = event.catalogItem.dailyCallsPerConsumer
           ),
           descriptorId = event.descriptorId
         )
@@ -213,7 +221,8 @@ package object v1 {
           description = event.catalogItem.description,
           technology = technology,
           attributes = attributes,
-          descriptors = descriptors
+          descriptors = descriptors,
+          dailyCallsPerConsumer = event.catalogItem.dailyCallsPerConsumer
         )
       )
 
@@ -233,7 +242,8 @@ package object v1 {
             description = event.catalogItem.description,
             technology = convertItemTechnologyToV1(event.catalogItem.technology),
             attributes = convertAttributesToV1(event.catalogItem.attributes),
-            descriptors = descriptors
+            descriptors = descriptors,
+            dailyCallsPerConsumer = event.catalogItem.dailyCallsPerConsumer
           )
         )
     }

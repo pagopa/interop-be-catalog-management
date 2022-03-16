@@ -15,6 +15,7 @@ message CatalogItemV1 {
   required CatalogItemTechnologyV1 technology = 5;
   required CatalogAttributesV1  attributes = 6;
   repeated CatalogDescriptorV1 descriptors = 7;
+  required int64 dailyCallsPerConsumer = 8;
 }
 
 message CatalogAttributeValueV1 {

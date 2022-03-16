@@ -341,6 +341,7 @@ class CatalogManagementServiceSpec
         """{
           |     "name": "TestName"
           |   , "description": "howdy!"
+          |   , "dailyCallsPerConsumer": 900
           |   , "technology": "SOAP"
           |   , "attributes": {"verified": [], "certified": [], "declared": []}
           |}""".stripMargin
@@ -362,6 +363,7 @@ class CatalogManagementServiceSpec
 
       updatedEService.name shouldBe "TestName"
       updatedEService.description shouldBe "howdy!"
+      updatedEService.dailyCallsPerConsumer shouldBe 900L
       updatedEService.technology shouldBe EServiceTechnology.SOAP
       updatedEService.attributes.certified.size shouldBe 0
       updatedEService.attributes.declared.size shouldBe 0

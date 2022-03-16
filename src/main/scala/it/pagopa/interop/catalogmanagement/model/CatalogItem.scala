@@ -11,7 +11,8 @@ final case class CatalogItem(
   description: String,
   technology: CatalogItemTechnology,
   attributes: CatalogAttributes,
-  descriptors: Seq[CatalogDescriptor]
+  descriptors: Seq[CatalogDescriptor],
+  dailyCallsPerConsumer: Long
 ) extends Convertable[EService] {
 
   def toApi: EService = {
@@ -22,7 +23,8 @@ final case class CatalogItem(
       description = description,
       technology = technology.toApi,
       attributes = attributes.toApi,
-      descriptors = descriptors.map(_.toApi)
+      descriptors = descriptors.map(_.toApi),
+      dailyCallsPerConsumer = dailyCallsPerConsumer
     )
   }
 
@@ -47,7 +49,8 @@ final case class CatalogItem(
         name = updateEServiceSeed.name,
         description = updateEServiceSeed.description,
         technology = CatalogItemTechnology.fromApi(updateEServiceSeed.technology),
-        attributes = attributes
+        attributes = attributes,
+        dailyCallsPerConsumer = updateEServiceSeed.dailyCallsPerConsumer
       )
     }
   }
@@ -70,7 +73,8 @@ object CatalogItem {
         description = seed.description,
         technology = CatalogItemTechnology.fromApi(seed.technology),
         attributes = attributes,
-        descriptors = Seq.empty[CatalogDescriptor]
+        descriptors = Seq.empty[CatalogDescriptor],
+        dailyCallsPerConsumer = seed.dailyCallsPerConsumer
       )
     }
   }

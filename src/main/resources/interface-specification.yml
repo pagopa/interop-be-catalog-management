@@ -746,12 +746,16 @@ components:
         - description
         - technology
         - attributes
+        - dailyCallsPerConsumer
       properties:
         producerId:
           type: string
           format: uuid
         name:
           type: string
+        dailyCallsPerConsumer:
+          type: integer
+          format: int64
         description:
           type: string
         technology:
@@ -768,6 +772,7 @@ components:
         - technology
         - attributes
         - descriptors
+        - dailyCallsPerConsumer
       properties:
         id:
           type: string
@@ -779,6 +784,9 @@ components:
           type: string
         description:
           type: string
+        dailyCallsPerConsumer:
+          type: integer
+          format: int64
         technology:
           $ref: '#/components/schemas/EServiceTechnology'
         attributes:
@@ -946,11 +954,15 @@ components:
         - description
         - technology
         - attributes
+        - dailyCallsPerConsumer
       properties:
         name:
           type: string
         description:
           type: string
+        dailyCallsPerConsumer:
+          type: integer
+          format: int64
         technology:
           $ref: '#/components/schemas/EServiceTechnology'
         attributes:
