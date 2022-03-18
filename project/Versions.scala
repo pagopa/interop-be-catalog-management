@@ -9,7 +9,7 @@ object Versions {
   lazy val httpJson4sVersion           = "1.38.2"
   lazy val jacksonVersion              = "2.11.4"
   lazy val jdbcPersistenceVersion      = "5.0.1"
-  lazy val json4sVersion               = "4.0.3"
+  lazy val json4sVersion               = "4.0.4"
   lazy val kamonVersion                = "2.1.17"
   lazy val logbackVersion              = "1.2.9"
   lazy val mockitoVersion              = "3.9.0"
