@@ -11,8 +11,6 @@ import akka.http.scaladsl.Http
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.model.headers.OAuth2BearerToken
 import akka.http.scaladsl.server.directives.{AuthenticationDirective, SecurityDirectives}
-import com.itv.scalapact.ScalaPactVerify._
-import com.itv.scalapact.shared.ProviderStateResult
 import it.pagopa.interop.catalogmanagement.api.impl.{EServiceApiMarshallerImpl, EServiceApiServiceImpl}
 import it.pagopa.interop.catalogmanagement.api.{EServiceApi, EServiceApiMarshaller}
 import it.pagopa.interop.catalogmanagement.model._
@@ -95,33 +93,6 @@ class CatalogManagementServiceSpec
     ActorTestKit.shutdown(httpSystem, 5.seconds)
     super.afterAll()
     println("Resources cleaned")
-  }
-
-  "Contract verification" should {
-    import com.itv.scalapact.http._
-    import com.itv.scalapact.json._
-    "succeed" in {
-
-      val pactJson: String =
-        getPact("src/test/resources/pacts/agreement-process-consumer_catalog-management-provider.json")
-
-      verifyPact
-        .withPactSource(pactAsJsonString(pactJson))
-        .setupProviderState("given") { case "e-service id" =>
-          createEService("24772a3d-e6f2-47f2-96e5-4cbd1e4e8c84")
-          createEServiceDescriptor(
-            "24772a3d-e6f2-47f2-96e5-4cbd1e4e8c84",
-            UUID.fromString("24772a3d-e6f2-47f2-96e5-4cbd1e4e9999")
-          )
-          val newHeader = "Content-Type" -> "application/json"
-          ProviderStateResult(
-            result = true,
-            req => req.copy(headers = Option(req.headers.fold(Map(newHeader))(_ + newHeader)))
-          )
-        }
-        .runVerificationAgainst("localhost", 18088, 10.seconds)
-
-    }
   }
 
   "Update descriptor" should {
