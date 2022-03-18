@@ -13,7 +13,7 @@ object Versions {
   lazy val kamonVersion                = "2.1.17"
   lazy val logbackVersion              = "1.2.9"
   lazy val mockitoVersion              = "3.9.0"
-  lazy val mustacheVersion             = "0.9.0"
+  lazy val mustacheVersion             = "0.9.10"
   lazy val openapi4jVersion            = "1.0.7"
   lazy val projectionVersion           = "1.2.1"
   lazy val s3Persistence               = "1.0.27"
