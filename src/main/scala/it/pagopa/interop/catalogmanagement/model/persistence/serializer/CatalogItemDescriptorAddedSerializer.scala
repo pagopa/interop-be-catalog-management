@@ -16,15 +16,19 @@ class CatalogItemDescriptorAddedSerializer extends SerializerWithStringManifest 
 
   override def manifest(o: AnyRef): String = s"${o.getClass.getName}|$currentVersion"
 
-  final val CatalogItemDescriptorAddedManifest: String = classOf[CatalogItemDescriptorAdded].getName
+  final val className: String = classOf[CatalogItemDescriptorAdded].getName
 
   override def toBinary(o: AnyRef): Array[Byte] = o match {
     case event: CatalogItemDescriptorAdded =>
-      serialize(event, CatalogItemDescriptorAddedManifest, currentVersion)
+      serialize(event, className, currentVersion)
+    case _ =>
+      throw new NotSerializableException(
+        s"Unable to serialize object of type [[${o.getClass.getName}]] for manifest [[$className]] and version [[$currentVersion]]"
+      )
   }
 
   override def fromBinary(bytes: Array[Byte], manifest: String): AnyRef = manifest.split('|').toList match {
-    case CatalogItemDescriptorAddedManifest :: `version1` :: Nil =>
+    case `className` :: `version1` :: Nil =>
       deserialize(v1.events.CatalogItemDescriptorAddedV1, bytes, manifest, currentVersion)
     case _ =>
       throw new NotSerializableException(
