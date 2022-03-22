@@ -88,11 +88,9 @@ class CatalogManagementServiceSpec
   }
 
   override def afterAll(): Unit = {
-    // println("****** Cleaning resources ********")
     bindServer.foreach(_.foreach(_.unbind()))
     ActorTestKit.shutdown(httpSystem, 5.seconds)
     super.afterAll()
-    // println("Resources cleaned")
   }
 
   "Update descriptor" should {
