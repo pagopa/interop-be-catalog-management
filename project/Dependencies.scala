@@ -99,11 +99,6 @@ object Dependencies {
     lazy val core      = namespace %% "scalamock" % scalaMockVersion
   }
 
-  private[this] object scalapact {
-    lazy val namespace = "com.itv"
-    lazy val core      = namespace %% "scalapact-scalatest-suite" % scalaPactVersion
-  }
-
   private[this] object tika {
     lazy val namespace = "org.apache.tika"
     lazy val core      = namespace % "tika-core" % tikaVersion
@@ -154,7 +149,6 @@ object Dependencies {
       tika.core                    % Compile,
       akka.testkit                 % Test,
       scalamock.core               % Test,
-      scalapact.core               % Test,
       scalaprotobuf.core           % Protobuf,
       scalatest.core               % Test
     )
