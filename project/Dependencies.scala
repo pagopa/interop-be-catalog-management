@@ -36,11 +36,6 @@ object Dependencies {
       "com.lightbend.akka.management" %% "akka-management-loglevels-logback" % akkaManagementVersion
   }
 
-  private[this] object awssdk {
-    lazy val namespace = "software.amazon.awssdk"
-    lazy val s3        = namespace % "s3" % awsSdkVersion
-  }
-
   private[this] object cats {
     lazy val namespace = "org.typelevel"
     lazy val core      = namespace %% "cats-core" % catsVersion
@@ -146,7 +141,6 @@ object Dependencies {
       akka.s3Snapshot              % Compile,
       akka.slf4j                   % Compile,
       akka.stream                  % Compile,
-      awssdk.s3                    % Compile,
       cats.core                    % Compile,
       commonsFileUpload.fileUpload % Compile,
       kamon.bundle                 % Compile,
