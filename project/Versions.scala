@@ -21,7 +21,7 @@ object Versions {
   lazy val scalaPactVersion            = "3.3.2-RC2"
   lazy val scalapbVersion              = "0.11.1"
   lazy val scalatestVersion            = "3.2.8"
-  lazy val slickProjectionVersion      = "1.2.3"
+  lazy val slickProjectionVersion      = "1.2.2"
   lazy val tikaVersion                 = "2.3.0"
 }
 
