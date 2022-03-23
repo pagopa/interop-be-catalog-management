@@ -13,8 +13,8 @@ final case class CatalogItemDocumentUpdated(
   descriptorId: String,
   documentId: String,
   updatedDocument: CatalogDocument
-)                                                          extends Event
-final case class CatalogItemDeleted(catalogItemId: String) extends Event
+) extends Event
+final case class CatalogItemDeleted(catalogItemId: String)                                         extends Event
 
 final case class CatalogItemDocumentAdded(
   eServiceId: String,

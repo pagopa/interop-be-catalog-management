@@ -20,7 +20,7 @@ object utils {
     catalogAttribute match {
       case s: SingleAttribute =>
         CatalogAttributeV1(Some(convertAttributeValueToV1(s.id)), Seq.empty[CatalogAttributeValueV1])
-      case g: GroupAttribute => CatalogAttributeV1(None, g.ids.map(convertAttributeValueToV1))
+      case g: GroupAttribute  => CatalogAttributeV1(None, g.ids.map(convertAttributeValueToV1))
     }
 
   def convertAttributesToV1(attributes: CatalogAttributes): CatalogAttributesV1 = {
@@ -147,11 +147,11 @@ object utils {
 
   def convertDescriptorStateFromV1(state: CatalogDescriptorStateV1): Either[Throwable, CatalogDescriptorState] =
     state match {
-      case CatalogDescriptorStateV1.DRAFT      => Right(Draft)
-      case CatalogDescriptorStateV1.PUBLISHED  => Right(Published)
-      case CatalogDescriptorStateV1.DEPRECATED => Right(Deprecated)
-      case CatalogDescriptorStateV1.SUSPENDED  => Right(Suspended)
-      case CatalogDescriptorStateV1.ARCHIVED   => Right(Archived)
+      case CatalogDescriptorStateV1.DRAFT               => Right(Draft)
+      case CatalogDescriptorStateV1.PUBLISHED           => Right(Published)
+      case CatalogDescriptorStateV1.DEPRECATED          => Right(Deprecated)
+      case CatalogDescriptorStateV1.SUSPENDED           => Right(Suspended)
+      case CatalogDescriptorStateV1.ARCHIVED            => Right(Archived)
       case CatalogDescriptorStateV1.Unrecognized(value) =>
         Left(new RuntimeException(s"Unable to deserialize catalog descriptor state value $value"))
     }
@@ -167,8 +167,8 @@ object utils {
 
   def convertItemTechnologyFromV1(technology: CatalogItemTechnologyV1): Either[Throwable, CatalogItemTechnology] =
     technology match {
-      case CatalogItemTechnologyV1.REST => Right(Rest)
-      case CatalogItemTechnologyV1.SOAP => Right(Soap)
+      case CatalogItemTechnologyV1.REST  => Right(Rest)
+      case CatalogItemTechnologyV1.SOAP  => Right(Soap)
       case UnrecognizedTechnology(value) =>
         Left(new RuntimeException(s"Unable to deserialize catalog item technology value $value"))
     }

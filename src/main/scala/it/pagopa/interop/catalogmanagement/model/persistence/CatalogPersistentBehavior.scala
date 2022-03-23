@@ -92,7 +92,7 @@ object CatalogPersistentBehavior {
               case (None, None) =>
                 replyTo ! StatusReply.Error[Done](s"Document not found.")
                 Effect.none[CatalogItemDocumentDeleted, State]
-              case _ =>
+              case _            =>
                 Effect
                   .persist(CatalogItemDocumentDeleted(eServiceId, descriptorId, documentId))
                   .thenRun((_: State) => replyTo ! StatusReply.Success(Done))
@@ -216,13 +216,13 @@ object CatalogPersistentBehavior {
       case CatalogItemDeleted(catalogItemId)                            => state.deleteEService(catalogItemId)
       case CatalogItemDocumentUpdated(eServiceId, descriptorId, documentId, modifiedDocument) =>
         state.updateDocument(eServiceId, descriptorId, documentId, modifiedDocument)
-      case CatalogItemDocumentAdded(eServiceId, descriptorId, openapiDoc, isInterface) =>
+      case CatalogItemDocumentAdded(eServiceId, descriptorId, openapiDoc, isInterface)        =>
         state.addItemDocument(eServiceId, descriptorId, openapiDoc, isInterface)
-      case CatalogItemDocumentDeleted(eServiceId, descriptorId, documentId) =>
+      case CatalogItemDocumentDeleted(eServiceId, descriptorId, documentId)                   =>
         state.deleteDocument(eServiceId, descriptorId, documentId)
-      case CatalogItemDescriptorAdded(eServiceId, catalogDescriptor) =>
+      case CatalogItemDescriptorAdded(eServiceId, catalogDescriptor)                          =>
         state.addDescriptor(eServiceId, catalogDescriptor)
-      case CatalogItemDescriptorUpdated(eServiceId, catalogDescriptor) =>
+      case CatalogItemDescriptorUpdated(eServiceId, catalogDescriptor)                        =>
         state.updateDescriptor(eServiceId, catalogDescriptor)
     }
 

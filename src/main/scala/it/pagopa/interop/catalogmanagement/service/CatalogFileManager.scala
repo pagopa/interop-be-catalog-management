@@ -45,7 +45,7 @@ object CatalogFileManager {
     ec: ExecutionContext,
     contexts: Seq[(String, String)]
   ): Future[CatalogItem] = for {
-    checksumVerified <- verifyChecksum(fileParts, catalogItem, descriptorId)
+    checksumVerified   <- verifyChecksum(fileParts, catalogItem, descriptorId)
     technologyVerified <-
       if (isInterface) verifyTechnology(fileParts, checksumVerified) else Future.successful(checksumVerified)
   } yield technologyVerified
@@ -55,7 +55,7 @@ object CatalogFileManager {
     catalogItem: CatalogItem,
     descriptorId: String
   ): Future[CatalogItem] = {
-    val checksum: String = Digester.createMD5Hash(fileParts._2)
+    val checksum: String         = Digester.createMD5Hash(fileParts._2)
     val alreadyUploaded: Boolean = catalogItem.descriptors
       .exists(descriptor =>
         descriptor.id == UUID

@@ -68,7 +68,7 @@ class CatalogItemSpec extends AnyWordSpecLike with Matchers {
         descriptorDocumentGen(uuid6)
       )
 
-      val descriptorId = UUID.randomUUID()
+      val descriptorId                        = UUID.randomUUID()
       val descriptors: Seq[CatalogDescriptor] = Seq(
         descriptorGen(
           "1",
@@ -78,12 +78,12 @@ class CatalogItemSpec extends AnyWordSpecLike with Matchers {
         )
       )
 
-      //given a catalog item with 6 documents and an interface
+      // given a catalog item with 6 documents and an interface
       val catalogItem = catalogItemGen(descriptors)
 
       val state = State(items = Map(catalogItem.id.toString -> catalogItem))
 
-      //when we remove one of the documents
+      // when we remove one of the documents
       val descriptor =
         state
           .deleteDocument(catalogItem.id.toString, descriptorId.toString, toBeRemovedUUID.toString)
@@ -92,7 +92,7 @@ class CatalogItemSpec extends AnyWordSpecLike with Matchers {
           .flatMap(_.descriptors.find(_.id == descriptorId))
           .get
 
-      //then
+      // then
       descriptor.docs.map(_.id) should contain only (uuid1, uuid2, uuid3, uuid4, uuid6)
       descriptor.interface shouldBe a[Some[_]]
     }
@@ -116,7 +116,7 @@ class CatalogItemSpec extends AnyWordSpecLike with Matchers {
         descriptorDocumentGen(uuid6)
       )
 
-      val descriptorId = UUID.randomUUID()
+      val descriptorId                        = UUID.randomUUID()
       val descriptors: Seq[CatalogDescriptor] = Seq(
         descriptorGen(
           "1",
@@ -126,11 +126,11 @@ class CatalogItemSpec extends AnyWordSpecLike with Matchers {
         )
       )
 
-      //given a catalog item with 6 documents and an interface
+      // given a catalog item with 6 documents and an interface
       val catalogItem = catalogItemGen(descriptors)
       val state       = State(items = Map(catalogItem.id.toString -> catalogItem))
 
-      //when we remove one of the documents
+      // when we remove one of the documents
       val descriptor = state
         .deleteDocument(catalogItem.id.toString, descriptorId.toString, interfaceId.toString)
         .items
@@ -138,7 +138,7 @@ class CatalogItemSpec extends AnyWordSpecLike with Matchers {
         .flatMap(_.descriptors.find(_.id == descriptorId))
         .get
 
-      //then
+      // then
       descriptor.docs.map(_.id) should contain only (uuid1, uuid2, uuid3, uuid4, uuid5, uuid6)
       descriptor.interface shouldBe None
     }
@@ -162,7 +162,7 @@ class CatalogItemSpec extends AnyWordSpecLike with Matchers {
         descriptorDocumentGen(uuid6)
       )
 
-      val descriptorId = UUID.randomUUID()
+      val descriptorId                        = UUID.randomUUID()
       val descriptors: Seq[CatalogDescriptor] = Seq(
         descriptorGen(
           "1",
@@ -172,11 +172,11 @@ class CatalogItemSpec extends AnyWordSpecLike with Matchers {
         )
       )
 
-      //given a catalog item with 6 documents and an interface
+      // given a catalog item with 6 documents and an interface
       val catalogItem = catalogItemGen(descriptors)
       val state       = State(items = Map(catalogItem.id.toString -> catalogItem))
 
-      //when we remove a not existing document
+      // when we remove a not existing document
       val descriptor = state
         .deleteDocument(catalogItem.id.toString, descriptorId.toString, UUID.randomUUID().toString)
         .items
@@ -208,7 +208,7 @@ class CatalogItemSpec extends AnyWordSpecLike with Matchers {
         descriptorDocumentGen(uuid6)
       )
 
-      val descriptorId = UUID.randomUUID()
+      val descriptorId                        = UUID.randomUUID()
       val descriptors: Seq[CatalogDescriptor] = Seq(
         descriptorGen(
           "1",
@@ -218,11 +218,11 @@ class CatalogItemSpec extends AnyWordSpecLike with Matchers {
         )
       )
 
-      //given a catalog item with 6 documents and an interface
+      // given a catalog item with 6 documents and an interface
       val catalogItem = catalogItemGen(descriptors)
       val state       = State(items = Map(catalogItem.id.toString -> catalogItem))
 
-      //when we remove one of the documents on a not existing descriptor
+      // when we remove one of the documents on a not existing descriptor
       val descriptor =
         state
           .deleteDocument(catalogItem.id.toString, UUID.randomUUID().toString, interfaceId.toString)
@@ -260,7 +260,7 @@ class CatalogItemSpec extends AnyWordSpecLike with Matchers {
         descriptorGen("9"),
         descriptorGen("10")
       )
-      val catalogItem = catalogItemGen(descriptors)
+      val catalogItem                         = catalogItemGen(descriptors)
       catalogItem.currentVersion shouldBe Some("10")
     }
 
@@ -277,7 +277,7 @@ class CatalogItemSpec extends AnyWordSpecLike with Matchers {
         descriptorGen("9xxx"),
         descriptorGen("10xxx")
       )
-      val catalogItem = catalogItemGen(descriptors)
+      val catalogItem                         = catalogItemGen(descriptors)
       catalogItem.currentVersion shouldBe Some("8")
     }
   }

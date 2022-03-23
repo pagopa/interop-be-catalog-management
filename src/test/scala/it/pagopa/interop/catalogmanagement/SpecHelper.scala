@@ -12,11 +12,19 @@ import org.scalamock.scalatest.MockFactory
 import org.scalatest.matchers.should.Matchers._
 import org.scalatest.wordspec.AnyWordSpecLike
 
+import java.net.InetAddress
 import java.util.UUID
 import scala.concurrent.Await
 import scala.concurrent.duration.Duration
 
 trait SpecHelper extends SpecConfiguration with AnyWordSpecLike with MockFactory {
+
+  final val requestHeaders: Seq[HttpHeader] =
+    Seq(
+      headers.Authorization(OAuth2BearerToken("1234")),
+      headers.RawHeader("X-Correlation-Id", "test-id"),
+      headers.`X-Forwarded-For`(RemoteAddress(InetAddress.getByName("127.0.0.1")))
+    )
 
   def createEServiceDescriptor(eserviceId: String, descriptorId: UUID)(implicit
     actorSystem: ActorSystem[_]
@@ -39,7 +47,7 @@ trait SpecHelper extends SpecConfiguration with AnyWordSpecLike with MockFactory
           uri = s"$serviceURL/eservices/${eserviceId}/descriptors",
           method = HttpMethods.POST,
           entity = HttpEntity(ContentTypes.`application/json`, data),
-          headers = Seq(headers.Authorization(OAuth2BearerToken("1234")))
+          headers = requestHeaders
         )
       ),
       Duration.Inf
@@ -98,7 +106,7 @@ trait SpecHelper extends SpecConfiguration with AnyWordSpecLike with MockFactory
           uri = s"$serviceURL/eservices",
           method = HttpMethods.POST,
           entity = HttpEntity(ContentTypes.`application/json`, data),
-          headers = Seq(headers.Authorization(OAuth2BearerToken("1234")))
+          headers = requestHeaders
         )
       ),
       Duration.Inf
@@ -113,11 +121,7 @@ trait SpecHelper extends SpecConfiguration with AnyWordSpecLike with MockFactory
 
     val response = Await.result(
       Http().singleRequest(
-        HttpRequest(
-          uri = s"$serviceURL/eservices/$uuid",
-          method = HttpMethods.GET,
-          headers = Seq(headers.Authorization(OAuth2BearerToken("1234")))
-        )
+        HttpRequest(uri = s"$serviceURL/eservices/$uuid", method = HttpMethods.GET, headers = requestHeaders)
       ),
       Duration.Inf
     )

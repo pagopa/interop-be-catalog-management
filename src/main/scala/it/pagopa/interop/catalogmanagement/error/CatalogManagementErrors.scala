@@ -9,8 +9,8 @@ object CatalogManagementErrors {
       extends ComponentError(
         "0001",
         s"""Error trying to parse content type ${catalogDocument.contentType} for document ${catalogDocument.path},reason:\n${errors
-          .map(_.formatPretty)
-          .mkString("\n")}"""
+            .map(_.formatPretty)
+            .mkString("\n")}"""
       )
 
   final case class DocumentNotFoundError(catalogItemId: String, descriptorId: String, documentId: String)

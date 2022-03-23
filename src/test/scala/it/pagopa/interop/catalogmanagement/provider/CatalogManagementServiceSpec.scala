@@ -9,7 +9,6 @@ import akka.cluster.sharding.typed.scaladsl.{ClusterSharding, Entity}
 import akka.cluster.typed.{Cluster, Join}
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.model._
-import akka.http.scaladsl.model.headers.OAuth2BearerToken
 import akka.http.scaladsl.server.directives.{AuthenticationDirective, SecurityDirectives}
 import it.pagopa.interop.catalogmanagement.api.impl.{EServiceApiMarshallerImpl, EServiceApiServiceImpl}
 import it.pagopa.interop.catalogmanagement.api.{EServiceApi, EServiceApiMarshaller}
@@ -46,14 +45,14 @@ class CatalogManagementServiceSpec
 
   val payloadMarshaller: EServiceApiMarshaller = new EServiceApiMarshallerImpl
 
-  var controller: Option[Controller]                 = None
-  var bindServer: Option[Future[Http.ServerBinding]] = None
+  var controller: Option[Controller]                                    = None
+  var bindServer: Option[Future[Http.ServerBinding]]                    = None
   val wrappingDirective: AuthenticationDirective[Seq[(String, String)]] =
     SecurityDirectives.authenticateOAuth2("SecurityRealm", AkkaUtils.Authenticator)
 
   val sharding: ClusterSharding = ClusterSharding(system)
 
-  val httpSystem: ActorSystem[Any] =
+  val httpSystem: ActorSystem[Any]                        =
     ActorSystem(Behaviors.ignore[Any], name = system.name, config = system.settings.config)
   implicit val executionContext: ExecutionContextExecutor = httpSystem.executionContext
   implicit val classicSystem: actor.ActorSystem           = httpSystem.classicSystem
@@ -118,7 +117,7 @@ class CatalogManagementServiceSpec
             uri = s"$serviceURL/eservices/${eService.id.toString}/descriptors/${descriptor.id.toString}",
             method = HttpMethods.PUT,
             entity = HttpEntity(ContentType(MediaTypes.`application/json`), data),
-            headers = Seq(headers.Authorization(OAuth2BearerToken("1234")))
+            headers = requestHeaders
           )
         ),
         Duration.Inf
@@ -160,7 +159,7 @@ class CatalogManagementServiceSpec
             uri = s"$serviceURL/eservices/${newEService.id.toString}/descriptors/2",
             method = HttpMethods.PUT,
             entity = HttpEntity(ContentType(MediaTypes.`application/json`), data),
-            headers = Seq(headers.Authorization(OAuth2BearerToken("1234")))
+            headers = requestHeaders
           )
         ),
         Duration.Inf
@@ -187,7 +186,7 @@ class CatalogManagementServiceSpec
             uri = s"$serviceURL/eservices/1/descriptors/2",
             method = HttpMethods.PUT,
             entity = HttpEntity(ContentType(MediaTypes.`application/json`), data),
-            headers = Seq(headers.Authorization(OAuth2BearerToken("1234")))
+            headers = requestHeaders
           )
         ),
         Duration.Inf
@@ -219,7 +218,7 @@ class CatalogManagementServiceSpec
             uri = s"$serviceURL/eservices/${eService.id.toString}/descriptors/${descriptorId.toString}",
             method = HttpMethods.PUT,
             entity = HttpEntity(ContentType(MediaTypes.`application/json`), data),
-            headers = Seq(headers.Authorization(OAuth2BearerToken("1234")))
+            headers = requestHeaders
           )
         ),
         Duration.Inf
@@ -242,14 +241,14 @@ class CatalogManagementServiceSpec
           HttpRequest(
             uri = s"$serviceURL/eservices/${eService.id.toString}/descriptors/${descriptor.id.toString}/publish",
             method = HttpMethods.POST,
-            headers = Seq(headers.Authorization(OAuth2BearerToken("1234")))
+            headers = requestHeaders
           )
         ),
         Duration.Inf
       )
 
       response.status shouldBe StatusCodes.NoContent
-      val updatedEService = retrieveEService(eServiceUuid.toString)
+      val updatedEService   = retrieveEService(eServiceUuid.toString)
       updatedEService.descriptors.size shouldBe 1
       val updatedDescriptor = updatedEService.descriptors.head
       updatedDescriptor.state shouldBe EServiceDescriptorState.PUBLISHED
@@ -266,14 +265,14 @@ class CatalogManagementServiceSpec
           HttpRequest(
             uri = s"$serviceURL/eservices/${eService.id.toString}/descriptors/${descriptor.id.toString}/deprecate",
             method = HttpMethods.POST,
-            headers = Seq(headers.Authorization(OAuth2BearerToken("1234")))
+            headers = requestHeaders
           )
         ),
         Duration.Inf
       )
 
       response.status shouldBe StatusCodes.NoContent
-      val updatedEService = retrieveEService(eServiceUuid.toString)
+      val updatedEService   = retrieveEService(eServiceUuid.toString)
       updatedEService.descriptors.size shouldBe 1
       val updatedDescriptor = updatedEService.descriptors.head
       updatedDescriptor.state shouldBe EServiceDescriptorState.DEPRECATED
@@ -290,14 +289,14 @@ class CatalogManagementServiceSpec
           HttpRequest(
             uri = s"$serviceURL/eservices/${eService.id.toString}/descriptors/${descriptor.id.toString}/suspend",
             method = HttpMethods.POST,
-            headers = Seq(headers.Authorization(OAuth2BearerToken("1234")))
+            headers = requestHeaders
           )
         ),
         Duration.Inf
       )
 
       response.status shouldBe StatusCodes.NoContent
-      val updatedEService = retrieveEService(eServiceUuid.toString)
+      val updatedEService   = retrieveEService(eServiceUuid.toString)
       updatedEService.descriptors.size shouldBe 1
       val updatedDescriptor = updatedEService.descriptors.head
       updatedDescriptor.state shouldBe EServiceDescriptorState.SUSPENDED
@@ -306,12 +305,12 @@ class CatalogManagementServiceSpec
 
   "Update an e-service" should {
     "return a modified set of e-service information" in {
-      //given an e-service
+      // given an e-service
       val eServiceUuid = UUID.randomUUID().toString
       val eService     = createEService(eServiceUuid)
 
-      //when updated with the following data
-      val data =
+      // when updated with the following data
+      val data     =
         """{
           |     "name": "TestName"
           |   , "description": "howdy!"
@@ -324,13 +323,13 @@ class CatalogManagementServiceSpec
             uri = s"$serviceURL/eservices/${eService.id.toString}",
             method = HttpMethods.PUT,
             entity = HttpEntity(ContentType(MediaTypes.`application/json`), data),
-            headers = Seq(headers.Authorization(OAuth2BearerToken("1234")))
+            headers = requestHeaders
           )
         ),
         Duration.Inf
       )
 
-      //then
+      // then
       response.status shouldBe StatusCodes.OK
       val updatedEService = retrieveEService(eServiceUuid)
 
@@ -343,45 +342,45 @@ class CatalogManagementServiceSpec
     }
 
     "delete an e-service when it has no descriptors" in {
-      //given an e-service
+      // given an e-service
       val eServiceUuid = UUID.randomUUID().toString
       val eService     = createEService(eServiceUuid)
 
-      //when deleted
+      // when deleted
       val response = Await.result(
         Http().singleRequest(
           HttpRequest(
             uri = s"$serviceURL/eservices/${eService.id.toString}",
             method = HttpMethods.DELETE,
-            headers = Seq(headers.Authorization(OAuth2BearerToken("1234")))
+            headers = requestHeaders
           )
         ),
         Duration.Inf
       )
 
-      //then
+      // then
       response.status shouldBe StatusCodes.NoContent
     }
 
     "not delete an e-service when it has at least one descriptor" in {
-      //given an e-service
+      // given an e-service
       val eServiceUuid = UUID.randomUUID().toString
       val eService     = createEService(eServiceUuid)
       val _            = createEServiceDescriptor(eServiceUuid, UUID.randomUUID())
 
-      //when deleted
+      // when deleted
       val response = Await.result(
         Http().singleRequest(
           HttpRequest(
             uri = s"$serviceURL/eservices/${eService.id.toString}",
             method = HttpMethods.DELETE,
-            headers = Seq(headers.Authorization(OAuth2BearerToken("1234")))
+            headers = requestHeaders
           )
         ),
         Duration.Inf
       )
 
-      //then
+      // then
       response.status shouldBe StatusCodes.BadRequest
     }
   }

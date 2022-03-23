@@ -71,12 +71,12 @@ class EServiceApiServiceImpl(
     onComplete(result) {
       case Success(statusReply) if statusReply.isSuccess =>
         createEService200(statusReply.getValue.toApi)
-      case Success(statusReply) =>
+      case Success(statusReply)                          =>
         logger.error(
           s"Error while creating e-service ${eServiceSeed.name} for producer ${eServiceSeed.producerId} - ${statusReply.getError.getMessage}"
         )
         createEService400(problemOf(StatusCodes.Conflict, EServiceAlreadyExistingError(eServiceSeed.name)))
-      case Failure(ex) =>
+      case Failure(ex)                                   =>
         logger.error(
           s"Error while creating e-service ${eServiceSeed.name} for producer ${eServiceSeed.producerId} - ${ex.getMessage}"
         )
@@ -88,12 +88,13 @@ class EServiceApiServiceImpl(
     * Code: 400, Message: Invalid input, DataType: Problem
     * Code: 404, Message: Not found, DataType: Problem
     */
+
   override def createEServiceDocument(
-    eServiceId: String,
-    descriptorId: String,
     kind: String,
     description: String,
-    doc: (FileInfo, File)
+    doc: (FileInfo, File),
+    eServiceId: String,
+    descriptorId: String
   )(implicit
     toEntityMarshallerProblem: ToEntityMarshaller[Problem],
     toEntityMarshallerEService: ToEntityMarshaller[EService],
@@ -120,8 +121,8 @@ class EServiceApiServiceImpl(
       current  <- retrieveCatalogItem(commander, eServiceId)
       verified <- CatalogFileManager.verify(doc, current, descriptorId, isInterface)
       document <- catalogFileManager.store(id = uuidSupplier.get, description = description, fileParts = doc)
-      _        <- commander.ask(ref => AddCatalogItemDocument(verified.id.toString, descriptorId, document, isInterface, ref))
-      updated  <- commander.ask(ref => GetCatalogItem(eServiceId, ref))
+      _ <- commander.ask(ref => AddCatalogItemDocument(verified.id.toString, descriptorId, document, isInterface, ref))
+      updated <- commander.ask(ref => GetCatalogItem(eServiceId, ref))
     } yield updated
 
     onComplete(result) {
@@ -134,7 +135,7 @@ class EServiceApiServiceImpl(
             problemOf(StatusCodes.NotFound, DocumentCreationNotFound(kind, eServiceId, descriptorId))
           )
         })(ci => createEServiceDocument200(ci.toApi))
-      case Failure(ex) =>
+      case Failure(ex)          =>
         logger.error(
           s"Failure in creation of e-service document of kind ${kind} for e-service ${eServiceId} and descriptor ${descriptorId} - ${ex.getMessage}"
         )
@@ -160,7 +161,7 @@ class EServiceApiServiceImpl(
 
     onSuccess(result) {
       case Some(catalogItem) => getEService200(catalogItem.toApi)
-      case None => {
+      case None              => {
         logger.error(s"E-service ${eServiceId} not found")
         getEService404(problemOf(StatusCodes.NotFound, EServiceNotFoundError))
       }
@@ -207,7 +208,7 @@ class EServiceApiServiceImpl(
 
     result match {
       case Right(items) => getEServices200(items.map(_.toApi))
-      case Left(ex) =>
+      case Left(ex)     =>
         logger.error(s"Error while getting e-service for producer ${producerId} and state ${state} - ${ex.getMessage}")
         getEServices400(problemOf(StatusCodes.BadRequest, EServiceRetrievalError))
     }
@@ -243,13 +244,13 @@ class EServiceApiServiceImpl(
 
     onComplete(result) {
       case Success(doc) => getEServiceDocument200(doc)
-      case Failure(ex) =>
+      case Failure(ex)  =>
         logger.error(
           s"Error while getting e-service document ${documentId} for e-service ${eServiceId} and descriptor ${descriptorId} - ${ex.getMessage}"
         )
         ex match {
           case ex: EServiceNotFoundError => getEService404(problemOf(StatusCodes.NotFound, ex))
-          case _                         => getEService400(problemOf(StatusCodes.BadRequest, DocumentRetrievalBadRequest(documentId)))
+          case _ => getEService400(problemOf(StatusCodes.BadRequest, DocumentRetrievalBadRequest(documentId)))
         }
 
     }
@@ -295,13 +296,13 @@ class EServiceApiServiceImpl(
       retrieved <- commander.ask(ref => GetCatalogItem(eServiceId, ref))
       current   <- retrieved.toFuture(EServiceNotFoundError(eServiceId))
       _         <- descriptorDeletable(current, descriptorId)
-      _ <- current
+      _         <- current
         .getInterfacePath(descriptorId)
         .fold(Future.successful(true))(path => catalogFileManager.delete(path))
-      _ <- current
+      _         <- current
         .getDocumentPaths(descriptorId)
         .fold(Future.successful(Seq.empty[Boolean]))(path => Future.traverse(path)(catalogFileManager.delete))
-      deleted <- commander.ask(ref => DeleteCatalogItemWithDescriptor(current, descriptorId, ref))
+      deleted   <- commander.ask(ref => DeleteCatalogItemWithDescriptor(current, descriptorId, ref))
     } yield deleted
 
     onComplete(result) {
@@ -313,7 +314,7 @@ class EServiceApiServiceImpl(
           )
           deleteDraft400(problemOf(StatusCodes.BadRequest, DescriptorDeleteDraftBadRequest(eServiceId, descriptorId)))
         }
-      case Failure(ex) =>
+      case Failure(ex)          =>
         logger.error(
           s"Error while deleting draft version of descriptor ${descriptorId} for e-service ${eServiceId} - ${ex.getMessage}"
         )
@@ -355,13 +356,13 @@ class EServiceApiServiceImpl(
         )
 
     val result: Future[Option[CatalogItem]] = for {
-      retrieved <- commander.ask(ref => GetCatalogItem(eServiceId, ref))
-      current   <- retrieved.toFuture(EServiceNotFoundError(eServiceId))
+      retrieved          <- commander.ask(ref => GetCatalogItem(eServiceId, ref))
+      current            <- retrieved.toFuture(EServiceNotFoundError(eServiceId))
       toUpdateDescriptor <- current.descriptors
         .find(_.id.toString == descriptorId)
         .toFuture(EServiceDescriptorNotFoundError(eServiceId, descriptorId))
       updatedDescriptor = mergeChanges(toUpdateDescriptor, eServiceDescriptorSeed)
-      updatedItem = current.copy(descriptors =
+      updatedItem       = current.copy(descriptors =
         current.descriptors.filter(_.id.toString != descriptorId) :+ updatedDescriptor
       )
       updated <- commander.ask(ref => UpdateCatalogItem(updatedItem, ref))
@@ -374,14 +375,14 @@ class EServiceApiServiceImpl(
             .error(s"Error while updating descriptor ${descriptorId} for e-service ${eServiceId} - bad request")
           updateDescriptor400(problemOf(StatusCodes.BadRequest, DescriptorUpdateBadRequest(eServiceId, descriptorId)))
         })(ci => updateDescriptor200(ci.toApi))
-      case Failure(ex) =>
+      case Failure(ex)          =>
         logger.error(s"Error while updating descriptor ${descriptorId} for e-service ${eServiceId} - ${ex.getMessage}")
         ex match {
-          case ex: EServiceNotFoundError =>
+          case ex: EServiceNotFoundError           =>
             updateDescriptor404(problemOf(StatusCodes.NotFound, ex))
           case ex: EServiceDescriptorNotFoundError =>
             updateDescriptor404(problemOf(StatusCodes.NotFound, ex))
-          case _ =>
+          case _                                   =>
             updateDescriptor400(problemOf(StatusCodes.BadRequest, DescriptorUpdateBadRequest(eServiceId, descriptorId)))
         }
 
@@ -414,7 +415,7 @@ class EServiceApiServiceImpl(
           logger.error(s"Error while updating e-service by id ${eServiceId} - not found")
           updateEServiceById404(problemOf(StatusCodes.NotFound, EServiceNotFoundError(eServiceId)))
         })(ci => updateEServiceById200(ci.toApi))
-      case Failure(ex) =>
+      case Failure(ex)          =>
         logger.error(s"Error while updating e-service by id ${eServiceId} - ${ex.getMessage}")
         updateEServiceById400(problemOf(StatusCodes.BadRequest, EServiceUpdateError(eServiceId)))
     }
@@ -472,7 +473,7 @@ class EServiceApiServiceImpl(
 
     onComplete(result) {
       case Success(descriptor) => createDescriptor200(descriptor.toApi)
-      case Failure(exception) =>
+      case Failure(exception)  =>
         logger.error(s"Error while creating descriptor for e-service ${eServiceId} - ${exception.getMessage}")
         createDescriptor400(problemOf(StatusCodes.BadRequest, DescriptorCreationBadRequest(eServiceId)))
     }
@@ -497,7 +498,7 @@ class EServiceApiServiceImpl(
       document      <- extractDocument(catalogItem, descriptorId, documentId)
       extractedFile <- extractFile(document)
       _             <- catalogFileManager.delete(extractedFile.path.toString)
-      updated       <- commander.ask(ref => DeleteCatalogItemDocument(catalogItem.id.toString, descriptorId, documentId, ref))
+      updated <- commander.ask(ref => DeleteCatalogItemDocument(catalogItem.id.toString, descriptorId, documentId, ref))
     } yield updated
 
     onComplete(result) {
@@ -519,11 +520,11 @@ class EServiceApiServiceImpl(
           s"Error while deleting document ${documentId} of descriptor ${descriptorId} for e-service ${eServiceId} - ${ex.getMessage}"
         )
         ex match {
-          case ex: EServiceNotFoundError =>
+          case ex: EServiceNotFoundError           =>
             deleteEServiceDocument404(problemOf(StatusCodes.NotFound, ex))
           case ex: EServiceDescriptorNotFoundError =>
             deleteEServiceDocument404(problemOf(StatusCodes.NotFound, ex))
-          case _ =>
+          case _                                   =>
             deleteEServiceDocument400(
               problemOf(
                 StatusCodes.BadRequest,
@@ -551,7 +552,7 @@ class EServiceApiServiceImpl(
             .error(s"Error during archiviation of descriptor ${descriptorId} of e-service ${eServiceId} - bad request")
           archiveDescriptor400(problemOf(StatusCodes.BadRequest, DescriptorArchiveBadRequest(eServiceId, descriptorId)))
         })(_ => archiveDescriptor204)
-      case Failure(ex) =>
+      case Failure(ex)          =>
         logger.error(
           s"Error during archiviation of descriptor ${descriptorId} of e-service ${eServiceId} - ${ex.getMessage}"
         )
@@ -578,7 +579,7 @@ class EServiceApiServiceImpl(
             problemOf(StatusCodes.BadRequest, DescriptorDeprecationBadRequest(eServiceId, descriptorId))
           )
         })(_ => deprecateDescriptor204)
-      case Failure(ex) =>
+      case Failure(ex)          =>
         logger.error(
           s"Error during deprecation of descriptor ${descriptorId} of e-service ${eServiceId} - ${ex.getMessage}"
         )
@@ -605,7 +606,7 @@ class EServiceApiServiceImpl(
             problemOf(StatusCodes.BadRequest, DescriptorSuspensionBadRequest(eServiceId, descriptorId))
           )
         })(_ => suspendDescriptor204)
-      case Failure(ex) =>
+      case Failure(ex)          =>
         logger.error(
           s"Error during suspension of descriptor ${descriptorId} of e-service ${eServiceId} - ${ex.getMessage}"
         )
@@ -630,7 +631,7 @@ class EServiceApiServiceImpl(
             .error(s"Error while making descriptor ${descriptorId} of e-service ${eServiceId} as draft - bad request")
           draftDescriptor400(problemOf(StatusCodes.BadRequest, DescriptorDraftBadRequest(eServiceId, descriptorId)))
         })(_ => draftDescriptor204)
-      case Failure(ex) =>
+      case Failure(ex)          =>
         logger.error(
           s"Error while making descriptor ${descriptorId} of e-service ${eServiceId} as draft - ${ex.getMessage}"
         )
@@ -655,7 +656,7 @@ class EServiceApiServiceImpl(
           logger.error(s"Error while publishing descriptor ${descriptorId} of e-service ${eServiceId} - bad request")
           publishDescriptor400(problemOf(StatusCodes.BadRequest, DescriptorPublishBadRequest(eServiceId, descriptorId)))
         })(_ => publishDescriptor204)
-      case Failure(ex) =>
+      case Failure(ex)          =>
         logger.error(s"Error while publishing descriptor ${descriptorId} of e-service ${eServiceId} - ${ex.getMessage}")
         publishDescriptor400(problemOf(StatusCodes.BadRequest, DescriptorPublishError(eServiceId, descriptorId)))
     }
@@ -681,13 +682,13 @@ class EServiceApiServiceImpl(
     }
 
     for {
-      retrieved <- commander.ask(ref => GetCatalogItem(eServiceId, ref))
-      current   <- retrieved.toFuture(EServiceNotFoundError(eServiceId))
+      retrieved          <- commander.ask(ref => GetCatalogItem(eServiceId, ref))
+      current            <- retrieved.toFuture(EServiceNotFoundError(eServiceId))
       toUpdateDescriptor <- current.descriptors
         .find(_.id.toString == descriptorId)
         .toFuture(EServiceDescriptorNotFoundError(eServiceId, descriptorId))
-      updatedDescriptor <- mergeChanges(toUpdateDescriptor, state).toFuture
-      updated           <- commander.ask(ref => UpdateCatalogItemDescriptor(current.id.toString, updatedDescriptor, ref))
+      updatedDescriptor  <- mergeChanges(toUpdateDescriptor, state).toFuture
+      updated <- commander.ask(ref => UpdateCatalogItemDescriptor(current.id.toString, updatedDescriptor, ref))
     } yield updated
   }
 
@@ -736,16 +737,16 @@ class EServiceApiServiceImpl(
             problemOf(StatusCodes.NotFound, DocumentUpdateNotFound(documentId, descriptorId, eServiceId))
           )
         })(catalogDocument => updateEServiceDocument200(catalogDocument.toApi))
-      case Failure(ex) =>
+      case Failure(ex)       =>
         logger.error(
           s"Error while updating document ${documentId} of descriptor ${descriptorId} of e-service ${eServiceId} - ${ex.getMessage}"
         )
         ex match {
-          case ex: EServiceNotFoundError =>
+          case ex: EServiceNotFoundError           =>
             updateEServiceDocument404(problemOf(StatusCodes.NotFound, ex))
           case ex: EServiceDescriptorNotFoundError =>
             updateEServiceDocument404(problemOf(StatusCodes.NotFound, ex))
-          case _ =>
+          case _                                   =>
             updateEServiceDocument400(
               problemOf(
                 StatusCodes.BadRequest,
@@ -771,20 +772,20 @@ class EServiceApiServiceImpl(
 
     val result: Future[StatusReply[CatalogItem]] =
       for {
-        service        <- getCommander(shard).ask(ref => GetCatalogItem(eServiceId, ref))
-        serviceToClone <- service.toFuture(EServiceNotFoundError(eServiceId))
+        service           <- getCommander(shard).ask(ref => GetCatalogItem(eServiceId, ref))
+        serviceToClone    <- service.toFuture(EServiceNotFoundError(eServiceId))
         descriptorToClone <- serviceToClone.descriptors
           .find(_.id.toString == descriptorId)
           .toFuture(EServiceDescriptorNotFoundError(eServiceId, descriptorId))
-        clonedInterface <-
+        clonedInterface   <-
           descriptorToClone.interface.fold(Future.successful[Option[CatalogDocument]](None))(interface =>
             interface.cloneDocument(catalogFileManager)(uuidSupplier.get).map(d => Some(d))
           )
-        clonedDocuments <- Future.traverse(descriptorToClone.docs)(
+        clonedDocuments   <- Future.traverse(descriptorToClone.docs)(
           _.cloneDocument(catalogFileManager)(uuidSupplier.get)
         )
-        clonedService <- cloneItemAsNewDraft(serviceToClone, descriptorToClone, clonedInterface, clonedDocuments)
-        cloned        <- getCommander(getShard(clonedService.id.toString)).ask(ref => AddClonedCatalogItem(clonedService, ref))
+        clonedService     <- cloneItemAsNewDraft(serviceToClone, descriptorToClone, clonedInterface, clonedDocuments)
+        cloned <- getCommander(getShard(clonedService.id.toString)).ask(ref => AddClonedCatalogItem(clonedService, ref))
       } yield cloned
 
     onComplete(result) {
@@ -792,7 +793,7 @@ class EServiceApiServiceImpl(
         document match {
           case statusReply if statusReply.isSuccess =>
             cloneEServiceByDescriptor200(statusReply.getValue.toApi)
-          case statusReply =>
+          case statusReply                          =>
             logger.error(
               s"Error while cloning descriptor ${descriptorId} of e-service ${eServiceId} - ${statusReply.getError.getMessage}"
             )
@@ -804,11 +805,11 @@ class EServiceApiServiceImpl(
       case Failure(ex) =>
         logger.error(s"Error while cloning descriptor ${descriptorId} of e-service ${eServiceId} - ${ex.getMessage}")
         ex match {
-          case ex: EServiceNotFoundError =>
+          case ex: EServiceNotFoundError           =>
             cloneEServiceByDescriptor404(problemOf(StatusCodes.NotFound, ex))
           case ex: EServiceDescriptorNotFoundError =>
             cloneEServiceByDescriptor404(problemOf(StatusCodes.NotFound, ex))
-          case _ =>
+          case _                                   =>
             cloneEServiceByDescriptor400(
               problemOf(StatusCodes.BadRequest, CloningEServiceError(eServiceId, descriptorId))
             )
@@ -874,7 +875,7 @@ class EServiceApiServiceImpl(
           logger.error(s"Error while deleting e-service ${eServiceId} - ${statusReply.getError.getMessage}")
           deleteEService400(problemOf(StatusCodes.BadRequest, DeleteEServiceBadRequest(eServiceId)))
         }
-      case Failure(ex) =>
+      case Failure(ex)          =>
         logger.error(s"Error while deleting e-service ${eServiceId} - ${ex.getMessage}")
         deleteEService400(problemOf(StatusCodes.BadRequest, DeleteEServiceBadRequest(eServiceId)))
     }
