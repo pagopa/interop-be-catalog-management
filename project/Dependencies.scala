@@ -36,11 +36,6 @@ object Dependencies {
       "com.lightbend.akka.management" %% "akka-management-loglevels-logback" % akkaManagementVersion
   }
 
-  private[this] object awssdk {
-    lazy val namespace = "software.amazon.awssdk"
-    lazy val s3        = namespace % "s3" % awsSdkVersion
-  }
-
   private[this] object cats {
     lazy val namespace = "org.typelevel"
     lazy val core      = namespace %% "cats-core" % catsVersion
@@ -84,7 +79,7 @@ object Dependencies {
 
   private[this] object postgres {
     lazy val namespace = "org.postgresql"
-    lazy val jdbc      = namespace % "postgresql" % "42.2.21"
+    lazy val jdbc      = namespace % "postgresql" % "42.3.3"
   }
 
   lazy val Protobuf = "protobuf"
@@ -102,11 +97,6 @@ object Dependencies {
   private[this] object scalamock {
     lazy val namespace = "org.scalamock"
     lazy val core      = namespace %% "scalamock" % scalaMockVersion
-  }
-
-  private[this] object scalapact {
-    lazy val namespace = "com.itv"
-    lazy val core      = namespace %% "scalapact-scalatest-suite" % scalaPactVersion
   }
 
   private[this] object tika {
@@ -146,7 +136,6 @@ object Dependencies {
       akka.s3Snapshot              % Compile,
       akka.slf4j                   % Compile,
       akka.stream                  % Compile,
-      awssdk.s3                    % Compile,
       cats.core                    % Compile,
       commonsFileUpload.fileUpload % Compile,
       kamon.bundle                 % Compile,
@@ -160,7 +149,6 @@ object Dependencies {
       tika.core                    % Compile,
       akka.testkit                 % Test,
       scalamock.core               % Test,
-      scalapact.core               % Test,
       scalaprotobuf.core           % Protobuf,
       scalatest.core               % Test
     )

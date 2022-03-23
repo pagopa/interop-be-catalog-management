@@ -113,6 +113,7 @@ class EServiceApiServiceImpl(
     val isInterface: Boolean = kind match {
       case INTERFACE => true
       case DOCUMENT  => false
+      case _         => false
     }
 
     val result: Future[Option[CatalogItem]] = for {
@@ -791,7 +792,7 @@ class EServiceApiServiceImpl(
         document match {
           case statusReply if statusReply.isSuccess =>
             cloneEServiceByDescriptor200(statusReply.getValue.toApi)
-          case statusReply if statusReply.isError =>
+          case statusReply =>
             logger.error(
               s"Error while cloning descriptor ${descriptorId} of e-service ${eServiceId} - ${statusReply.getError.getMessage}"
             )
