@@ -19,7 +19,8 @@ object CatalogAttribute {
   def fromApi(attribute: Attribute): Try[CatalogAttribute] = {
 
     val single: Option[CatalogAttributeValue]     = attribute.single.map(CatalogAttributeValue.fromApi)
-    val group: Option[Seq[CatalogAttributeValue]] = attribute.group.map(_.map(CatalogAttributeValue.fromApi))
+    val group: Option[Seq[CatalogAttributeValue]] =
+      attribute.group.map(_.map(CatalogAttributeValue.fromApi)).filter(_.nonEmpty)
 
     (single, group) match {
       case (Some(attr), None)  => Success[CatalogAttribute](SingleAttribute(attr))
