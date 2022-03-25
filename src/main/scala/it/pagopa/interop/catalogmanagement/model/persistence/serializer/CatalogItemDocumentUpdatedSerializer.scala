@@ -21,7 +21,7 @@ class CatalogItemDocumentUpdatedSerializer extends SerializerWithStringManifest 
   override def toBinary(o: AnyRef): Array[Byte] = o match {
     case event: CatalogItemDocumentUpdated =>
       serialize(event, className, currentVersion)
-    case _ =>
+    case _                                 =>
       throw new NotSerializableException(
         s"Unable to serialize object of type [[${o.getClass.getName}]] for manifest [[$className]] and version [[$currentVersion]]"
       )
@@ -30,7 +30,7 @@ class CatalogItemDocumentUpdatedSerializer extends SerializerWithStringManifest 
   override def fromBinary(bytes: Array[Byte], manifest: String): AnyRef = manifest.split('|').toList match {
     case `className` :: `version1` :: Nil =>
       deserialize(v1.events.CatalogItemDocumentUpdatedV1, bytes, manifest, currentVersion)
-    case _ =>
+    case _                                =>
       throw new NotSerializableException(
         s"Unable to handle manifest: [[$manifest]], currentVersion: [[$currentVersion]] "
       )

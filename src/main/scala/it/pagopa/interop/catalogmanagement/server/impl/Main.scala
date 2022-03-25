@@ -62,14 +62,14 @@ object Main extends App {
     fileManager <- FileManager.getConcreteImplementation(StorageConfiguration.runtimeFileManager)
     keyset      <- JWTConfiguration.jwtReader.loadKeyset()
     jwtValidator = new DefaultJWTReader with PublicKeysHolder {
-      var publicKeyset = keyset
+      var publicKeyset                                                                 = keyset
       override protected val claimsVerifier: DefaultJWTClaimsVerifier[SecurityContext] =
         getClaimsVerifier(audience = ApplicationConfiguration.jwtAudience)
     }
   } yield (fileManager, jwtValidator)
 
   val (runtimeFileManager, jwtValidator) =
-    dependenciesLoaded.get //THIS IS THE END OF THE WORLD. Exceptions are welcomed here.
+    dependenciesLoaded.get // THIS IS THE END OF THE WORLD. Exceptions are welcomed here.
 
   Kamon.init()
 

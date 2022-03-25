@@ -28,7 +28,7 @@ final case class State(items: Map[String, CatalogItem]) extends Persistable {
       case Some(item) =>
         val updatedItem = item.copy(descriptors = catalogDescriptor +: item.descriptors)
         copy(items = items + (item.id.toString -> updatedItem))
-      case None => this
+      case None       => this
     }
   }
 
@@ -47,10 +47,10 @@ final case class State(items: Map[String, CatalogItem]) extends Persistable {
       val interface: Option[CatalogDocument] = descriptor.interface.filter(_.id.toString == docId)
       val document: Option[CatalogDocument]  = descriptor.docs.find(_.id.toString == docId)
       (interface, document) match {
-        case (Some(_), None) => descriptor.copy(interface = Some(modifiedDocument))
-        case (None, Some(_)) =>
+        case (Some(_), None)    => descriptor.copy(interface = Some(modifiedDocument))
+        case (None, Some(_))    =>
           descriptor.copy(docs = modifiedDocument +: descriptor.docs.filterNot(_.id.toString == docId))
-        case (None, None) => descriptor
+        case (None, None)       => descriptor
         case (Some(_), Some(_)) =>
           descriptor.copy(
             interface = Some(modifiedDocument),
@@ -84,9 +84,9 @@ final case class State(items: Map[String, CatalogItem]) extends Persistable {
       val interface: Option[CatalogDocument] = descriptor.interface.filter(_.id.toString == docId)
       val document: Option[CatalogDocument]  = descriptor.docs.find(_.id.toString == docId)
       (interface, document) match {
-        case (Some(_), None) => descriptor.copy(interface = None)
-        case (None, Some(_)) => descriptor.copy(docs = descriptor.docs.filterNot(_.id.toString == docId))
-        case (None, None)    => descriptor
+        case (Some(_), None)    => descriptor.copy(interface = None)
+        case (None, Some(_))    => descriptor.copy(docs = descriptor.docs.filterNot(_.id.toString == docId))
+        case (None, None)       => descriptor
         case (Some(_), Some(_)) =>
           descriptor.copy(interface = None, docs = descriptor.docs.filterNot(_.id.toString == docId))
       }
@@ -109,7 +109,7 @@ final case class State(items: Map[String, CatalogItem]) extends Persistable {
     val newState = for {
       item       <- items.get(eServiceId)
       descriptor <- item.descriptors.find(_.id.toString == descriptorId)
-      updatedItem = item.copy(descriptors =
+      updatedItem  = item.copy(descriptors =
         item.descriptors.filterNot(_.id.toString == descriptorId).prepended(descriptorOperation(descriptor))
       )
       updatedState = copy(items = items + (item.id.toString -> updatedItem))

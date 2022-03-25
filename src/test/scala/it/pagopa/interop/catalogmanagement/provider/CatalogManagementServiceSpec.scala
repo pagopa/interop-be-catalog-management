@@ -46,14 +46,14 @@ class CatalogManagementServiceSpec
 
   val payloadMarshaller: EServiceApiMarshaller = new EServiceApiMarshallerImpl
 
-  var controller: Option[Controller]                 = None
-  var bindServer: Option[Future[Http.ServerBinding]] = None
+  var controller: Option[Controller]                                    = None
+  var bindServer: Option[Future[Http.ServerBinding]]                    = None
   val wrappingDirective: AuthenticationDirective[Seq[(String, String)]] =
     SecurityDirectives.authenticateOAuth2("SecurityRealm", AkkaUtils.Authenticator)
 
   val sharding: ClusterSharding = ClusterSharding(system)
 
-  val httpSystem: ActorSystem[Any] =
+  val httpSystem: ActorSystem[Any]                        =
     ActorSystem(Behaviors.ignore[Any], name = system.name, config = system.settings.config)
   implicit val executionContext: ExecutionContextExecutor = httpSystem.executionContext
   implicit val classicSystem: actor.ActorSystem           = httpSystem.classicSystem
@@ -249,7 +249,7 @@ class CatalogManagementServiceSpec
       )
 
       response.status shouldBe StatusCodes.NoContent
-      val updatedEService = retrieveEService(eServiceUuid.toString)
+      val updatedEService   = retrieveEService(eServiceUuid.toString)
       updatedEService.descriptors.size shouldBe 1
       val updatedDescriptor = updatedEService.descriptors.head
       updatedDescriptor.state shouldBe EServiceDescriptorState.PUBLISHED
@@ -273,7 +273,7 @@ class CatalogManagementServiceSpec
       )
 
       response.status shouldBe StatusCodes.NoContent
-      val updatedEService = retrieveEService(eServiceUuid.toString)
+      val updatedEService   = retrieveEService(eServiceUuid.toString)
       updatedEService.descriptors.size shouldBe 1
       val updatedDescriptor = updatedEService.descriptors.head
       updatedDescriptor.state shouldBe EServiceDescriptorState.DEPRECATED
@@ -297,7 +297,7 @@ class CatalogManagementServiceSpec
       )
 
       response.status shouldBe StatusCodes.NoContent
-      val updatedEService = retrieveEService(eServiceUuid.toString)
+      val updatedEService   = retrieveEService(eServiceUuid.toString)
       updatedEService.descriptors.size shouldBe 1
       val updatedDescriptor = updatedEService.descriptors.head
       updatedDescriptor.state shouldBe EServiceDescriptorState.SUSPENDED
@@ -306,12 +306,12 @@ class CatalogManagementServiceSpec
 
   "Update an e-service" should {
     "return a modified set of e-service information" in {
-      //given an e-service
+      // given an e-service
       val eServiceUuid = UUID.randomUUID().toString
       val eService     = createEService(eServiceUuid)
 
-      //when updated with the following data
-      val data =
+      // when updated with the following data
+      val data     =
         """{
           |     "name": "TestName"
           |   , "description": "howdy!"
@@ -330,7 +330,7 @@ class CatalogManagementServiceSpec
         Duration.Inf
       )
 
-      //then
+      // then
       response.status shouldBe StatusCodes.OK
       val updatedEService = retrieveEService(eServiceUuid)
 
@@ -343,11 +343,11 @@ class CatalogManagementServiceSpec
     }
 
     "delete an e-service when it has no descriptors" in {
-      //given an e-service
+      // given an e-service
       val eServiceUuid = UUID.randomUUID().toString
       val eService     = createEService(eServiceUuid)
 
-      //when deleted
+      // when deleted
       val response = Await.result(
         Http().singleRequest(
           HttpRequest(
@@ -359,17 +359,17 @@ class CatalogManagementServiceSpec
         Duration.Inf
       )
 
-      //then
+      // then
       response.status shouldBe StatusCodes.NoContent
     }
 
     "not delete an e-service when it has at least one descriptor" in {
-      //given an e-service
+      // given an e-service
       val eServiceUuid = UUID.randomUUID().toString
       val eService     = createEService(eServiceUuid)
       val _            = createEServiceDescriptor(eServiceUuid, UUID.randomUUID())
 
-      //when deleted
+      // when deleted
       val response = Await.result(
         Http().singleRequest(
           HttpRequest(
@@ -381,7 +381,7 @@ class CatalogManagementServiceSpec
         Duration.Inf
       )
 
-      //then
+      // then
       response.status shouldBe StatusCodes.BadRequest
     }
   }
