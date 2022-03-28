@@ -9,7 +9,6 @@ import akka.cluster.sharding.typed.scaladsl.{ClusterSharding, Entity}
 import akka.cluster.typed.{Cluster, Join}
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.model._
-import akka.http.scaladsl.model.headers.OAuth2BearerToken
 import akka.http.scaladsl.server.directives.{AuthenticationDirective, SecurityDirectives}
 import it.pagopa.interop.catalogmanagement.api.impl.{EServiceApiMarshallerImpl, EServiceApiServiceImpl}
 import it.pagopa.interop.catalogmanagement.api.{EServiceApi, EServiceApiMarshaller}
@@ -118,7 +117,7 @@ class CatalogManagementServiceSpec
             uri = s"$serviceURL/eservices/${eService.id.toString}/descriptors/${descriptor.id.toString}",
             method = HttpMethods.PUT,
             entity = HttpEntity(ContentType(MediaTypes.`application/json`), data),
-            headers = Seq(headers.Authorization(OAuth2BearerToken("1234")))
+            headers = requestHeaders
           )
         ),
         Duration.Inf
@@ -160,7 +159,7 @@ class CatalogManagementServiceSpec
             uri = s"$serviceURL/eservices/${newEService.id.toString}/descriptors/2",
             method = HttpMethods.PUT,
             entity = HttpEntity(ContentType(MediaTypes.`application/json`), data),
-            headers = Seq(headers.Authorization(OAuth2BearerToken("1234")))
+            headers = requestHeaders
           )
         ),
         Duration.Inf
@@ -187,7 +186,7 @@ class CatalogManagementServiceSpec
             uri = s"$serviceURL/eservices/1/descriptors/2",
             method = HttpMethods.PUT,
             entity = HttpEntity(ContentType(MediaTypes.`application/json`), data),
-            headers = Seq(headers.Authorization(OAuth2BearerToken("1234")))
+            headers = requestHeaders
           )
         ),
         Duration.Inf
@@ -219,7 +218,7 @@ class CatalogManagementServiceSpec
             uri = s"$serviceURL/eservices/${eService.id.toString}/descriptors/${descriptorId.toString}",
             method = HttpMethods.PUT,
             entity = HttpEntity(ContentType(MediaTypes.`application/json`), data),
-            headers = Seq(headers.Authorization(OAuth2BearerToken("1234")))
+            headers = requestHeaders
           )
         ),
         Duration.Inf
@@ -242,7 +241,7 @@ class CatalogManagementServiceSpec
           HttpRequest(
             uri = s"$serviceURL/eservices/${eService.id.toString}/descriptors/${descriptor.id.toString}/publish",
             method = HttpMethods.POST,
-            headers = Seq(headers.Authorization(OAuth2BearerToken("1234")))
+            headers = requestHeaders
           )
         ),
         Duration.Inf
@@ -266,7 +265,7 @@ class CatalogManagementServiceSpec
           HttpRequest(
             uri = s"$serviceURL/eservices/${eService.id.toString}/descriptors/${descriptor.id.toString}/deprecate",
             method = HttpMethods.POST,
-            headers = Seq(headers.Authorization(OAuth2BearerToken("1234")))
+            headers = requestHeaders
           )
         ),
         Duration.Inf
@@ -290,7 +289,7 @@ class CatalogManagementServiceSpec
           HttpRequest(
             uri = s"$serviceURL/eservices/${eService.id.toString}/descriptors/${descriptor.id.toString}/suspend",
             method = HttpMethods.POST,
-            headers = Seq(headers.Authorization(OAuth2BearerToken("1234")))
+            headers = requestHeaders
           )
         ),
         Duration.Inf
@@ -324,7 +323,7 @@ class CatalogManagementServiceSpec
             uri = s"$serviceURL/eservices/${eService.id.toString}",
             method = HttpMethods.PUT,
             entity = HttpEntity(ContentType(MediaTypes.`application/json`), data),
-            headers = Seq(headers.Authorization(OAuth2BearerToken("1234")))
+            headers = requestHeaders
           )
         ),
         Duration.Inf
@@ -353,7 +352,7 @@ class CatalogManagementServiceSpec
           HttpRequest(
             uri = s"$serviceURL/eservices/${eService.id.toString}",
             method = HttpMethods.DELETE,
-            headers = Seq(headers.Authorization(OAuth2BearerToken("1234")))
+            headers = requestHeaders
           )
         ),
         Duration.Inf
@@ -375,7 +374,7 @@ class CatalogManagementServiceSpec
           HttpRequest(
             uri = s"$serviceURL/eservices/${eService.id.toString}",
             method = HttpMethods.DELETE,
-            headers = Seq(headers.Authorization(OAuth2BearerToken("1234")))
+            headers = requestHeaders
           )
         ),
         Duration.Inf

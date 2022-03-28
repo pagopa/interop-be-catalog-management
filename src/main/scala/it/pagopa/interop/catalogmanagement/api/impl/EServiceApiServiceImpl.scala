@@ -88,12 +88,13 @@ class EServiceApiServiceImpl(
     * Code: 400, Message: Invalid input, DataType: Problem
     * Code: 404, Message: Not found, DataType: Problem
     */
+
   override def createEServiceDocument(
-    eServiceId: String,
-    descriptorId: String,
     kind: String,
     description: String,
-    doc: (FileInfo, File)
+    doc: (FileInfo, File),
+    eServiceId: String,
+    descriptorId: String
   )(implicit
     toEntityMarshallerProblem: ToEntityMarshaller[Problem],
     toEntityMarshallerEService: ToEntityMarshaller[EService],
