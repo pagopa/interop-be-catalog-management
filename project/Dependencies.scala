@@ -7,7 +7,7 @@ object Dependencies {
   private[this] object akka {
     lazy val namespace = "com.typesafe.akka"
 
-    lazy val actorTyped = namespace %% "akka-actor-typed" % akkaVersion
+    lazy val actorTyped       = namespace %% "akka-actor-typed" % akkaVersion
     lazy val clusterBootstrap =
       "com.lightbend.akka.management" %% "akka-management-cluster-bootstrap" % akkaManagementVersion
     lazy val clusterHttp     = "com.lightbend.akka.management" %% "akka-management-cluster-http" % akkaManagementVersion
@@ -31,7 +31,7 @@ object Dependencies {
     lazy val stream           = namespace            %% "akka-stream-typed"            % akkaVersion
     lazy val testkit          = namespace            %% "akka-actor-testkit-typed"     % akkaVersion
 
-    lazy val management = "com.lightbend.akka.management" %% "akka-management" % akkaManagementVersion
+    lazy val management          = "com.lightbend.akka.management" %% "akka-management" % akkaManagementVersion
     lazy val managementLogLevels =
       "com.lightbend.akka.management" %% "akka-management-loglevels-logback" % akkaManagementVersion
   }
@@ -111,9 +111,9 @@ object Dependencies {
   object Jars {
     lazy val overrides: Seq[ModuleID] =
       Seq(jackson.annotations % Compile, jackson.core % Compile, jackson.databind % Compile)
-    lazy val `server`: Seq[ModuleID] = Seq(
+    lazy val `server`: Seq[ModuleID]  = Seq(
       // For making Java 12 happy
-      "javax.annotation" % "javax.annotation-api" % "1.3.2" % "compile",
+      "javax.annotation"           % "javax.annotation-api" % "1.3.2" % "compile",
       //
       akka.actorTyped              % Compile,
       akka.clusterBootstrap        % Compile,
@@ -152,7 +152,7 @@ object Dependencies {
       scalaprotobuf.core           % Protobuf,
       scalatest.core               % Test
     )
-    lazy val client: Seq[ModuleID] = Seq(
+    lazy val client: Seq[ModuleID]    = Seq(
       akka.stream     % Compile,
       akka.http       % Compile,
       akka.httpJson4s % Compile,
