@@ -27,7 +27,7 @@ final class CatalogFileManagerImpl(val fileManager: FileManager) extends Catalog
           id = id,
           name = fileParts._1.getFileName,
           contentType = fileParts._1.getContentType.toString(),
-          description = description,
+          prettyName = description,
           path = filePath,
           checksum = Digester.createMD5Hash(fileParts._2),
           uploadDate = OffsetDateTime.now()
@@ -51,7 +51,7 @@ final class CatalogFileManagerImpl(val fileManager: FileManager) extends Catalog
           id = documentId,
           name = fileName,
           contentType = contentType,
-          description = description,
+          prettyName = description,
           path = copiedPath,
           checksum = checksum,
           uploadDate = OffsetDateTime.now()

@@ -595,7 +595,7 @@ paths:
               type: object
               required:
                 - kind
-                - description
+                - prettyName
                 - doc
               properties:
                 kind:
@@ -604,7 +604,7 @@ paths:
                   enum:
                     - INTERFACE
                     - DOCUMENT
-                description:
+                prettyName:
                   type: string
                 doc:
                   type: string
@@ -844,7 +844,7 @@ components:
         - id
         - name
         - contentType
-        - description
+        - prettyName
         - path
       properties:
         id:
@@ -854,7 +854,7 @@ components:
           type: string
         contentType:
           type: string
-        description:
+        prettyName:
           type: string
         path:
           type: string
@@ -962,10 +962,10 @@ components:
           minimum: 0
     UpdateEServiceDescriptorDocumentSeed:
       required:
-        - description
+        - prettyName
       type: object
       properties:
-        description:
+        prettyName:
           type: string
     AttributeValue:
       type: object

@@ -252,7 +252,7 @@ package object v1 {
           id = documentId,
           name = event.updatedDocument.name,
           contentType = event.updatedDocument.contentType,
-          description = event.updatedDocument.description,
+          prettyName = event.updatedDocument.prettyName,
           path = event.updatedDocument.path,
           checksum = event.updatedDocument.checksum,
           uploadDate = uploadDate
@@ -273,7 +273,7 @@ package object v1 {
           id = event.updatedDocument.id.toString,
           name = event.updatedDocument.name,
           contentType = event.updatedDocument.contentType,
-          description = event.updatedDocument.description,
+          prettyName = event.updatedDocument.prettyName,
           path = event.updatedDocument.path,
           checksum = event.updatedDocument.checksum,
           uploadDate = uploadDate
@@ -293,7 +293,7 @@ package object v1 {
           id = event.document.id.toString,
           name = event.document.name,
           contentType = event.document.contentType,
-          description = event.document.description,
+          prettyName = event.document.prettyName,
           path = event.document.path,
           checksum = event.document.checksum,
           uploadDate = uploadDate
@@ -315,7 +315,7 @@ package object v1 {
           id = documentId,
           name = event.document.name,
           contentType = event.document.contentType,
-          description = event.document.description,
+          prettyName = event.document.prettyName,
           path = event.document.path,
           checksum = event.document.checksum,
           uploadDate = uploadDate

@@ -46,7 +46,7 @@ class CatalogItemSpec extends AnyWordSpecLike with Matchers {
       path = "",
       checksum = "",
       uploadDate = OffsetDateTime.now(),
-      description = "fake"
+      prettyName = "fake"
     )
 
   "a CatalogItem" should {

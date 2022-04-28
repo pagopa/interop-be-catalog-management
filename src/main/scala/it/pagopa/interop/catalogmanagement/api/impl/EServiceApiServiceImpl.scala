@@ -715,7 +715,7 @@ class EServiceApiServiceImpl(
       found       <- commander.ask(ref => GetCatalogItem(eServiceId, ref))
       catalogItem <- found.toFuture(EServiceNotFoundError(eServiceId))
       document    <- extractDocument(catalogItem, descriptorId, documentId)
-      updatedDocument = document.copy(description = updateEServiceDescriptorDocumentSeed.description)
+      updatedDocument = document.copy(prettyName = updateEServiceDescriptorDocumentSeed.prettyName)
       updated <- commander.ask(ref =>
         UpdateCatalogItemDocument(
           eServiceId = eServiceId,

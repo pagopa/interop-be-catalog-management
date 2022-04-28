@@ -10,14 +10,14 @@ final case class CatalogDocument(
   id: UUID,
   name: String,
   contentType: String,
-  description: String,
+  prettyName: String,
   path: String,
   checksum: String,
   uploadDate: OffsetDateTime
 ) extends Convertable[EServiceDoc] {
 
   override def toApi: EServiceDoc =
-    EServiceDoc(id = id, name = name, contentType = contentType, description = description, path = path)
+    EServiceDoc(id = id, name = name, contentType = contentType, prettyName = prettyName, path = path)
 
   /** clones the current document instance as a new one.
     * @param fileManager - DI of the fileManager in place
@@ -31,7 +31,7 @@ final case class CatalogDocument(
   )(clonedDocumentId: UUID)(implicit ec: ExecutionContext): Future[CatalogDocument] = {
     fileManager.copy(path)(
       documentId = clonedDocumentId,
-      description = this.description,
+      description = this.prettyName,
       checksum = this.checksum,
       contentType = this.contentType,
       fileName = this.name
