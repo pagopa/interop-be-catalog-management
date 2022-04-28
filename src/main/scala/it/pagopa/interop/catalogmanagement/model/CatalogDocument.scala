@@ -31,7 +31,7 @@ final case class CatalogDocument(
   )(clonedDocumentId: UUID)(implicit ec: ExecutionContext): Future[CatalogDocument] = {
     fileManager.copy(path)(
       documentId = clonedDocumentId,
-      description = this.prettyName,
+      prettyName = this.prettyName,
       checksum = this.checksum,
       contentType = this.contentType,
       fileName = this.name

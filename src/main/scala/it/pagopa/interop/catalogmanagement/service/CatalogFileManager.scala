@@ -21,13 +21,13 @@ import scala.concurrent.{ExecutionContext, Future}
 trait CatalogFileManager {
   val fileManager: FileManager
 
-  def store(id: UUID, description: String, fileParts: (FileInfo, File))(implicit
+  def store(id: UUID, prettyName: String, fileParts: (FileInfo, File))(implicit
     ec: ExecutionContext
   ): Future[CatalogDocument]
 
   def copy(
     filePathToCopy: String
-  )(documentId: UUID, description: String, checksum: String, contentType: String, fileName: String)(implicit
+  )(documentId: UUID, prettyName: String, checksum: String, contentType: String, fileName: String)(implicit
     ec: ExecutionContext
   ): Future[CatalogDocument]
 
