@@ -91,7 +91,7 @@ class EServiceApiServiceImpl(
 
   override def createEServiceDocument(
     kind: String,
-    description: String,
+    prettyName: String,
     doc: (FileInfo, File),
     eServiceId: String,
     descriptorId: String
@@ -120,7 +120,7 @@ class EServiceApiServiceImpl(
     val result: Future[Option[CatalogItem]] = for {
       current  <- retrieveCatalogItem(commander, eServiceId)
       verified <- CatalogFileManager.verify(doc, current, descriptorId, isInterface)
-      document <- catalogFileManager.store(id = uuidSupplier.get, description = description, fileParts = doc)
+      document <- catalogFileManager.store(id = uuidSupplier.get, prettyName = prettyName, fileParts = doc)
       _ <- commander.ask(ref => AddCatalogItemDocument(verified.id.toString, descriptorId, document, isInterface, ref))
       updated <- commander.ask(ref => GetCatalogItem(eServiceId, ref))
     } yield updated
@@ -715,7 +715,7 @@ class EServiceApiServiceImpl(
       found       <- commander.ask(ref => GetCatalogItem(eServiceId, ref))
       catalogItem <- found.toFuture(EServiceNotFoundError(eServiceId))
       document    <- extractDocument(catalogItem, descriptorId, documentId)
-      updatedDocument = document.copy(description = updateEServiceDescriptorDocumentSeed.description)
+      updatedDocument = document.copy(prettyName = updateEServiceDescriptorDocumentSeed.prettyName)
       updated <- commander.ask(ref =>
         UpdateCatalogItemDocument(
           eServiceId = eServiceId,

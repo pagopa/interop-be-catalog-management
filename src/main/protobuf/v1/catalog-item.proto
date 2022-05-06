@@ -53,7 +53,7 @@ message CatalogDocumentV1 {
   required string path = 4;
   required string checksum = 5;
   required string uploadDate = 6;
-  required string description = 7;
+  required string prettyName = 7;
 }
 
 enum CatalogDescriptorStateV1 {
