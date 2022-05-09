@@ -38,7 +38,7 @@ class EServiceApiServiceImpl(
 )(implicit ec: ExecutionContext)
     extends EServiceApiService {
 
-  val logger = Logger.takingImplicit[ContextFieldsToLog]this.getClass)
+  val logger = Logger.takingImplicit[ContextFieldsToLog](this.getClass)
 
   private lazy val INTERFACE = "INTERFACE"
   private lazy val DOCUMENT  = "DOCUMENT"

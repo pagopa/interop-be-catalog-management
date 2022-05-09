@@ -36,7 +36,7 @@ trait CatalogFileManager {
 object CatalogFileManager {
 
   private val logger: LoggerTakingImplicit[ContextFieldsToLog] =
-    Logger.takingImplicit[ContextFieldsToLog](Logger(this.getClass))
+    Logger.takingImplicit[ContextFieldsToLog](this.getClass)
 
   private final val tika: Tika = new Tika()
 
