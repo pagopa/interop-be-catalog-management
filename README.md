@@ -1,23 +1,15 @@
-# PDND Interoperability - Catalog Management Micro Service
+# interop-be-catalog-management
 
-## How to start
-1. Generate boilerplate
+To change the log level at runtime use:
+
 ```
-sbt clean generateCode
-```
-2. Update dependencies
-```
-sbt -Djavax.net.ssl.trustStore=<path_to_your_local_trust_store> -Djavax.net.ssl.trustStorePassword=<trust_store_password> update
-```
-3. Run locally
-```
-sbt -Dconfig.file="src/main/resources/reference-standalone.conf" run
+# This is for the internal Akka actors and classic Akka logging
+curl -X PUT <akkaManagementEndpoint>/loglevel/akka?level=DEBUG
+# This is for the internal Akka actors and classic Akka logging
+curl -X PUT <akkaManagementEndpoint>/loglevel/logback?logger=<loggerName>&level=DEBUG
 ```
 
-## Environment variables
-POSTGRES_HOST=localhost
-POSTGRES_PORT=5432
-POSTGRES_DB=persistence_management
-POSTGRES_SCHEMA=catalog
-POSTGRES_USR=root
-POSTGRES_PSW=password
+where `<loggerName>` is the name of a specific logger that has to have been created in the code itself.
+`GET`ting the same endpoints w/o the `level` query parameters returns the actual logging level for that logger.
+
+[Source](https://doc.akka.io/docs/akka-management/current/loglevels/logback.html)

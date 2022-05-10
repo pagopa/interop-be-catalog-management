@@ -11,7 +11,6 @@ import it.pagopa.interop.commons.files.service.{FileManager, StorageFilePath}
 import it.pagopa.interop.commons.logging.{CanLogContextFields, ContextFieldsToLog}
 import it.pagopa.interop.commons.utils.Digester
 import org.apache.tika.Tika
-import org.slf4j.LoggerFactory
 
 import java.io.File
 import java.nio.file.Files
@@ -37,7 +36,7 @@ trait CatalogFileManager {
 object CatalogFileManager {
 
   private val logger: LoggerTakingImplicit[ContextFieldsToLog] =
-    Logger.takingImplicit[ContextFieldsToLog](LoggerFactory.getLogger(this.getClass))
+    Logger.takingImplicit[ContextFieldsToLog](this.getClass)
 
   private final val tika: Tika = new Tika()
 
