@@ -4,10 +4,14 @@ import akka.actor.typed.ActorSystem
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.model.headers.OAuth2BearerToken
 import akka.http.scaladsl.model._
+import akka.http.scaladsl.server.Directives.Authenticator
+import akka.http.scaladsl.server.directives.Credentials
+import akka.http.scaladsl.server.directives.Credentials.{Missing, Provided}
 import akka.http.scaladsl.unmarshalling.Unmarshal
 import it.pagopa.interop.catalogmanagement.api.impl._
 import it.pagopa.interop.catalogmanagement.model.{EService, EServiceDescriptor}
 import it.pagopa.interop.catalogmanagement.provider.CatalogManagementServiceSpec.mockUUIDSupplier
+import it.pagopa.interop.commons.utils.{BEARER, USER_ROLES}
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.matchers.should.Matchers._
 import org.scalatest.wordspec.AnyWordSpecLike
@@ -129,5 +133,15 @@ trait SpecHelper extends SpecConfiguration with AnyWordSpecLike with MockFactory
     response.status shouldBe StatusCodes.OK
 
     Await.result(Unmarshal(response).to[EService], Duration.Inf)
+  }
+}
+
+//mocks admin user role rights for every call
+object AdminMockAuthenticator extends Authenticator[Seq[(String, String)]] {
+  override def apply(credentials: Credentials): Option[Seq[(String, String)]] = {
+    credentials match {
+      case Provided(identifier) => Some(Seq(BEARER -> identifier, USER_ROLES -> "admin"))
+      case Missing              => None
+    }
   }
 }
