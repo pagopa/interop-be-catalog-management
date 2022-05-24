@@ -18,7 +18,7 @@ import it.pagopa.interop.catalogmanagement.error.CatalogManagementErrors._
 import it.pagopa.interop.catalogmanagement.model._
 import it.pagopa.interop.catalogmanagement.model.persistence._
 import it.pagopa.interop.catalogmanagement.service.{CatalogFileManager, VersionGenerator}
-import it.pagopa.interop.commons.jwt.{ADMIN_ROLE, API_ROLE, authorizeInterop, hasPermissions}
+import it.pagopa.interop.commons.jwt.{ADMIN_ROLE, API_ROLE, M2M_ROLE, SECURITY_ROLE, authorizeInterop, hasPermissions}
 import it.pagopa.interop.commons.logging.{CanLogContextFields, ContextFieldsToLog}
 import it.pagopa.interop.commons.utils.AkkaUtils
 import it.pagopa.interop.commons.utils.TypeConversions.{EitherOps, OptionOps}
@@ -161,7 +161,7 @@ class EServiceApiServiceImpl(
     toEntityMarshallerProblem: ToEntityMarshaller[Problem],
     toEntityMarshallerEService: ToEntityMarshaller[EService],
     contexts: Seq[(String, String)]
-  ): Route = {
+  ): Route = authorize(ADMIN_ROLE, API_ROLE, SECURITY_ROLE, M2M_ROLE) {
     logger.info("Getting e-service {}", eServiceId)
 
     val shard: String                       = getShard(eServiceId)
@@ -182,7 +182,7 @@ class EServiceApiServiceImpl(
     toEntityMarshallerEServicearray: ToEntityMarshaller[Seq[EService]],
     toEntityMarshallerProblem: ToEntityMarshaller[Problem],
     contexts: Seq[(String, String)]
-  ): Route = {
+  ): Route = authorize(ADMIN_ROLE, API_ROLE, SECURITY_ROLE, M2M_ROLE) {
     logger.info("Getting e-service for producer {} and state {}", producerId.toString, state.toString)
     val sliceSize = 100
 
@@ -231,7 +231,7 @@ class EServiceApiServiceImpl(
     toEntityMarshallerEServiceDoc: ToEntityMarshaller[EServiceDoc],
     toEntityMarshallerProblem: ToEntityMarshaller[Problem],
     contexts: Seq[(String, String)]
-  ): Route = {
+  ): Route = authorize(ADMIN_ROLE, API_ROLE, SECURITY_ROLE, M2M_ROLE) {
     logger.info(
       "Getting e-service document {} for e-service {} and descriptor {}",
       documentId,
