@@ -17,8 +17,7 @@ import it.pagopa.interop.catalogmanagement.model.persistence.{CatalogPersistentB
 import it.pagopa.interop.catalogmanagement.server.Controller
 import it.pagopa.interop.catalogmanagement.server.impl.Main.behaviorFactory
 import it.pagopa.interop.catalogmanagement.service.CatalogFileManager
-import it.pagopa.interop.catalogmanagement.{SpecConfiguration, SpecHelper}
-import it.pagopa.interop.commons.utils.AkkaUtils
+import it.pagopa.interop.catalogmanagement.{AdminMockAuthenticator, SpecConfiguration, SpecHelper}
 import it.pagopa.interop.commons.utils.service.UUIDSupplier
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.wordspec.AnyWordSpecLike
@@ -48,7 +47,7 @@ class CatalogManagementServiceSpec
   var controller: Option[Controller]                                    = None
   var bindServer: Option[Future[Http.ServerBinding]]                    = None
   val wrappingDirective: AuthenticationDirective[Seq[(String, String)]] =
-    SecurityDirectives.authenticateOAuth2("SecurityRealm", AkkaUtils.Authenticator)
+    SecurityDirectives.authenticateOAuth2("SecurityRealm", AdminMockAuthenticator)
 
   val sharding: ClusterSharding = ClusterSharding(system)
 
