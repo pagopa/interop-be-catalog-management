@@ -42,7 +42,7 @@ class CatalogManagementServiceSpec
     with SpecConfiguration
     with SpecHelper {
 
-  val payloadMarshaller: EServiceApiMarshaller = new EServiceApiMarshallerImpl
+  val payloadMarshaller: EServiceApiMarshaller = EServiceApiMarshallerImpl
 
   var controller: Option[Controller]                                    = None
   var bindServer: Option[Future[Http.ServerBinding]]                    = None

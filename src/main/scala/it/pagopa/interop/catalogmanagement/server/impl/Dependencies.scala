@@ -52,8 +52,7 @@ trait Dependencies {
   val catalogPersistentEntity: Entity[Command, ShardingEnvelope[Command]] =
     Entity(CatalogPersistentBehavior.TypeKey)(behaviorFactory)
 
-  val eServiceApiMarshallerImpl: EServiceApiMarshallerImpl = new EServiceApiMarshallerImpl()
-  val uuidSupplier: UUIDSupplier                           = new UUIDSupplierImpl
+  val uuidSupplier: UUIDSupplier = new UUIDSupplierImpl
 
   def getFileManager(): Future[FileManager] =
     FileManager.getConcreteImplementation(StorageConfiguration.runtimeFileManager).toFuture
@@ -87,7 +86,7 @@ trait Dependencies {
   val validationExceptionToRoute: ValidationReport => Route = report => {
     val error =
       problemOf(StatusCodes.BadRequest, ValidationRequestError(OpenapiUtils.errorFromRequestValidationReport(report)))
-    complete(error.status, error)(eServiceApiMarshallerImpl.toEntityMarshallerProblem)
+    complete(error.status, error)(EServiceApiMarshallerImpl.toEntityMarshallerProblem)
   }
 
 }

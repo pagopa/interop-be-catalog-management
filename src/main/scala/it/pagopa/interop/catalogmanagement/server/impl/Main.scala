@@ -65,7 +65,7 @@ object Main extends App with Dependencies {
         jwtReader <- getJwtValidator()
         eServiceApi = new EServiceApi(
           new EServiceApiServiceImpl(actorSystem, sharding, catalogPersistentEntity, uuidSupplier, catalogFileManager),
-          eServiceApiMarshallerImpl,
+          EServiceApiMarshallerImpl,
           jwtReader.OAuth2JWTValidatorAsContexts
         )
         controller  = new Controller(eServiceApi, validationExceptionToRoute.some)(actorSystem.classicSystem)
