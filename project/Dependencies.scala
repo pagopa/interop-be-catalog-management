@@ -20,6 +20,7 @@ object Dependencies {
     lazy val http             = namespace            %% "akka-http"                    % akkaHttpVersion
     lazy val httpJson         = namespace            %% "akka-http-spray-json"         % akkaHttpVersion
     lazy val httpJson4s       = "de.heikoseeberger"  %% "akka-http-json4s"             % httpJson4sVersion
+    lazy val httpTestkit      = namespace            %% "akka-http-testkit"            % akkaHttpVersion
     lazy val persistence      = namespace            %% "akka-persistence-typed"       % akkaVersion
     lazy val persistenceJdbc  = "com.lightbend.akka" %% "akka-persistence-jdbc"        % jdbcPersistenceVersion
     lazy val persistenceQuery = namespace            %% "akka-persistence-query"       % akkaVersion
@@ -148,6 +149,7 @@ object Dependencies {
       postgres.jdbc                % Compile,
       tika.core                    % Compile,
       akka.testkit                 % Test,
+      akka.httpTestkit             % Test,
       scalamock.core               % Test,
       scalaprotobuf.core           % Protobuf,
       scalatest.core               % Test

@@ -6,7 +6,7 @@ import akka.http.scaladsl.unmarshalling.FromEntityUnmarshaller
 import it.pagopa.interop.catalogmanagement.api.EServiceApiMarshaller
 import it.pagopa.interop.catalogmanagement.model._
 import spray.json._
-class EServiceApiMarshallerImpl extends EServiceApiMarshaller with SprayJsonSupport with DefaultJsonProtocol {
+final object EServiceApiMarshallerImpl extends EServiceApiMarshaller with SprayJsonSupport with DefaultJsonProtocol {
 
   override implicit def toEntityMarshallerProblem: ToEntityMarshaller[Problem] = sprayJsonMarshaller[Problem]
 
