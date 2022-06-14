@@ -1,7 +1,7 @@
 
 {"endpoints":[{"route": "createEService", "roles": ["admin", "api"], "verb": "POST"},
 {"route": "createEServiceDocument", "roles": ["admin", "api"], "verb": "POST"},
-{"route": "getEService", "roles": ["admin", "api", "security", "m2m"], "verb": "GET"},
+{"route": "getEService", "roles": ["admin", "api", "security", "m2m", "internal"], "verb": "GET"},
 {"route": "getEServices", "roles": ["admin", "api", "security", "m2m"], "verb": "GET"},
 {"route": "getEServiceDocument", "roles": ["admin", "api", "security", "m2m"], "verb": "GET"},
 {"route": "deleteDraft", "roles": ["admin", "api"], "verb": "DELETE"},
