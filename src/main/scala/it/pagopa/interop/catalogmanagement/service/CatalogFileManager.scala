@@ -70,8 +70,8 @@ object CatalogFileManager {
   private def verifyTechnology(fileParts: (FileInfo, File), catalogItem: CatalogItem)(implicit
     contexts: Seq[(String, String)]
   ): Future[CatalogItem] = {
-    val restContentTypes: Set[String] = Set("text/x-yaml", "application/x-yaml")
-    val soapContentTypes: Set[String] = Set("application/soap+xml", "application/wsdl+xml")
+    val restContentTypes: Set[String] = Set("text/x-yaml", "application/x-yaml", "application/json")
+    val soapContentTypes: Set[String] = Set("application/xml", "application/soap+xml", "application/wsdl+xml")
 
     val detectedContentTypes: String = tika.detect(Files.readAllBytes(fileParts._2.toPath), fileParts._1.fileName)
 
