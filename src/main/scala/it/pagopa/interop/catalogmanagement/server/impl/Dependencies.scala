@@ -55,7 +55,11 @@ trait Dependencies {
   val uuidSupplier: UUIDSupplier = new UUIDSupplierImpl
 
   def getFileManager(blockingEc: ExecutionContextExecutor): FileManager =
-    FileManager.get(FileManager.S3)(blockingEc)
+    FileManager.get(ApplicationConfiguration.storageKind match {
+      case "S3"   => FileManager.S3
+      case "file" => FileManager.File
+      case _      => throw new Exception("Incorrect File Manager")
+    })(blockingEc)
 
   def getJwtValidator()(implicit ec: ExecutionContext): Future[JWTReader] = JWTConfiguration.jwtReader
     .loadKeyset()
