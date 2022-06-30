@@ -25,6 +25,8 @@ import buildinfo.BuildInfo
 import scala.concurrent.ExecutionContext
 import scala.util.Success
 import scala.util.Failure
+import scala.concurrent.ExecutionContextExecutor
+import akka.actor.typed.DispatcherSelector
 
 object Main extends App with Dependencies {
 
@@ -34,6 +36,10 @@ object Main extends App with Dependencies {
     Behaviors.setup[Nothing] { context =>
       implicit val actorSystem: ActorSystem[_]        = context.system
       implicit val executionContext: ExecutionContext = actorSystem.executionContext
+
+      // TODO Remember to modify ApiInvoker to use a configurable EC in the services that depend on this
+      val selector: DispatcherSelector         = DispatcherSelector.fromConfig("futures-dispatcher")
+      val blockingEc: ExecutionContextExecutor = actorSystem.dispatchers.lookup(selector)
 
       Kamon.init()
       AkkaManagement.get(actorSystem).start()
@@ -59,9 +65,10 @@ object Main extends App with Dependencies {
       logger.info(renderBuildInfo(BuildInfo))
       logger.info(s"Started cluster at ${cluster.selfMember.address}")
 
+      val fileManager        = getFileManager(blockingEc)
+      val catalogFileManager = new CatalogFileManagerImpl(fileManager)
+
       val serverBinding = for {
-        fileManager <- getFileManager()
-        catalogFileManager = new CatalogFileManagerImpl(fileManager)
         jwtReader <- getJwtValidator()
         eServiceApi = new EServiceApi(
           new EServiceApiServiceImpl(actorSystem, sharding, catalogPersistentEntity, uuidSupplier, catalogFileManager),

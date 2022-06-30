@@ -7,7 +7,7 @@ import it.pagopa.interop.catalogmanagement.error.CatalogManagementErrors.{
   InvalidInterfaceFileDetected
 }
 import it.pagopa.interop.catalogmanagement.model.{CatalogDocument, CatalogItem, Rest, Soap}
-import it.pagopa.interop.commons.files.service.{FileManager, StorageFilePath}
+import it.pagopa.interop.commons.files.service.FileManager
 import it.pagopa.interop.commons.logging.{CanLogContextFields, ContextFieldsToLog}
 import it.pagopa.interop.commons.utils.Digester
 import org.apache.tika.Tika
@@ -30,7 +30,7 @@ trait CatalogFileManager {
     ec: ExecutionContext
   ): Future[CatalogDocument]
 
-  def delete(filePath: StorageFilePath): Future[Boolean]
+  def delete(filePath: String): Future[Boolean]
 }
 
 object CatalogFileManager {
