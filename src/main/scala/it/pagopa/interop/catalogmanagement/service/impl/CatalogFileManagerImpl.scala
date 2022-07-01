@@ -1,7 +1,7 @@
 package it.pagopa.interop.catalogmanagement.service.impl
 
 import akka.http.scaladsl.server.directives.FileInfo
-import it.pagopa.interop.commons.files.service.{FileManager, StorageFilePath}
+import it.pagopa.interop.commons.files.service.FileManager
 import it.pagopa.interop.commons.utils.Digester
 import it.pagopa.interop.catalogmanagement.common.system.ApplicationConfiguration
 import it.pagopa.interop.catalogmanagement.model.CatalogDocument
@@ -59,6 +59,6 @@ final class CatalogFileManagerImpl(val fileManager: FileManager) extends Catalog
       )
   }
 
-  override def delete(filePath: StorageFilePath): Future[Boolean] =
+  override def delete(filePath: String): Future[Boolean] =
     fileManager.delete(ApplicationConfiguration.storageContainer)(filePath)
 }

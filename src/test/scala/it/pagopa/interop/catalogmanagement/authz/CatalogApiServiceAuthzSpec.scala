@@ -20,17 +20,24 @@ import it.pagopa.interop.catalogmanagement.model.persistence.Command
 import it.pagopa.interop.catalogmanagement.server.impl.Main.catalogPersistentEntity
 import it.pagopa.interop.catalogmanagement.service.impl.CatalogFileManagerImpl
 import it.pagopa.interop.catalogmanagement.util.{AuthorizedRoutes, ClusteredScalatestRouteTest}
-import it.pagopa.interop.commons.files.service.impl.FileManagerImpl
 import it.pagopa.interop.commons.utils.service.UUIDSupplier
 import org.scalatest.wordspec.AnyWordSpecLike
 
 import java.io.File
 import java.util.UUID
+import it.pagopa.interop.commons.files.service.FileManager
+import org.scalatest.BeforeAndAfterAll
+import scala.concurrent.ExecutionContextExecutor
+import java.util.concurrent.Executors
+import scala.concurrent.ExecutionContext
+import java.util.concurrent.ExecutorService
 
-class CatalogApiServiceAuthzSpec extends AnyWordSpecLike with ClusteredScalatestRouteTest {
+class CatalogApiServiceAuthzSpec extends AnyWordSpecLike with BeforeAndAfterAll with ClusteredScalatestRouteTest {
 
-  override val testPersistentEntity: Entity[Command, ShardingEnvelope[Command]] =
-    catalogPersistentEntity
+  private val threadPool: ExecutorService          = Executors.newSingleThreadExecutor()
+  private val blockingEc: ExecutionContextExecutor = ExecutionContext.fromExecutorService(threadPool)
+
+  override val testPersistentEntity: Entity[Command, ShardingEnvelope[Command]] = catalogPersistentEntity
 
   val service: EServiceApiServiceImpl =
     new EServiceApiServiceImpl(
@@ -40,8 +47,10 @@ class CatalogApiServiceAuthzSpec extends AnyWordSpecLike with ClusteredScalatest
       new UUIDSupplier {
         override def get: UUID = UUID.randomUUID()
       },
-      new CatalogFileManagerImpl(new FileManagerImpl())
+      new CatalogFileManagerImpl(FileManager.get(FileManager.File)(blockingEc))
     )
+
+  override def afterAll(): Unit = { threadPool.shutdown() }
 
   "E-Service api operation authorization spec" should {
 

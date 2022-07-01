@@ -9,6 +9,8 @@ object ApplicationConfiguration {
 
   val serverPort: Int = config.getInt("catalog-management.port")
 
+  val storageKind: String = config.getString("catalog-management.storage.kind")
+
   val storageContainer: String = config.getString("catalog-management.storage.container")
 
   val eserviceDocsPath: String = config.getString("catalog-management.storage.eservice-docs-path")
