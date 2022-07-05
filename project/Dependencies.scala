@@ -80,7 +80,7 @@ object Dependencies {
 
   private[this] object postgres {
     lazy val namespace = "org.postgresql"
-    lazy val jdbc      = namespace % "postgresql" % "42.3.3"
+    lazy val jdbc      = namespace % "postgresql" % "42.4.0"
   }
 
   lazy val Protobuf = "protobuf"
