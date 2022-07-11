@@ -31,7 +31,6 @@ import it.pagopa.interop.commons.utils.service.impl.UUIDSupplierImpl
 import slick.basic.DatabaseConfig
 import slick.jdbc.JdbcProfile
 
-import scala.concurrent.ExecutionContext
 import scala.concurrent.Future
 import akka.cluster.sharding.typed.ShardingEnvelope
 import com.atlassian.oai.validator.report.ValidationReport
@@ -61,9 +60,8 @@ trait Dependencies {
       case _      => throw new Exception("Incorrect File Manager")
     })(blockingEc)
 
-  def getJwtValidator()(implicit ec: ExecutionContext): Future[JWTReader] = JWTConfiguration.jwtReader
+  def getJwtValidator(): Future[JWTReader] = JWTConfiguration.jwtReader
     .loadKeyset()
-    .toFuture
     .map(keyset =>
       new DefaultJWTReader with PublicKeysHolder {
         var publicKeyset                                                                 = keyset
@@ -71,6 +69,7 @@ trait Dependencies {
           getClaimsVerifier(audience = ApplicationConfiguration.jwtAudience)
       }
     )
+    .toFuture
 
   def initProjections()(implicit actorSystem: ActorSystem[_]): Unit = {
     val dbConfig: DatabaseConfig[JdbcProfile] =

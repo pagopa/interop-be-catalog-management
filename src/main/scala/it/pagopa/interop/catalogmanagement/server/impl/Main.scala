@@ -37,7 +37,6 @@ object Main extends App with Dependencies {
       implicit val actorSystem: ActorSystem[_]        = context.system
       implicit val executionContext: ExecutionContext = actorSystem.executionContext
 
-      // TODO Remember to modify ApiInvoker to use a configurable EC in the services that depend on this
       val selector: DispatcherSelector         = DispatcherSelector.fromConfig("futures-dispatcher")
       val blockingEc: ExecutionContextExecutor = actorSystem.dispatchers.lookup(selector)
 
