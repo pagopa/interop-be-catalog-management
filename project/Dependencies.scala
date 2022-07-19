@@ -55,12 +55,6 @@ object Dependencies {
     lazy val jackson   = namespace %% "json4s-jackson" % json4sVersion
   }
 
-  private[this] object kamon {
-    lazy val namespace  = "io.kamon"
-    lazy val bundle     = namespace %% "kamon-bundle"     % kamonVersion
-    lazy val prometheus = namespace %% "kamon-prometheus" % kamonVersion
-  }
-
   private[this] object logback {
     lazy val namespace = "ch.qos.logback"
     lazy val classic   = namespace % "logback-classic" % logbackVersion
@@ -139,8 +133,6 @@ object Dependencies {
       akka.stream                  % Compile,
       cats.core                    % Compile,
       commonsFileUpload.fileUpload % Compile,
-      kamon.bundle                 % Compile,
-      kamon.prometheus             % Compile,
       logback.classic              % Compile,
       mustache.compiler            % Compile,
       pagopa.commons               % Compile,

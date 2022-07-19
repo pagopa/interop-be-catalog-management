@@ -18,7 +18,6 @@ import it.pagopa.interop.catalogmanagement.common.system.ApplicationConfiguratio
 import it.pagopa.interop.catalogmanagement.server.Controller
 import it.pagopa.interop.catalogmanagement.service.impl.CatalogFileManagerImpl
 import it.pagopa.interop.commons.logging.renderBuildInfo
-import kamon.Kamon
 import com.typesafe.scalalogging.Logger
 
 import buildinfo.BuildInfo
@@ -30,13 +29,9 @@ import akka.actor.typed.DispatcherSelector
 
 object Main extends App with Dependencies {
 
-  Kamon.init()
-
   val logger: Logger = Logger(this.getClass)
 
-  System.setProperty("kanela.show-banner", "false")
-
-  val actorSystem = ActorSystem[Nothing](
+  ActorSystem[Nothing](
     Behaviors.setup[Nothing] { context =>
       implicit val actorSystem: ActorSystem[_]        = context.system
       implicit val executionContext: ExecutionContext = actorSystem.executionContext
@@ -44,7 +39,6 @@ object Main extends App with Dependencies {
       val selector: DispatcherSelector         = DispatcherSelector.fromConfig("futures-dispatcher")
       val blockingEc: ExecutionContextExecutor = actorSystem.dispatchers.lookup(selector)
 
-      Kamon.init()
       AkkaManagement.get(actorSystem).start()
 
       val sharding: ClusterSharding = ClusterSharding(context.system)
@@ -94,7 +88,4 @@ object Main extends App with Dependencies {
     },
     BuildInfo.name
   )
-
-  actorSystem.whenTerminated.onComplete { case _ => Kamon.stop() }(scala.concurrent.ExecutionContext.global)
-
 }
