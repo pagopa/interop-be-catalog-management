@@ -151,7 +151,7 @@ object Dependencies {
       akka.testkit                 % Test,
       akka.httpTestkit             % Test,
       scalamock.core               % Test,
-      scalaprotobuf.core           % Protobuf,
+      scalaprotobuf.core           % "protobuf,compile",
       scalatest.core               % Test
     )
     lazy val client: Seq[ModuleID]    =

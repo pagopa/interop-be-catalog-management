@@ -30,7 +30,11 @@ import akka.actor.typed.DispatcherSelector
 
 object Main extends App with Dependencies {
 
+  Kamon.init()
+
   val logger: Logger = Logger(this.getClass)
+
+  System.setProperty("kanela.show-banner", "false")
 
   val actorSystem = ActorSystem[Nothing](
     Behaviors.setup[Nothing] { context =>
