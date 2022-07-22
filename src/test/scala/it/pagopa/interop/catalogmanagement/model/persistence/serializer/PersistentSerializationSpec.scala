@@ -5,199 +5,71 @@ import org.scalacheck.Gen
 import java.time.OffsetDateTime
 import java.time.format.DateTimeFormatter
 import munit.ScalaCheckSuite
-// import cats.kernel.Eq
-import it.pagopa.interop.catalogmanagement.model.persistence.serializer.v1.catalog_item.CatalogDescriptorStateV1._
-import it.pagopa.interop.catalogmanagement.model.persistence.serializer.v1.catalog_item._
 import it.pagopa.interop.catalogmanagement.model._
 import it.pagopa.interop.catalogmanagement.model.persistence._
 import it.pagopa.interop.catalogmanagement.model.persistence.serializer.v1.state._
-import PersistentSerializationSpec._
-import cats.kernel.Eq
 import it.pagopa.interop.catalogmanagement.model.persistence.serializer.v1.events._
+import it.pagopa.interop.catalogmanagement.model.persistence.serializer.v1.catalog_item.CatalogDescriptorStateV1._
+import it.pagopa.interop.catalogmanagement.model.persistence.serializer.v1.catalog_item._
+import PersistentSerializationSpec._
+import com.softwaremill.diffx.munit.DiffxAssertions
+import com.softwaremill.diffx.generic.auto._
+import com.softwaremill.diffx.Diff
+import scala.reflect.runtime.universe.{typeOf, TypeTag}
 
-class PersistentSerializationSpec extends ScalaCheckSuite {
+class PersistentSerializationSpec extends ScalaCheckSuite with DiffxAssertions {
 
-  property("State is correctly deserialized") {
-    forAll(stateGen) { case (state, stateV1) =>
-      assertEquals(PersistEventDeserializer.from[StateV1, State](stateV1), Either.right[Throwable, State](state))
-    }
-  }
+  serdeCheck[State, StateV1](stateGen, _.sorted)
+  serdeCheck[CatalogItemAdded, CatalogItemV1AddedV1](catalogItemAddedGen)
+  serdeCheck[ClonedCatalogItemAdded, ClonedCatalogItemV1AddedV1](clonedCatalogItemAddedGen)
+  serdeCheck[CatalogItemUpdated, CatalogItemV1UpdatedV1](catalogItemUpdatedGen)
+  serdeCheck[CatalogItemWithDescriptorsDeleted, CatalogItemWithDescriptorsDeletedV1](
+    catalogItemWithDescriptorsDeletedGen
+  )
+  serdeCheck[CatalogItemDeleted, CatalogItemDeletedV1](catalogItemDeletedGen)
+  serdeCheck[CatalogItemDocumentDeleted, CatalogItemDocumentDeletedV1](catalogItemDocumentDeletedGen)
+  serdeCheck[CatalogItemDescriptorAdded, CatalogItemDescriptorAddedV1](catalogItemDescriptorAddedGen)
+  serdeCheck[CatalogItemDescriptorUpdated, CatalogItemDescriptorUpdatedV1](catalogItemDescriptorUpdatedGen)
+  serdeCheck[CatalogItemDocumentAdded, CatalogItemDocumentAddedV1](catalogItemDocumentAddedGen)
+  serdeCheck[CatalogItemDocumentUpdated, CatalogItemDocumentUpdatedV1](catalogItemDocumentUpdatedGen)
 
-  property("CatalogItemAdded is correctly deserialized") {
-    forAll(catalogItemAddedGen) { case (state, stateV1) =>
-      assertEquals(
-        PersistEventDeserializer.from[CatalogItemV1AddedV1, CatalogItemAdded](stateV1),
-        Either.right[Throwable, CatalogItemAdded](state)
-      )
-    }
-  }
+  deserCheck[State, StateV1](stateGen)
+  deserCheck[CatalogItemAdded, CatalogItemV1AddedV1](catalogItemAddedGen)
+  deserCheck[ClonedCatalogItemAdded, ClonedCatalogItemV1AddedV1](clonedCatalogItemAddedGen)
+  deserCheck[CatalogItemUpdated, CatalogItemV1UpdatedV1](catalogItemUpdatedGen)
+  deserCheck[CatalogItemWithDescriptorsDeleted, CatalogItemWithDescriptorsDeletedV1](
+    catalogItemWithDescriptorsDeletedGen
+  )
+  deserCheck[CatalogItemDeleted, CatalogItemDeletedV1](catalogItemDeletedGen)
+  deserCheck[CatalogItemDocumentDeleted, CatalogItemDocumentDeletedV1](catalogItemDocumentDeletedGen)
+  deserCheck[CatalogItemDescriptorAdded, CatalogItemDescriptorAddedV1](catalogItemDescriptorAddedGen)
+  deserCheck[CatalogItemDescriptorUpdated, CatalogItemDescriptorUpdatedV1](catalogItemDescriptorUpdatedGen)
+  deserCheck[CatalogItemDocumentAdded, CatalogItemDocumentAddedV1](catalogItemDocumentAddedGen)
+  deserCheck[CatalogItemDocumentUpdated, CatalogItemDocumentUpdatedV1](catalogItemDocumentUpdatedGen)
 
-  property("ClonedCatalogItemAdded is correctly deserialized") {
-    forAll(clonedCatalogItemAddedGen) { case (state, stateV1) =>
-      assertEquals(
-        PersistEventDeserializer.from[ClonedCatalogItemV1AddedV1, ClonedCatalogItemAdded](stateV1),
-        Either.right[Throwable, ClonedCatalogItemAdded](state)
-      )
-    }
-  }
-
-  property("CatalogItemUpdated is correctly deserialized") {
-    forAll(catalogItemUpdatedGen) { case (state, stateV1) =>
-      assertEquals(
-        PersistEventDeserializer.from[CatalogItemV1UpdatedV1, CatalogItemUpdated](stateV1),
-        Either.right[Throwable, CatalogItemUpdated](state)
-      )
-    }
-  }
-
-  property("CatalogItemWithDescriptorsDeleted is correctly deserialized") {
-    forAll(catalogItemWithDescriptorsDeletedGen) { case (state, stateV1) =>
-      assertEquals(
-        PersistEventDeserializer.from[CatalogItemWithDescriptorsDeletedV1, CatalogItemWithDescriptorsDeleted](stateV1),
-        Either.right[Throwable, CatalogItemWithDescriptorsDeleted](state)
-      )
-    }
-  }
-  property("CatalogItemDeleted is correctly deserialized") {
-    forAll(catalogItemDeletedGen) { case (state, stateV1) =>
-      assertEquals(
-        PersistEventDeserializer.from[CatalogItemDeletedV1, CatalogItemDeleted](stateV1),
-        Either.right[Throwable, CatalogItemDeleted](state)
-      )
-    }
-  }
-  property("CatalogItemDocumentDeleted is correctly deserialized") {
-    forAll(catalogItemDocumentDeletedGen) { case (state, stateV1) =>
-      assertEquals(
-        PersistEventDeserializer.from[CatalogItemDocumentDeletedV1, CatalogItemDocumentDeleted](stateV1),
-        Either.right[Throwable, CatalogItemDocumentDeleted](state)
-      )
-    }
-  }
-  property("CatalogItemDescriptorAdded is correctly deserialized") {
-    forAll(catalogItemDescriptorAddedGen) { case (state, stateV1) =>
-      assertEquals(
-        PersistEventDeserializer.from[CatalogItemDescriptorAddedV1, CatalogItemDescriptorAdded](stateV1),
-        Either.right[Throwable, CatalogItemDescriptorAdded](state)
-      )
-    }
-  }
-  property("CatalogItemDescriptorUpdated is correctly deserialized") {
-    forAll(catalogItemDescriptorUpdatedGen) { case (state, stateV1) =>
-      assertEquals(
-        PersistEventDeserializer.from[CatalogItemDescriptorUpdatedV1, CatalogItemDescriptorUpdated](stateV1),
-        Either.right[Throwable, CatalogItemDescriptorUpdated](state)
-      )
-    }
-  }
-  property("CatalogItemDocumentAdded is correctly deserialized") {
-    forAll(catalogItemDocumentAddedGen) { case (state, stateV1) =>
-      assertEquals(
-        PersistEventDeserializer.from[CatalogItemDocumentAddedV1, CatalogItemDocumentAdded](stateV1),
-        Either.right[Throwable, CatalogItemDocumentAdded](state)
-      )
-    }
-  }
-  property("CatalogItemDocumentUpdated is correctly deserialized") {
-    forAll(catalogItemDocumentUpdatedGen) { case (state, stateV1) =>
-      assertEquals(
-        PersistEventDeserializer.from[CatalogItemDocumentUpdatedV1, CatalogItemDocumentUpdated](stateV1),
-        Either.right[Throwable, CatalogItemDocumentUpdated](state)
-      )
+  // TODO move me in commons
+  def serdeCheck[A: TypeTag, B](gen: Gen[(A, B)], adapter: B => B = identity[B](_))(implicit
+    e: PersistEventSerializer[A, B],
+    loc: munit.Location,
+    d: => Diff[Either[Throwable, B]]
+  ): Unit = property(s"${typeOf[A].typeSymbol.name.toString} is correctly serialized") {
+    forAll(gen) { case (state, stateV1) =>
+      implicit val diffX: Diff[Either[Throwable, B]] = d
+      assertEqual(PersistEventSerializer.to[A, B](state).map(adapter), Right(stateV1).map(adapter))
     }
   }
 
-  // * Equality has been customized to do not get affected
-  // * by different collection kind and order
-  property("State is correctly serialized") {
-    forAll(stateGen) { case (state, stateV1) =>
-      Either.right[Throwable, StateV1](stateV1) === PersistEventSerializer.to[State, StateV1](state)
+  // TODO move me in commons
+  def deserCheck[A, B: TypeTag](
+    gen: Gen[(A, B)]
+  )(implicit e: PersistEventDeserializer[B, A], loc: munit.Location, d: => Diff[Either[Throwable, A]]): Unit =
+    property(s"${typeOf[B].typeSymbol.name.toString} is correctly serialized") {
+      forAll(gen) { case (state, stateV1) =>
+        // * This is declared lazy in the signature to avoid a MethodTooBigException
+        implicit val diffX: Diff[Either[Throwable, A]] = d
+        assertEqual(PersistEventDeserializer.from[B, A](stateV1), Right(state))
+      }
     }
-  }
-
-  property("CatalogItemAdded is correctly serialized") {
-    forAll(catalogItemAddedGen) { case (state, stateV1) =>
-      assertEquals(
-        PersistEventSerializer.to[CatalogItemAdded, CatalogItemV1AddedV1](state),
-        Either.right[Throwable, CatalogItemV1AddedV1](stateV1)
-      )
-    }
-  }
-
-  property("ClonedCatalogItemAdded is correctly serialized") {
-    forAll(clonedCatalogItemAddedGen) { case (state, stateV1) =>
-      assertEquals(
-        PersistEventSerializer.to[ClonedCatalogItemAdded, ClonedCatalogItemV1AddedV1](state),
-        Either.right[Throwable, ClonedCatalogItemV1AddedV1](stateV1)
-      )
-    }
-  }
-
-  property("CatalogItemUpdated is correctly serialized") {
-    forAll(catalogItemUpdatedGen) { case (state, stateV1) =>
-      assertEquals(
-        PersistEventSerializer.to[CatalogItemUpdated, CatalogItemV1UpdatedV1](state),
-        Either.right[Throwable, CatalogItemV1UpdatedV1](stateV1)
-      )
-    }
-  }
-
-  property("CatalogItemWithDescriptorsDeleted is correctly serialized") {
-    forAll(catalogItemWithDescriptorsDeletedGen) { case (state, stateV1) =>
-      assertEquals(
-        PersistEventSerializer.to[CatalogItemWithDescriptorsDeleted, CatalogItemWithDescriptorsDeletedV1](state),
-        Either.right[Throwable, CatalogItemWithDescriptorsDeletedV1](stateV1)
-      )
-    }
-  }
-  property("CatalogItemDeleted is correctly serialized") {
-    forAll(catalogItemDeletedGen) { case (state, stateV1) =>
-      assertEquals(
-        PersistEventSerializer.to[CatalogItemDeleted, CatalogItemDeletedV1](state),
-        Either.right[Throwable, CatalogItemDeletedV1](stateV1)
-      )
-    }
-  }
-  property("CatalogItemDocumentDeleted is correctly serialized") {
-    forAll(catalogItemDocumentDeletedGen) { case (state, stateV1) =>
-      assertEquals(
-        PersistEventSerializer.to[CatalogItemDocumentDeleted, CatalogItemDocumentDeletedV1](state),
-        Either.right[Throwable, CatalogItemDocumentDeletedV1](stateV1)
-      )
-    }
-  }
-  property("CatalogItemDescriptorAdded is correctly serialized") {
-    forAll(catalogItemDescriptorAddedGen) { case (state, stateV1) =>
-      assertEquals(
-        PersistEventSerializer.to[CatalogItemDescriptorAdded, CatalogItemDescriptorAddedV1](state),
-        Either.right[Throwable, CatalogItemDescriptorAddedV1](stateV1)
-      )
-    }
-  }
-  property("CatalogItemDescriptorUpdated is correctly serialized") {
-    forAll(catalogItemDescriptorUpdatedGen) { case (state, stateV1) =>
-      assertEquals(
-        PersistEventSerializer.to[CatalogItemDescriptorUpdated, CatalogItemDescriptorUpdatedV1](state),
-        Either.right[Throwable, CatalogItemDescriptorUpdatedV1](stateV1)
-      )
-    }
-  }
-  property("CatalogItemDocumentAdded is correctly serialized") {
-    forAll(catalogItemDocumentAddedGen) { case (state, stateV1) =>
-      assertEquals(
-        PersistEventSerializer.to[CatalogItemDocumentAdded, CatalogItemDocumentAddedV1](state),
-        Either.right[Throwable, CatalogItemDocumentAddedV1](stateV1)
-      )
-    }
-  }
-  property("CatalogItemDocumentUpdated is correctly serialized") {
-    forAll(catalogItemDocumentUpdatedGen) { case (state, stateV1) =>
-      assertEquals(
-        PersistEventSerializer.to[CatalogItemDocumentUpdated, CatalogItemDocumentUpdatedV1](state),
-        Either.right[Throwable, CatalogItemDocumentUpdatedV1](stateV1)
-      )
-    }
-  }
 }
 
 object PersistentSerializationSpec {
@@ -350,10 +222,8 @@ object PersistentSerializationSpec {
       (state, stateV1)
     }
 
-  implicit val throwableEq: Eq[Throwable] = Eq.fromUniversalEquals
-
-  implicit val stateEq: Eq[StateV1] = Eq.instance { case (stateA, stateB) =>
-    stateA.items.sortBy(_.key) == stateB.items.sortBy(_.key)
+  implicit class PimpedStateV1(val stateV1: StateV1) extends AnyVal {
+    def sorted: StateV1 = stateV1.copy(items = stateV1.items.sortBy(_.key))
   }
 
   val catalogItemAddedGen: Gen[(CatalogItemAdded, CatalogItemV1AddedV1)] = catalogItemGen.map { case (a, b) =>
