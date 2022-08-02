@@ -3,6 +3,7 @@ package it.pagopa.interop.catalogmanagement.model
 import it.pagopa.interop.catalogmanagement.model.persistence.State
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
+import it.pagopa.interop.catalogmanagement.model.CatalogAdapters._
 
 import java.time.OffsetDateTime
 import java.util.UUID

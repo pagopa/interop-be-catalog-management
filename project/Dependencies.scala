@@ -104,9 +104,9 @@ object Dependencies {
   }
 
   object Jars {
-    lazy val overrides: Seq[ModuleID] =
-      Seq(jackson.annotations % Compile, jackson.core % Compile, jackson.databind % Compile)
-    lazy val `server`: Seq[ModuleID]  = Seq(
+    lazy val overrides: List[ModuleID] =
+      List(jackson.annotations % Compile, jackson.core % Compile, jackson.databind % Compile)
+    lazy val `server`: List[ModuleID]  = List(
       // For making Java 12 happy
       "javax.annotation"           % "javax.annotation-api" % "1.3.2"  % "compile",
       //
@@ -148,9 +148,10 @@ object Dependencies {
       "org.scalameta"             %% "munit-scalacheck"     % "0.7.29" % Test,
       "com.softwaremill.diffx"    %% "diffx-munit"          % "0.7.0"  % Test
     )
-    lazy val client: Seq[ModuleID]    =
-      Seq(akka.stream, akka.http, akka.httpJson4s, akka.slf4j, json4s.jackson, json4s.ext, pagopa.commons).map(
+    lazy val client: List[ModuleID]    =
+      List(akka.stream, akka.http, akka.httpJson4s, akka.slf4j, json4s.jackson, json4s.ext, pagopa.commons).map(
         _ % Compile
       )
+    lazy val models: List[ModuleID]    = List(pagopa.commons).map(_ % Compile)
   }
 }

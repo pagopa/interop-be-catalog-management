@@ -38,6 +38,7 @@ import java.nio.file.Paths
 import scala.concurrent.duration.Duration
 import scala.concurrent.{Await, ExecutionContext, Future}
 import scala.util.{Failure, Success}
+import it.pagopa.interop.catalogmanagement.model.CatalogAdapters._
 
 class EServiceApiServiceImpl(
   system: ActorSystem[_],
