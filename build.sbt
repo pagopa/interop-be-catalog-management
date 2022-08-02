@@ -78,6 +78,20 @@ lazy val generated = project
   .settings(scalacOptions := Seq(), scalafmtOnCompile := true, libraryDependencies := Dependencies.Jars.`server`)
   .setupBuildInfo
 
+lazy val models = project
+  .in(file("models"))
+  .settings(
+    name                := "interop-be-catalog-management-models",
+    libraryDependencies := Dependencies.Jars.models,
+    scalafmtOnCompile   := true,
+    Docker / publish    := {},
+    publishTo           := {
+      val nexus = s"https://${System.getenv("MAVEN_REPO")}/nexus/repository/"
+      if (isSnapshot.value) Some("snapshots" at nexus + "maven-snapshots/")
+      else Some("releases" at nexus + "maven-releases/")
+    }
+  )
+
 lazy val client = project
   .in(file("client"))
   .settings(
@@ -112,8 +126,8 @@ lazy val root = (project in file("."))
     libraryDependencies         := Dependencies.Jars.`server`,
     dockerCommands += Cmd("LABEL", s"org.opencontainers.image.source https://github.com/pagopa/${name.value}")
   )
-  .aggregate(client)
-  .dependsOn(generated)
+  .aggregate(client, models)
+  .dependsOn(generated, models)
   .enablePlugins(JavaAppPackaging)
   .setupBuildInfo
 
