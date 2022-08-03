@@ -53,8 +53,8 @@ object JsonFormats {
         case JsObject(fields) =>
           fields
             .get("ids")
-            .map(gaFormat.read)
-            .orElse(fields.get("id").map(saFormat.read))
+            .map(_ => gaFormat.read(json))
+            .orElse(fields.get("id").map(_ => saFormat.read(json)))
             .getOrElse(deserializationError(s"Unable to deserialize json as a CatalogAttribute: $json"))
         case other            => deserializationError(s"Unable to deserialize json as a CatalogAttribute: $other")
       }

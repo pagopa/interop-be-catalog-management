@@ -24,18 +24,54 @@ object EServiceCqrsProjection {
     CqrsProjection[Event](offsetDbConfig, mongoDbConfig, projectionId, eventHandler)
 
   private def eventHandler(collection: MongoCollection[Document], event: Event): PartialMongoAction = event match {
-    case CatalogItemAdded(c)                             =>
+    case CatalogItemAdded(c)                               =>
       ActionWithDocument(collection.insertOne, Document(s"{ data: ${c.toJson.compactPrint} }"))
-    case ClonedCatalogItemAdded(c)                       =>
+    case ClonedCatalogItemAdded(c)                         =>
       ActionWithDocument(collection.insertOne, Document(s"{ data: ${c.toJson.compactPrint} }"))
-    case CatalogItemUpdated(c)                           =>
+    case CatalogItemUpdated(c)                             =>
       ActionWithBson(collection.updateOne(Filters.eq("data.id", c.id.toString), _), Updates.set("data", c.toDocument))
-    case CatalogItemWithDescriptorsDeleted(c, _)         =>
-      // TODO remove the item only if it was the only descriptor
-//      Action(collection.deleteOne(Filters.eq("data.id", c.id.toString)))
+    case CatalogItemWithDescriptorsDeleted(c, dId)         =>
+      ActionWithBson(
+        collection.updateOne(Filters.eq("data.id", c.id.toString), _),
+        Updates.pull("data.descriptors", Document(s"{ id : \"$dId\" }"))
+      )
     case CatalogItemDocumentUpdated(esId, dId, docId, doc) =>
-
-
+      // TODO Test
+      MultiAction(
+        Seq(
+          // Generic Doc
+          ActionWithBson(
+            collection.updateOne(
+              Filters.eq("data.id", esId),
+              _,
+              UpdateOptions().arrayFilters(
+                List(
+                  Filters.and(Filters.eq("elem.id", dId), Filters.elemMatch("elem.docs", Filters.eq("id", docId)))
+                ).asJava
+              )
+            ),
+            // TODO Verify if this combination works
+            Updates.combine(
+              Updates.pull("data.descriptors.$[elem].docs", Document(s"{ id : \"$docId\" }")),
+              Updates.push("data.descriptors.$[elem].docs", doc.toDocument)
+            )
+          ),
+          // Interface
+          ActionWithBson(
+            collection.updateOne(
+              Filters.eq("data.id", esId),
+              _,
+              UpdateOptions().arrayFilters(
+                List(Filters.and(Filters.eq("elem.id", dId), Filters.eq("elem.interface.id", docId))).asJava
+              )
+            ),
+            Updates.set("data.descriptors.$[elem].interface", doc.toDocument)
+          )
+        )
+      )
+    // TODO Remove
+    case _                                                 =>
+      throw new Exception("Not implemented yet")
   }
 
 }
