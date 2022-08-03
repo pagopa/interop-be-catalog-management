@@ -320,7 +320,7 @@ class EServiceApiServiceImpl(
       _         <- current
         .getDocumentPaths(descriptorId)
         .fold(Future.successful(Seq.empty[Boolean]))(path => Future.traverse(path)(catalogFileManager.delete))
-      deleted   <- commander.ask(ref => DeleteCatalogItemWithDescriptor(current, descriptorId, ref))
+      deleted   <- commander.ask(ref => DeleteCatalogItemDescriptor(current, descriptorId, ref))
     } yield deleted
 
     onComplete(result) {
