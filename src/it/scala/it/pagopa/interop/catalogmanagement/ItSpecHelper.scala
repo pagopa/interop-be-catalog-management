@@ -312,6 +312,12 @@ trait ItSpecHelper
     Await.result(Unmarshal(response).to[EService], Duration.Inf)
   }
 
+  def publishDescriptor(eServiceId: UUID, descriptorId: UUID): Unit = {
+    val response = request(s"$serviceURL/eservices/$eServiceId/descriptors/$descriptorId/publish", HttpMethods.POST)
+    response.status shouldBe StatusCodes.NoContent
+    ()
+  }
+
   def retrieveEService(uuid: String): EService = {
 
     val response = request(s"$serviceURL/eservices/$uuid", HttpMethods.GET)

@@ -5,7 +5,6 @@ import it.pagopa.interop.catalogmanagement.model._
 import it.pagopa.interop.catalogmanagement.model.persistence.JsonFormats._
 import it.pagopa.interop.catalogmanagement.utils.PersistentAdapters._
 import it.pagopa.interop.catalogmanagement.{ItSpecConfiguration, ItSpecHelper}
-import spray.json.JsObject
 
 import java.util.UUID
 
@@ -111,6 +110,26 @@ class CqrsProjectionSpec extends ScalaTestWithActorTestKit(ItSpecConfiguration.c
       deleteDescriptor(eServiceId, deletingDescriptorId)
 
       val expectedData = eService.copy(descriptors = Seq(descriptor)).toPersistent
+
+      val persisted = findOne[CatalogItem](eServiceId.toString).futureValue
+
+      compareCatalogItems(expectedData, persisted)
+    }
+
+    "succeed for event CatalogItemDescriptorUpdated" in {
+      val eServiceId           = UUID.randomUUID()
+      val descriptorId         = UUID.randomUUID()
+      val updatingDescriptorId = UUID.randomUUID()
+
+      val eService           = createEService(eServiceId)
+      val descriptor         = createEServiceDescriptor(eServiceId, descriptorId)
+      val updatingDescriptor = createEServiceDescriptor(eServiceId, updatingDescriptorId)
+
+      publishDescriptor(eServiceId, updatingDescriptorId)
+
+      val expectedData = eService
+        .copy(descriptors = Seq(descriptor, updatingDescriptor.copy(state = EServiceDescriptorState.PUBLISHED)))
+        .toPersistent
 
       val persisted = findOne[CatalogItem](eServiceId.toString).futureValue
 
