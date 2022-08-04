@@ -5,7 +5,6 @@ import it.pagopa.interop.catalogmanagement.model._
 import it.pagopa.interop.catalogmanagement.model.persistence.JsonFormats._
 import it.pagopa.interop.catalogmanagement.utils.PersistentAdapters._
 import it.pagopa.interop.catalogmanagement.{ItSpecConfiguration, ItSpecHelper}
-import spray.json.JsObject
 
 import java.util.UUID
 
@@ -56,7 +55,21 @@ class CqrsProjectionSpec extends ScalaTestWithActorTestKit(ItSpecConfiguration.c
       expectedData shouldBe persisted
     }
 
-    "succeed for event CatalogItemUpdated" in {
+    "succeed for event CatalogItemUpdated on EService update" in {
+      val eServiceId = UUID.randomUUID()
+
+      createEService(eServiceId)
+
+      val updatedEService = updateEService(eServiceId)
+
+      val expectedData = updatedEService.toPersistent
+
+      val persisted = findOne[CatalogItem](updatedEService.id.toString).futureValue
+
+      expectedData shouldBe persisted
+    }
+
+    "succeed for event CatalogItemUpdated on Descriptor update" in {
       val eServiceId           = UUID.randomUUID()
       val descriptorId         = UUID.randomUUID()
       val updatingDescriptorId = UUID.randomUUID()

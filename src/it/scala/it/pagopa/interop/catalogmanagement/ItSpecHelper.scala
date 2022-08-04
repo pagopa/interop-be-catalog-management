@@ -163,6 +163,37 @@ trait ItSpecHelper
     Await.result(Unmarshal(response).to[EService], Duration.Inf)
   }
 
+  def updateEService(eServiceId: UUID): EService = {
+
+    val seed = UpdateEServiceSeed(
+      name = "New name",
+      description = "New description",
+      technology = EServiceTechnology.SOAP,
+      attributes = Attributes(
+        certified = Seq(Attribute(single = Some(AttributeValue(id = "4321", explicitAttributeVerification = true)))),
+        declared = Seq(Attribute(single = Some(AttributeValue(id = "4321", explicitAttributeVerification = true)))),
+        verified = Seq(
+          Attribute(group =
+            Some(
+              Seq(
+                AttributeValue(id = "4321", explicitAttributeVerification = true),
+                AttributeValue(id = "2222", explicitAttributeVerification = true)
+              )
+            )
+          )
+        )
+      )
+    )
+
+    val data = seed.toJson.compactPrint
+
+    val response = request(s"$serviceURL/eservices/$eServiceId", HttpMethods.PUT, Some(data))
+
+    response.status shouldBe StatusCodes.OK
+
+    Await.result(Unmarshal(response).to[EService], Duration.Inf)
+  }
+
   def updateDescriptor(eServiceId: UUID, descriptorId: UUID): EService = {
 
     val seed = UpdateEServiceDescriptorSeed(
