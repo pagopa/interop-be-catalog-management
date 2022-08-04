@@ -99,7 +99,7 @@ trait ItSpecHelper
     ActorTestKit.shutdown(httpSystem, 5.seconds)
   }
 
-  def createEServiceDescriptor(eserviceId: String, descriptorId: UUID): EServiceDescriptor = {
+  def createEServiceDescriptor(eserviceId: UUID, descriptorId: UUID): EServiceDescriptor = {
     (() => mockUUIDSupplier.get).expects().returning(descriptorId).once()
 
     val seed = EServiceDescriptorSeed(
@@ -119,8 +119,8 @@ trait ItSpecHelper
     Await.result(Unmarshal(response).to[EServiceDescriptor], Duration.Inf)
   }
 
-  def createEService(uuid: String): EService = {
-    (() => mockUUIDSupplier.get).expects().returning(UUID.fromString(uuid)).once()
+  def createEService(uuid: UUID): EService = {
+    (() => mockUUIDSupplier.get).expects().returning(uuid).once()
 
     val seed = EServiceSeed(
       producerId = UUID.randomUUID(),
@@ -153,7 +153,6 @@ trait ItSpecHelper
   }
 
   def cloneEService(eServiceId: UUID, descriptorId: UUID): EService = {
-
     (() => mockUUIDSupplier.get).expects().returning(UUID.randomUUID()).once()
     (() => mockUUIDSupplier.get).expects().returning(UUID.randomUUID()).once()
 
@@ -162,7 +161,26 @@ trait ItSpecHelper
     response.status shouldBe StatusCodes.OK
 
     Await.result(Unmarshal(response).to[EService], Duration.Inf)
+  }
 
+  def updateDescriptor(eServiceId: UUID, descriptorId: UUID): EService = {
+
+    val seed = UpdateEServiceDescriptorSeed(
+      description = Some("New description"),
+      state = EServiceDescriptorState.ARCHIVED,
+      audience = Seq("newAud1", "newAud2"),
+      voucherLifespan = 987654,
+      dailyCallsPerConsumer = 556644,
+      dailyCallsTotal = 884455
+    )
+
+    val data = seed.toJson.compactPrint
+
+    val response = request(s"$serviceURL/eservices/$eServiceId/descriptors/$descriptorId", HttpMethods.PUT, Some(data))
+
+    response.status shouldBe StatusCodes.OK
+
+    Await.result(Unmarshal(response).to[EService], Duration.Inf)
   }
 
   def retrieveEService(uuid: String): EService = {

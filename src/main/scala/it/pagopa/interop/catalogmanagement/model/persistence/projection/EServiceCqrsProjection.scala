@@ -26,8 +26,11 @@ object EServiceCqrsProjection {
   private def eventHandler(collection: MongoCollection[Document], event: Event): PartialMongoAction = event match {
     case CatalogItemAdded(c)                               =>
       ActionWithDocument(collection.insertOne, Document(s"{ data: ${c.toJson.compactPrint} }"))
-    case ClonedCatalogItemAdded(c)                         =>
-      ActionWithDocument(collection.insertOne, Document(s"{ data: ${c.toJson.compactPrint} }"))
+    case CatalogItemDescriptorAdded(esId, descriptor)      =>
+      ActionWithBson(
+        collection.updateOne(Filters.eq("data.id", esId), _),
+        Updates.push(s"data.descriptors", descriptor.toDocument)
+      )
     case CatalogItemUpdated(c)                             =>
       ActionWithBson(collection.updateOne(Filters.eq("data.id", c.id.toString), _), Updates.set("data", c.toDocument))
     case CatalogItemWithDescriptorsDeleted(c, dId)         =>
@@ -69,9 +72,11 @@ object EServiceCqrsProjection {
           )
         )
       )
+    case ClonedCatalogItemAdded(c)                         =>
+      ActionWithDocument(collection.insertOne, Document(s"{ data: ${c.toJson.compactPrint} }"))
     // TODO Remove
-    case _                                                 =>
-      throw new Exception("Not implemented yet")
+    case other                                             =>
+      throw new Exception(s"Not implemented yet: $other")
   }
 
 }
