@@ -58,7 +58,6 @@ object EServiceCqrsProjection {
           Updates.push("data.descriptors.$[elem].docs", doc.toDocument)
         )
     case CatalogItemDocumentUpdated(esId, dId, docId, doc)     =>
-      // TODO Test
       MultiAction(
         Seq(
           // Generic Doc
@@ -66,17 +65,10 @@ object EServiceCqrsProjection {
             collection.updateOne(
               Filters.eq("data.id", esId),
               _,
-              UpdateOptions().arrayFilters(
-                List(
-                  Filters.and(Filters.eq("elem.id", dId), Filters.elemMatch("elem.docs", Filters.eq("id", docId)))
-                ).asJava
-              )
+              UpdateOptions()
+                .arrayFilters(List(Filters.eq("descriptor.id", dId), Filters.eq("document.docs.id", docId)).asJava)
             ),
-            // TODO Verify if this combination works
-            Updates.combine(
-              Updates.pull("data.descriptors.$[elem].docs", Document(s"{ id : \"$docId\" }")),
-              Updates.push("data.descriptors.$[elem].docs", doc.toDocument)
-            )
+            Updates.set("data.descriptors.$[descriptor].docs.$[document]", doc.toDocument)
           ),
           // Interface
           ActionWithBson(

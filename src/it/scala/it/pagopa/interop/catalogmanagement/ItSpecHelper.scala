@@ -154,10 +154,14 @@ trait ItSpecHelper
     Await.result(Unmarshal(response).to[EService], Duration.Inf)
   }
 
-  def createDescriptorDocument(eServiceId: UUID, descriptorId: UUID, kind: String): EService = {
-    val docId = UUID.randomUUID()
-    val doc   = CatalogDocument(
-      id = docId,
+  def createDescriptorDocument(
+    eServiceId: UUID,
+    descriptorId: UUID,
+    kind: String,
+    documentId: UUID = UUID.randomUUID()
+  ): EService = {
+    val doc = CatalogDocument(
+      id = documentId,
       name = "name",
       contentType = "application/yaml",
       prettyName = "prettyName",
@@ -166,7 +170,7 @@ trait ItSpecHelper
       uploadDate = OffsetDateTime.now()
     )
 
-    (() => mockUUIDSupplier.get).expects().returning(docId).once()
+    (() => mockUUIDSupplier.get).expects().returning(documentId).once()
     (mockFileManager
       .store(_: UUID, _: String, _: (FileInfo, File))(_: ExecutionContext))
       .expects(*, *, *, *)
@@ -197,6 +201,21 @@ trait ItSpecHelper
     response.status shouldBe StatusCodes.OK
 
     Await.result(Unmarshal(response).to[EService], Duration.Inf)
+  }
+
+  def updateDescriptorDocument(eServiceId: UUID, descriptorId: UUID, documentId: UUID): EServiceDoc = {
+    val seed = UpdateEServiceDescriptorDocumentSeed(prettyName = "new prettyName")
+
+    val data = seed.toJson.prettyPrint
+
+    val response = request(
+      s"$serviceURL/eservices/$eServiceId/descriptors/$descriptorId/documents/$documentId/update",
+      HttpMethods.POST,
+      Some(data)
+    )
+    response.status shouldBe StatusCodes.OK
+
+    Await.result(Unmarshal(response).to[EServiceDoc], Duration.Inf)
   }
 
   def deleteDescriptor(eServiceId: UUID, descriptorId: UUID): Unit = {

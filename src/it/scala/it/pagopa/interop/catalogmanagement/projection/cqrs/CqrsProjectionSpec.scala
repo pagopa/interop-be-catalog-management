@@ -106,13 +106,18 @@ class CqrsProjectionSpec extends ScalaTestWithActorTestKit(ItSpecConfiguration.c
     }
 
     "succeed for event CatalogItemDocumentAdded with interface document" in {
-      val eServiceId   = UUID.randomUUID()
-      val descriptorId = UUID.randomUUID()
+      val eServiceId    = UUID.randomUUID()
+      val descriptorId  = UUID.randomUUID()
+      val descriptorId2 = UUID.randomUUID()
 
       createEService(eServiceId)
       createEServiceDescriptor(eServiceId, descriptorId)
+      createEServiceDescriptor(eServiceId, descriptorId2)
 
-      val eService = createDescriptorDocument(eServiceId, descriptorId, "INTERFACE")
+      createDescriptorDocument(eServiceId, descriptorId2, "INTERFACE")
+
+      createDescriptorDocument(eServiceId, descriptorId, "INTERFACE")
+      val eService = createDescriptorDocument(eServiceId, descriptorId, "DOCUMENT")
 
       val expectedData = eService.toPersistent
 
@@ -122,11 +127,17 @@ class CqrsProjectionSpec extends ScalaTestWithActorTestKit(ItSpecConfiguration.c
     }
 
     "succeed for event CatalogItemDocumentAdded with generic document" in {
-      val eServiceId   = UUID.randomUUID()
-      val descriptorId = UUID.randomUUID()
+      val eServiceId    = UUID.randomUUID()
+      val descriptorId  = UUID.randomUUID()
+      val descriptorId2 = UUID.randomUUID()
 
       createEService(eServiceId)
       createEServiceDescriptor(eServiceId, descriptorId)
+      createEServiceDescriptor(eServiceId, descriptorId2)
+
+      createDescriptorDocument(eServiceId, descriptorId2, "DOCUMENT")
+
+      createDescriptorDocument(eServiceId, descriptorId, "INTERFACE")
 
       createDescriptorDocument(eServiceId, descriptorId, "DOCUMENT")
       val eService = createDescriptorDocument(eServiceId, descriptorId, "DOCUMENT")
@@ -141,6 +152,33 @@ class CqrsProjectionSpec extends ScalaTestWithActorTestKit(ItSpecConfiguration.c
         )
 
       serviceSortedFields(expectedData) shouldBe serviceSortedFields(persisted)
+    }
+
+    "succeed for event CatalogItemDocumentUpdated with interface document" in {
+      val eServiceId    = UUID.randomUUID()
+      val descriptorId  = UUID.randomUUID()
+      val descriptorId2 = UUID.randomUUID()
+      val documentId    = UUID.randomUUID()
+
+      createEService(eServiceId)
+      createEServiceDescriptor(eServiceId, descriptorId)
+      createEServiceDescriptor(eServiceId, descriptorId2)
+
+      createDescriptorDocument(eServiceId, descriptorId, "INTERFACE", documentId)
+      createDescriptorDocument(eServiceId, descriptorId, "DOCUMENT")
+      createDescriptorDocument(eServiceId, descriptorId2, "INTERFACE")
+      val eService = createDescriptorDocument(eServiceId, descriptorId2, "DOCUMENT")
+
+      val doc = updateDescriptorDocument(eServiceId, descriptorId, documentId)
+
+      val descriptorWithDocs  = eService.descriptors.find(_.id == descriptorId).get.copy(interface = Some(doc))
+      val descriptor2WithDocs = eService.descriptors.find(_.id == descriptorId2).get
+
+      val expectedData = eService.copy(descriptors = Seq(descriptorWithDocs, descriptor2WithDocs)).toPersistent
+
+      val persisted = findOne[CatalogItem](eServiceId.toString).futureValue
+
+      expectedData shouldBe persisted
     }
 
   }
