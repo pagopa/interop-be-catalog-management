@@ -23,6 +23,24 @@ class CqrsProjectionSpec extends ScalaTestWithActorTestKit(ItSpecConfiguration.c
       expectedData shouldBe persisted
     }
 
+    "succeed for event ClonedCatalogItemAdded" in {
+      val eServiceId          = UUID.randomUUID()
+      val descriptorId        = UUID.randomUUID()
+      val cloningDescriptorId = UUID.randomUUID()
+
+      createEService(eServiceId.toString)
+      createEServiceDescriptor(eServiceId.toString, descriptorId)
+      createEServiceDescriptor(eServiceId.toString, cloningDescriptorId)
+
+      val clonedEService = cloneEService(eServiceId, cloningDescriptorId)
+
+      val expectedData = clonedEService.toPersistent
+
+      val persisted = findOne[CatalogItem](clonedEService.id.toString).futureValue
+
+      expectedData shouldBe persisted
+    }
+
   }
 
 }

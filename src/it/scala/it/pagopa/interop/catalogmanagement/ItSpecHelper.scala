@@ -152,6 +152,19 @@ trait ItSpecHelper
     Await.result(Unmarshal(response).to[EService], Duration.Inf)
   }
 
+  def cloneEService(eServiceId: UUID, descriptorId: UUID): EService = {
+
+    (() => mockUUIDSupplier.get).expects().returning(UUID.randomUUID()).once()
+    (() => mockUUIDSupplier.get).expects().returning(UUID.randomUUID()).once()
+
+    val response = request(s"$serviceURL/eservices/$eServiceId/descriptors/$descriptorId/clone", HttpMethods.POST)
+
+    response.status shouldBe StatusCodes.OK
+
+    Await.result(Unmarshal(response).to[EService], Duration.Inf)
+
+  }
+
   def retrieveEService(uuid: String): EService = {
 
     val response = request(s"$serviceURL/eservices/$uuid", HttpMethods.GET)
