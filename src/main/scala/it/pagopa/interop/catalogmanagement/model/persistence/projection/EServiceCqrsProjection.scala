@@ -66,7 +66,7 @@ object EServiceCqrsProjection {
               Filters.eq("data.id", esId),
               _,
               UpdateOptions()
-                .arrayFilters(List(Filters.eq("descriptor.id", dId), Filters.eq("document.docs.id", docId)).asJava)
+                .arrayFilters(List(Filters.eq("descriptor.id", dId), Filters.eq("document.id", docId)).asJava)
             ),
             Updates.set("data.descriptors.$[descriptor].docs.$[document]", doc.toDocument)
           ),

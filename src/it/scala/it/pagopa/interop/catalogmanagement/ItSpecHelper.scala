@@ -23,6 +23,7 @@ import it.pagopa.interop.catalogmanagement.server.impl.Dependencies
 import it.pagopa.interop.catalogmanagement.service.CatalogFileManager
 import it.pagopa.interop.commons.utils.service.UUIDSupplier
 import org.scalamock.scalatest.MockFactory
+import org.scalatest.Assertion
 import spray.json._
 
 import java.io.File
@@ -100,6 +101,12 @@ trait ItSpecHelper
     bindServer.foreach(_.foreach(_.unbind()))
     ActorTestKit.shutdown(httpSystem, 5.seconds)
   }
+
+  def compareCatalogItems(item1: CatalogItem, item2: CatalogItem): Assertion =
+    sortEServiceArrayFields(item1) shouldBe sortEServiceArrayFields(item2)
+
+  def sortEServiceArrayFields(eService: CatalogItem): CatalogItem =
+    eService.copy(descriptors = eService.descriptors.sortBy(_.id).map(desc => desc.copy(docs = desc.docs.sortBy(_.id))))
 
   def createEServiceDescriptor(eServiceId: UUID, descriptorId: UUID): EServiceDescriptor = {
     (() => mockUUIDSupplier.get).expects().returning(descriptorId).once()

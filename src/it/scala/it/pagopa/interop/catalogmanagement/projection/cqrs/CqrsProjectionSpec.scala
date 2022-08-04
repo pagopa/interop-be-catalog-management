@@ -52,7 +52,7 @@ class CqrsProjectionSpec extends ScalaTestWithActorTestKit(ItSpecConfiguration.c
 
       val persisted = findOne[CatalogItem](eServiceId.toString).futureValue
 
-      expectedData shouldBe persisted
+      compareCatalogItems(expectedData, persisted)
     }
 
     "succeed for event CatalogItemUpdated on EService update" in {
@@ -84,7 +84,7 @@ class CqrsProjectionSpec extends ScalaTestWithActorTestKit(ItSpecConfiguration.c
 
       val persisted = findOne[CatalogItem](updatedEService.id.toString).futureValue
 
-      expectedData shouldBe persisted
+      compareCatalogItems(expectedData, persisted)
     }
 
     "succeed for event CatalogItemWithDescriptorsDeleted" in {
@@ -102,7 +102,7 @@ class CqrsProjectionSpec extends ScalaTestWithActorTestKit(ItSpecConfiguration.c
 
       val persisted = findOne[CatalogItem](eServiceId.toString).futureValue
 
-      expectedData shouldBe persisted
+      compareCatalogItems(expectedData, persisted)
     }
 
     "succeed for event CatalogItemDocumentAdded with interface document" in {
@@ -123,7 +123,7 @@ class CqrsProjectionSpec extends ScalaTestWithActorTestKit(ItSpecConfiguration.c
 
       val persisted = findOne[CatalogItem](eServiceId.toString).futureValue
 
-      expectedData shouldBe persisted
+      compareCatalogItems(expectedData, persisted)
     }
 
     "succeed for event CatalogItemDocumentAdded with generic document" in {
@@ -146,12 +146,7 @@ class CqrsProjectionSpec extends ScalaTestWithActorTestKit(ItSpecConfiguration.c
 
       val persisted = findOne[CatalogItem](eServiceId.toString).futureValue
 
-      def serviceSortedFields(eService: CatalogItem) =
-        eService.copy(descriptors =
-          eService.descriptors.sortBy(_.id).map(desc => desc.copy(docs = desc.docs.sortBy(_.id)))
-        )
-
-      serviceSortedFields(expectedData) shouldBe serviceSortedFields(persisted)
+      sortEServiceArrayFields(expectedData) shouldBe sortEServiceArrayFields(persisted)
     }
 
     "succeed for event CatalogItemDocumentUpdated with interface document" in {
@@ -165,6 +160,7 @@ class CqrsProjectionSpec extends ScalaTestWithActorTestKit(ItSpecConfiguration.c
       createEServiceDescriptor(eServiceId, descriptorId2)
 
       createDescriptorDocument(eServiceId, descriptorId, "INTERFACE", documentId)
+
       createDescriptorDocument(eServiceId, descriptorId, "DOCUMENT")
       createDescriptorDocument(eServiceId, descriptorId2, "INTERFACE")
       val eService = createDescriptorDocument(eServiceId, descriptorId2, "DOCUMENT")
@@ -178,7 +174,37 @@ class CqrsProjectionSpec extends ScalaTestWithActorTestKit(ItSpecConfiguration.c
 
       val persisted = findOne[CatalogItem](eServiceId.toString).futureValue
 
-      expectedData shouldBe persisted
+      compareCatalogItems(expectedData, persisted)
+    }
+
+    "succeed for event CatalogItemDocumentUpdated with generic document" in {
+      val eServiceId    = UUID.randomUUID()
+      val descriptorId  = UUID.randomUUID()
+      val descriptorId2 = UUID.randomUUID()
+      val documentId    = UUID.randomUUID()
+
+      createEService(eServiceId)
+      createEServiceDescriptor(eServiceId, descriptorId)
+      createEServiceDescriptor(eServiceId, descriptorId2)
+
+      createDescriptorDocument(eServiceId, descriptorId, "DOCUMENT", documentId)
+
+      createDescriptorDocument(eServiceId, descriptorId, "INTERFACE")
+      createDescriptorDocument(eServiceId, descriptorId, "DOCUMENT")
+      createDescriptorDocument(eServiceId, descriptorId2, "INTERFACE")
+      val eService = createDescriptorDocument(eServiceId, descriptorId2, "DOCUMENT")
+
+      val doc = updateDescriptorDocument(eServiceId, descriptorId, documentId)
+
+      val updatedDescriptor   = eService.descriptors.find(_.id == descriptorId).get
+      val descriptorWithDocs  = updatedDescriptor.copy(docs = updatedDescriptor.docs.filter(_.id != documentId) :+ doc)
+      val descriptor2WithDocs = eService.descriptors.find(_.id == descriptorId2).get
+
+      val expectedData = eService.copy(descriptors = Seq(descriptorWithDocs, descriptor2WithDocs)).toPersistent
+
+      val persisted = findOne[CatalogItem](eServiceId.toString).futureValue
+
+      compareCatalogItems(expectedData, persisted)
     }
 
   }
