@@ -66,11 +66,11 @@ object Dependencies {
   }
 
   private[this] object pagopa {
-    lazy val namespace   = "it.pagopa"
-    lazy val commonsUtils     = namespace %% "interop-commons-utils"        % commonsVersion
-    lazy val fileManager = namespace %% "interop-commons-file-manager" % commonsVersion
-    lazy val commonsJWT  = namespace %% "interop-commons-jwt"          % commonsVersion
-    lazy val commonsCqrs = namespace %% "interop-commons-cqrs"         % commonsVersion
+    lazy val namespace    = "it.pagopa"
+    lazy val commonsUtils = namespace %% "interop-commons-utils"        % commonsVersion
+    lazy val fileManager  = namespace %% "interop-commons-file-manager" % commonsVersion
+    lazy val commonsJWT   = namespace %% "interop-commons-jwt"          % commonsVersion
+    lazy val commonsCqrs  = namespace %% "interop-commons-cqrs"         % commonsVersion
   }
 
   private[this] object postgres {
@@ -109,7 +109,7 @@ object Dependencies {
       List(jackson.annotations % Compile, jackson.core % Compile, jackson.databind % Compile)
     lazy val `server`: List[ModuleID]  = List(
       // For making Java 12 happy
-      "javax.annotation"           % "javax.annotation-api" % "1.3.2"  % "compile",
+      "javax.annotation"           % "javax.annotation-api"           % "1.3.2"                    % "compile",
       //
       akka.actorTyped              % Compile,
       akka.clusterBootstrap        % Compile,
@@ -136,7 +136,7 @@ object Dependencies {
       commonsFileUpload.fileUpload % Compile,
       logback.classic              % Compile,
       mustache.compiler            % Compile,
-      pagopa.commonsUtils               % "compile,it",
+      pagopa.commonsUtils          % "compile,it",
       pagopa.fileManager           % Compile,
       pagopa.commonsJWT            % Compile,
       pagopa.commonsCqrs           % "compile,it",
@@ -147,10 +147,9 @@ object Dependencies {
       scalamock.core               % "test,it",
       scalaprotobuf.core           % "protobuf,compile",
       scalatest.core               % "test,it",
-      "org.scalameta"             %% "munit-scalacheck"     % "0.7.29" % Test,
-      "com.softwaremill.diffx"    %% "diffx-munit"          % "0.7.0"  % Test,
-      "com.dimafeng"             %% "testcontainers-scala-scalatest"  % testcontainersScalaVersion % IntegrationTest,
-
+      "org.scalameta"             %% "munit-scalacheck"               % "0.7.29"                   % Test,
+      "com.softwaremill.diffx"    %% "diffx-munit"                    % "0.7.0"                    % Test,
+      "com.dimafeng"              %% "testcontainers-scala-scalatest" % testcontainersScalaVersion % IntegrationTest
     )
     lazy val client: List[ModuleID]    =
       List(akka.stream, akka.http, akka.httpJson4s, akka.slf4j, json4s.jackson, json4s.ext, pagopa.commonsUtils).map(

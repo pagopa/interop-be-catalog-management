@@ -50,6 +50,7 @@ object JsonFormats {
   implicit val caFormat: RootJsonFormat[CatalogAttribute] =
     new RootJsonFormat[CatalogAttribute] {
       override def read(json: JsValue): CatalogAttribute = json match {
+        // TODO Is there a better way?
         case JsObject(fields) =>
           fields
             .get("ids")
