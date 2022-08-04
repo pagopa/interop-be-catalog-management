@@ -33,6 +33,8 @@ object EServiceCqrsProjection {
       )
     case CatalogItemUpdated(c)                                 =>
       ActionWithBson(collection.updateOne(Filters.eq("data.id", c.id.toString), _), Updates.set("data", c.toDocument))
+    case CatalogItemDeleted(cId)                               =>
+      Action(collection.deleteOne(Filters.eq("data.id", cId)))
     case CatalogItemWithDescriptorsDeleted(c, dId)             =>
       ActionWithBson(
         collection.updateOne(Filters.eq("data.id", c.id.toString), _),

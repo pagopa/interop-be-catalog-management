@@ -225,6 +225,12 @@ trait ItSpecHelper
     Await.result(Unmarshal(response).to[EServiceDoc], Duration.Inf)
   }
 
+  def deleteEService(eServiceId: UUID): Unit = {
+    val response = request(s"$serviceURL/eservices/$eServiceId", HttpMethods.DELETE)
+    response.status shouldBe StatusCodes.NoContent
+    ()
+  }
+
   def deleteDescriptor(eServiceId: UUID, descriptorId: UUID): Unit = {
     val response = request(s"$serviceURL/eservices/$eServiceId/descriptors/$descriptorId", HttpMethods.DELETE)
     response.status shouldBe StatusCodes.NoContent

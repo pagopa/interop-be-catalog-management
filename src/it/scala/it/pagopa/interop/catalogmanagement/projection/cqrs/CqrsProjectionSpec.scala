@@ -55,6 +55,17 @@ class CqrsProjectionSpec extends ScalaTestWithActorTestKit(ItSpecConfiguration.c
       compareCatalogItems(expectedData, persisted)
     }
 
+    "succeed for event CatalogItemDeleted" in {
+      val eServiceId = UUID.randomUUID()
+
+      createEService(eServiceId)
+      deleteEService(eServiceId)
+
+      val persisted = find[CatalogItem](eServiceId.toString).futureValue
+
+      persisted shouldBe empty
+    }
+
     "succeed for event CatalogItemUpdated on EService update" in {
       val eServiceId = UUID.randomUUID()
 
