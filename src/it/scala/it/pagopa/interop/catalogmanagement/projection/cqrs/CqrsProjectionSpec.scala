@@ -5,7 +5,6 @@ import it.pagopa.interop.catalogmanagement.model._
 import it.pagopa.interop.catalogmanagement.model.persistence.JsonFormats._
 import it.pagopa.interop.catalogmanagement.utils.PersistentAdapters._
 import it.pagopa.interop.catalogmanagement.{ItSpecConfiguration, ItSpecHelper}
-import spray.json.JsObject
 
 import java.util.UUID
 
@@ -120,6 +119,28 @@ class CqrsProjectionSpec extends ScalaTestWithActorTestKit(ItSpecConfiguration.c
       val persisted = findOne[CatalogItem](eServiceId.toString).futureValue
 
       expectedData shouldBe persisted
+    }
+
+    "succeed for event CatalogItemDocumentAdded with generic document" in {
+      val eServiceId   = UUID.randomUUID()
+      val descriptorId = UUID.randomUUID()
+
+      createEService(eServiceId)
+      createEServiceDescriptor(eServiceId, descriptorId)
+
+      createDescriptorDocument(eServiceId, descriptorId, "DOCUMENT")
+      val eService = createDescriptorDocument(eServiceId, descriptorId, "DOCUMENT")
+
+      val expectedData = eService.toPersistent
+
+      val persisted = findOne[CatalogItem](eServiceId.toString).futureValue
+
+      def serviceSortedFields(eService: CatalogItem) =
+        eService.copy(descriptors =
+          eService.descriptors.sortBy(_.id).map(desc => desc.copy(docs = desc.docs.sortBy(_.id)))
+        )
+
+      serviceSortedFields(expectedData) shouldBe serviceSortedFields(persisted)
     }
 
   }
