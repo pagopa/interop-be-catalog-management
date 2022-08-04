@@ -87,6 +87,24 @@ class CqrsProjectionSpec extends ScalaTestWithActorTestKit(ItSpecConfiguration.c
       expectedData shouldBe persisted
     }
 
+    "succeed for event CatalogItemWithDescriptorsDeleted" in {
+      val eServiceId           = UUID.randomUUID()
+      val descriptorId         = UUID.randomUUID()
+      val deletingDescriptorId = UUID.randomUUID()
+
+      val eService   = createEService(eServiceId)
+      val descriptor = createEServiceDescriptor(eServiceId, descriptorId)
+      createEServiceDescriptor(eServiceId, deletingDescriptorId)
+
+      deleteDescriptor(eServiceId, deletingDescriptorId)
+
+      val expectedData = eService.copy(descriptors = Seq(descriptor)).toPersistent
+
+      val persisted = findOne[CatalogItem](eServiceId.toString).futureValue
+
+      expectedData shouldBe persisted
+    }
+
   }
 
 }
