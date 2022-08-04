@@ -11,7 +11,7 @@ import akka.http.scaladsl.Http
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.model.headers.OAuth2BearerToken
-import akka.http.scaladsl.server.directives.{AuthenticationDirective, SecurityDirectives}
+import akka.http.scaladsl.server.directives.{AuthenticationDirective, FileInfo, SecurityDirectives}
 import akka.http.scaladsl.unmarshalling.Unmarshal
 import it.pagopa.interop.catalogmanagement.api._
 import it.pagopa.interop.catalogmanagement.api.impl._
@@ -25,10 +25,12 @@ import it.pagopa.interop.commons.utils.service.UUIDSupplier
 import org.scalamock.scalatest.MockFactory
 import spray.json._
 
+import java.io.File
 import java.net.InetAddress
+import java.time.OffsetDateTime
 import java.util.UUID
 import scala.concurrent.duration._
-import scala.concurrent.{Await, ExecutionContextExecutor, Future}
+import scala.concurrent.{Await, ExecutionContext, ExecutionContextExecutor, Future}
 
 trait ItSpecHelper
     extends ItSpecConfiguration
@@ -99,7 +101,7 @@ trait ItSpecHelper
     ActorTestKit.shutdown(httpSystem, 5.seconds)
   }
 
-  def createEServiceDescriptor(eserviceId: UUID, descriptorId: UUID): EServiceDescriptor = {
+  def createEServiceDescriptor(eServiceId: UUID, descriptorId: UUID): EServiceDescriptor = {
     (() => mockUUIDSupplier.get).expects().returning(descriptorId).once()
 
     val seed = EServiceDescriptorSeed(
@@ -112,7 +114,7 @@ trait ItSpecHelper
 
     val data = seed.toJson.compactPrint
 
-    val response = request(s"$serviceURL/eservices/$eserviceId/descriptors", HttpMethods.POST, Some(data))
+    val response = request(s"$serviceURL/eservices/$eServiceId/descriptors", HttpMethods.POST, Some(data))
 
     response.status shouldBe StatusCodes.OK
 
@@ -146,6 +148,51 @@ trait ItSpecHelper
     val data = seed.toJson.compactPrint
 
     val response = request(s"$serviceURL/eservices", HttpMethods.POST, Some(data))
+
+    response.status shouldBe StatusCodes.OK
+
+    Await.result(Unmarshal(response).to[EService], Duration.Inf)
+  }
+
+  def createDescriptorDocument(eServiceId: UUID, descriptorId: UUID, kind: String): EService = {
+    val docId = UUID.randomUUID()
+    val doc   = CatalogDocument(
+      id = docId,
+      name = "name",
+      contentType = "application/yaml",
+      prettyName = "prettyName",
+      path = "path",
+      checksum = "trustme",
+      uploadDate = OffsetDateTime.now()
+    )
+
+    (() => mockUUIDSupplier.get).expects().returning(docId).once()
+    (mockFileManager
+      .store(_: UUID, _: String, _: (FileInfo, File))(_: ExecutionContext))
+      .expects(*, *, *, *)
+      .returning(Future.successful(doc))
+      .once()
+
+    val file = new File("src/it/resources/apis.yaml")
+
+    val formData =
+      Multipart.FormData(
+        Multipart.FormData.BodyPart.fromPath("doc", MediaTypes.`application/octet-stream`, file.toPath),
+        Multipart.FormData.BodyPart.Strict("kind", kind),
+        Multipart.FormData.BodyPart.Strict("prettyName", file.getName)
+      )
+
+    val response =
+      Http()
+        .singleRequest(
+          HttpRequest(
+            uri = s"$serviceURL/eservices/$eServiceId/descriptors/$descriptorId/documents",
+            method = HttpMethods.POST,
+            entity = formData.toEntity,
+            headers = requestHeaders
+          )
+        )
+        .futureValue
 
     response.status shouldBe StatusCodes.OK
 

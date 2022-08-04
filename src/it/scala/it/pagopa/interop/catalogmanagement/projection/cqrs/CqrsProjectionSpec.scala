@@ -5,6 +5,7 @@ import it.pagopa.interop.catalogmanagement.model._
 import it.pagopa.interop.catalogmanagement.model.persistence.JsonFormats._
 import it.pagopa.interop.catalogmanagement.utils.PersistentAdapters._
 import it.pagopa.interop.catalogmanagement.{ItSpecConfiguration, ItSpecHelper}
+import spray.json.JsObject
 
 import java.util.UUID
 
@@ -99,6 +100,22 @@ class CqrsProjectionSpec extends ScalaTestWithActorTestKit(ItSpecConfiguration.c
       deleteDescriptor(eServiceId, deletingDescriptorId)
 
       val expectedData = eService.copy(descriptors = Seq(descriptor)).toPersistent
+
+      val persisted = findOne[CatalogItem](eServiceId.toString).futureValue
+
+      expectedData shouldBe persisted
+    }
+
+    "succeed for event CatalogItemDocumentAdded with interface document" in {
+      val eServiceId   = UUID.randomUUID()
+      val descriptorId = UUID.randomUUID()
+
+      createEService(eServiceId)
+      createEServiceDescriptor(eServiceId, descriptorId)
+
+      val eService = createDescriptorDocument(eServiceId, descriptorId, "INTERFACE")
+
+      val expectedData = eService.toPersistent
 
       val persisted = findOne[CatalogItem](eServiceId.toString).futureValue
 

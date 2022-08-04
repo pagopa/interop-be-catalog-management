@@ -24,21 +24,40 @@ object EServiceCqrsProjection {
     CqrsProjection[Event](offsetDbConfig, mongoDbConfig, projectionId, eventHandler)
 
   private def eventHandler(collection: MongoCollection[Document], event: Event): PartialMongoAction = event match {
-    case CatalogItemAdded(c)                               =>
+    case CatalogItemAdded(c)                                   =>
       ActionWithDocument(collection.insertOne, Document(s"{ data: ${c.toJson.compactPrint} }"))
-    case CatalogItemDescriptorAdded(esId, descriptor)      =>
+    case CatalogItemDescriptorAdded(esId, descriptor)          =>
       ActionWithBson(
         collection.updateOne(Filters.eq("data.id", esId), _),
         Updates.push(s"data.descriptors", descriptor.toDocument)
       )
-    case CatalogItemUpdated(c)                             =>
+    case CatalogItemUpdated(c)                                 =>
       ActionWithBson(collection.updateOne(Filters.eq("data.id", c.id.toString), _), Updates.set("data", c.toDocument))
-    case CatalogItemWithDescriptorsDeleted(c, dId)         =>
+    case CatalogItemWithDescriptorsDeleted(c, dId)             =>
       ActionWithBson(
         collection.updateOne(Filters.eq("data.id", c.id.toString), _),
         Updates.pull("data.descriptors", Document(s"{ id : \"$dId\" }"))
       )
-    case CatalogItemDocumentUpdated(esId, dId, docId, doc) =>
+    case CatalogItemDocumentAdded(esId, dId, doc, isInterface) =>
+      if (isInterface)
+        ActionWithBson(
+          collection.updateMany(
+            Filters.eq("data.id", esId),
+            _,
+            UpdateOptions().arrayFilters(List(Filters.eq("elem.id", dId)).asJava)
+          ),
+          Updates.set("data.descriptors.$[elem].interface", doc.toDocument)
+        )
+      else
+        ActionWithBson(
+          collection.updateMany(
+            Filters.eq("data.id", esId),
+            _,
+            UpdateOptions().arrayFilters(List(Filters.eq("elem.id", dId)).asJava)
+          ),
+          Updates.push("data.descriptors.$[elem].docs", doc.toDocument)
+        )
+    case CatalogItemDocumentUpdated(esId, dId, docId, doc)     =>
       // TODO Test
       MultiAction(
         Seq(
@@ -72,10 +91,10 @@ object EServiceCqrsProjection {
           )
         )
       )
-    case ClonedCatalogItemAdded(c)                         =>
+    case ClonedCatalogItemAdded(c)                             =>
       ActionWithDocument(collection.insertOne, Document(s"{ data: ${c.toJson.compactPrint} }"))
     // TODO Remove
-    case other                                             =>
+    case other                                                 =>
       throw new Exception(s"Not implemented yet: $other")
   }
 
