@@ -210,6 +210,19 @@ trait ItSpecHelper
     Await.result(Unmarshal(response).to[EService], Duration.Inf)
   }
 
+  def deleteDescriptorDocument(eServiceId: UUID, descriptorId: UUID, documentId: UUID): Unit = {
+    (mockFileManager
+      .delete(_: String))
+      .expects(*)
+      .returning(Future.successful(true))
+      .once()
+
+    val response =
+      request(s"$serviceURL/eservices/$eServiceId/descriptors/$descriptorId/documents/$documentId", HttpMethods.DELETE)
+    response.status shouldBe StatusCodes.NoContent
+    ()
+  }
+
   def updateDescriptorDocument(eServiceId: UUID, descriptorId: UUID, documentId: UUID): EServiceDoc = {
     val seed = UpdateEServiceDescriptorDocumentSeed(prettyName = "new prettyName")
 

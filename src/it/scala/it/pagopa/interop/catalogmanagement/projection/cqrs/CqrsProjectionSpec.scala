@@ -5,6 +5,7 @@ import it.pagopa.interop.catalogmanagement.model._
 import it.pagopa.interop.catalogmanagement.model.persistence.JsonFormats._
 import it.pagopa.interop.catalogmanagement.utils.PersistentAdapters._
 import it.pagopa.interop.catalogmanagement.{ItSpecConfiguration, ItSpecHelper}
+import spray.json.JsObject
 
 import java.util.UUID
 
@@ -209,6 +210,64 @@ class CqrsProjectionSpec extends ScalaTestWithActorTestKit(ItSpecConfiguration.c
 
       val updatedDescriptor   = eService.descriptors.find(_.id == descriptorId).get
       val descriptorWithDocs  = updatedDescriptor.copy(docs = updatedDescriptor.docs.filter(_.id != documentId) :+ doc)
+      val descriptor2WithDocs = eService.descriptors.find(_.id == descriptorId2).get
+
+      val expectedData = eService.copy(descriptors = Seq(descriptorWithDocs, descriptor2WithDocs)).toPersistent
+
+      val persisted = findOne[CatalogItem](eServiceId.toString).futureValue
+
+      compareCatalogItems(expectedData, persisted)
+    }
+
+    "succeed for event CatalogItemDocumentDeleted with interface document" in {
+      val eServiceId    = UUID.randomUUID()
+      val descriptorId  = UUID.randomUUID()
+      val descriptorId2 = UUID.randomUUID()
+      val documentId    = UUID.randomUUID()
+
+      createEService(eServiceId)
+      createEServiceDescriptor(eServiceId, descriptorId)
+      createEServiceDescriptor(eServiceId, descriptorId2)
+
+      createDescriptorDocument(eServiceId, descriptorId, "INTERFACE", documentId)
+
+      createDescriptorDocument(eServiceId, descriptorId, "DOCUMENT")
+      createDescriptorDocument(eServiceId, descriptorId2, "INTERFACE")
+      val eService = createDescriptorDocument(eServiceId, descriptorId2, "DOCUMENT")
+
+      deleteDescriptorDocument(eServiceId, descriptorId, documentId)
+
+      val descriptorWithDocs  = eService.descriptors.find(_.id == descriptorId).get.copy(interface = None)
+      val descriptor2WithDocs = eService.descriptors.find(_.id == descriptorId2).get
+
+      val expectedData = eService.copy(descriptors = Seq(descriptorWithDocs, descriptor2WithDocs)).toPersistent
+
+      val persisted = findOne[CatalogItem](eServiceId.toString).futureValue
+
+      compareCatalogItems(expectedData, persisted)
+    }
+
+    "succeed for event CatalogItemDocumentDeleted with generic document" in {
+      val eServiceId    = UUID.randomUUID()
+      val descriptorId  = UUID.randomUUID()
+      val descriptorId2 = UUID.randomUUID()
+      val documentId    = UUID.randomUUID()
+
+      createEService(eServiceId)
+      createEServiceDescriptor(eServiceId, descriptorId)
+      createEServiceDescriptor(eServiceId, descriptorId2)
+
+      createDescriptorDocument(eServiceId, descriptorId, "DOCUMENT", documentId)
+
+      createDescriptorDocument(eServiceId, descriptorId, "INTERFACE")
+      createDescriptorDocument(eServiceId, descriptorId, "DOCUMENT")
+      createDescriptorDocument(eServiceId, descriptorId2, "INTERFACE")
+      val eService = createDescriptorDocument(eServiceId, descriptorId2, "DOCUMENT")
+
+      deleteDescriptorDocument(eServiceId, descriptorId, documentId)
+
+      val updatedDescriptor   = eService.descriptors.find(_.id == descriptorId).get
+      val descriptorWithDocs  = updatedDescriptor.copy(docs = updatedDescriptor.docs.filter(_.id != documentId))
       val descriptor2WithDocs = eService.descriptors.find(_.id == descriptorId2).get
 
       val expectedData = eService.copy(descriptors = Seq(descriptorWithDocs, descriptor2WithDocs)).toPersistent

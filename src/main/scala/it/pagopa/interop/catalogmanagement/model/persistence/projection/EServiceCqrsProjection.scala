@@ -59,6 +59,31 @@ object EServiceCqrsProjection {
           ),
           Updates.push("data.descriptors.$[elem].docs", doc.toDocument)
         )
+    case CatalogItemDocumentDeleted(esId, dId, docId)          =>
+      MultiAction(
+        Seq(
+          // Generic Doc
+          ActionWithBson(
+            collection.updateOne(
+              Filters.eq("data.id", esId),
+              _,
+              UpdateOptions().arrayFilters(List(Filters.eq("descriptor.id", dId)).asJava)
+            ),
+            Updates.pull("data.descriptors.$[descriptor].docs", Filters.eq("id", docId))
+          ),
+          // Interface
+          ActionWithBson(
+            collection.updateOne(
+              Filters.eq("data.id", esId),
+              _,
+              UpdateOptions().arrayFilters(
+                List(Filters.and(Filters.eq("elem.id", dId), Filters.eq("elem.interface.id", docId))).asJava
+              )
+            ),
+            Updates.unset("data.descriptors.$[elem].interface")
+          )
+        )
+      )
     case CatalogItemDocumentUpdated(esId, dId, docId, doc)     =>
       MultiAction(
         Seq(
