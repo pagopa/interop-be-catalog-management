@@ -121,9 +121,6 @@ object EServiceCqrsProjection {
       )
     case ClonedCatalogItemAdded(c)                             =>
       ActionWithDocument(collection.insertOne, Document(s"{ data: ${c.toJson.compactPrint} }"))
-    // TODO Remove
-    case other                                                 =>
-      throw new Exception(s"Not implemented yet: $other")
   }
 
 }
