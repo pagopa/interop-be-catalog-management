@@ -50,14 +50,9 @@ object JsonFormats {
   implicit val caFormat: RootJsonFormat[CatalogAttribute] =
     new RootJsonFormat[CatalogAttribute] {
       override def read(json: JsValue): CatalogAttribute = json match {
-        // TODO Is there a better way?
-        case JsObject(fields) =>
-          fields
-            .get("ids")
-            .map(_ => gaFormat.read(json))
-            .orElse(fields.get("id").map(_ => saFormat.read(json)))
-            .getOrElse(deserializationError(s"Unable to deserialize json as a CatalogAttribute: $json"))
-        case other            => deserializationError(s"Unable to deserialize json as a CatalogAttribute: $other")
+        case JsObject(fields) if fields.contains("ids") => gaFormat.read(json)
+        case JsObject(fields) if fields.contains("id")  => saFormat.read(json)
+        case other => deserializationError(s"Unable to deserialize json as a CatalogAttribute: $other")
       }
 
       override def write(obj: CatalogAttribute): JsValue = obj match {
