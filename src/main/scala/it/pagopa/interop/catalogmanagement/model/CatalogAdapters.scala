@@ -100,7 +100,15 @@ object CatalogAdapters {
 
   implicit class CatalogDocumentWrapper(private val p: CatalogDocument) extends AnyVal {
     def toApi: EServiceDoc =
-      EServiceDoc(id = p.id, name = p.name, contentType = p.contentType, prettyName = p.prettyName, path = p.path)
+      EServiceDoc(
+        id = p.id,
+        name = p.name,
+        contentType = p.contentType,
+        prettyName = p.prettyName,
+        path = p.path,
+        checksum = p.checksum,
+        uploadDate = p.uploadDate
+      )
 
     def cloneDocument(
       fileManager: CatalogFileManager
