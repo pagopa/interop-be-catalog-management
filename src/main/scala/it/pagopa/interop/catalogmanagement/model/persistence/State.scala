@@ -2,20 +2,14 @@ package it.pagopa.interop.catalogmanagement.model.persistence
 
 import it.pagopa.interop.catalogmanagement.model.{CatalogDescriptor, CatalogDocument, CatalogItem}
 
-import java.util.UUID
-
 final case class State(items: Map[String, CatalogItem]) extends Persistable {
-  def delete(catalogItem: CatalogItem, descriptorId: String): State = {
-    val updated = catalogItem.copy(descriptors = catalogItem.descriptors.filter(_.id != UUID.fromString(descriptorId)))
-    if (updated.descriptors.isEmpty) {
-      copy(items = items - (catalogItem.id.toString))
-    } else {
-      this.update(updated)
-    }
+  def deleteDescriptor(catalogItem: CatalogItem, descriptorId: String): State = {
+    val updated = catalogItem.copy(descriptors = catalogItem.descriptors.filter(_.id.toString != descriptorId))
+    update(updated)
   }
 
   def deleteEService(catalogItemId: String): State =
-    copy(items = items - (catalogItemId))
+    copy(items = items - catalogItemId)
 
   def add(catalogItem: CatalogItem): State =
     copy(items = items + (catalogItem.id.toString -> catalogItem))
