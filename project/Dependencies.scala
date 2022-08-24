@@ -149,7 +149,8 @@ object Dependencies {
       scalatest.core               % "test,it",
       "org.scalameta"             %% "munit-scalacheck"               % "0.7.29"                   % Test,
       "com.softwaremill.diffx"    %% "diffx-munit"                    % "0.7.0"                    % Test,
-      "com.dimafeng"              %% "testcontainers-scala-scalatest" % testcontainersScalaVersion % IntegrationTest
+      "com.dimafeng"              %% "testcontainers-scala-scalatest" % testcontainersScalaVersion % IntegrationTest,
+      "org.scoverage" % "scalac-scoverage-plugin" % "2.0.0"% "provided"
     )
     lazy val client: List[ModuleID]    =
       List(akka.stream, akka.http, akka.httpJson4s, akka.slf4j, json4s.jackson, json4s.ext, pagopa.commonsUtils).map(
