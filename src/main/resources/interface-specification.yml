@@ -846,6 +846,8 @@ components:
         - contentType
         - prettyName
         - path
+        - checksum
+        - uploadDate
       properties:
         id:
           type: string
@@ -858,6 +860,11 @@ components:
           type: string
         path:
           type: string
+        checksum:
+          type: string
+        uploadDate:
+          type: string
+          format: date-time
     EServiceDescriptor:
       type: object
       required:

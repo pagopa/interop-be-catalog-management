@@ -21,7 +21,10 @@ final class CatalogFileManagerImpl(val fileManager: FileManager) extends Catalog
     ec: ExecutionContext
   ): Future[CatalogDocument] = {
     fileManager
-      .store(ApplicationConfiguration.storageContainer, ApplicationConfiguration.eserviceDocsPath)(id, fileParts)
+      .store(ApplicationConfiguration.storageContainer, ApplicationConfiguration.eserviceDocsPath)(
+        id.toString,
+        fileParts
+      )
       .map(filePath =>
         CatalogDocument(
           id = id,
@@ -43,7 +46,7 @@ final class CatalogFileManagerImpl(val fileManager: FileManager) extends Catalog
     fileManager
       .copy(ApplicationConfiguration.storageContainer, ApplicationConfiguration.eserviceDocsPath)(
         filePathToCopy,
-        documentId,
+        documentId.toString,
         fileName
       )
       .map(copiedPath =>

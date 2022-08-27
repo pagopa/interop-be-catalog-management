@@ -155,7 +155,7 @@ object CatalogPersistentBehavior {
           }
       //
 
-      case DeleteCatalogItemWithDescriptor(deletedCatalogItem, descriptorId, replyTo) =>
+      case DeleteCatalogItemDescriptor(deletedCatalogItem, descriptorId, replyTo) =>
         val descriptorToDelete: Option[CatalogDescriptor] =
           state.items
             .get(deletedCatalogItem.id.toString)
@@ -212,7 +212,8 @@ object CatalogPersistentBehavior {
       case CatalogItemAdded(catalogItem)                                => state.add(catalogItem)
       case ClonedCatalogItemAdded(catalogItem)                          => state.add(catalogItem)
       case CatalogItemUpdated(catalogItem)                              => state.update(catalogItem)
-      case CatalogItemWithDescriptorsDeleted(catalogItem, descriptorId) => state.delete(catalogItem, descriptorId)
+      case CatalogItemWithDescriptorsDeleted(catalogItem, descriptorId) =>
+        state.deleteDescriptor(catalogItem, descriptorId)
       case CatalogItemDeleted(catalogItemId)                            => state.deleteEService(catalogItemId)
       case CatalogItemDocumentUpdated(eServiceId, descriptorId, documentId, modifiedDocument) =>
         state.updateDocument(eServiceId, descriptorId, documentId, modifiedDocument)

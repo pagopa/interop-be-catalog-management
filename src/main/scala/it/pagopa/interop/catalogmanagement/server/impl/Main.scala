@@ -1,31 +1,25 @@
 package it.pagopa.interop.catalogmanagement.server.impl
 
-import cats.syntax.all._
+import akka.actor.typed.{ActorSystem, DispatcherSelector}
 import akka.actor.typed.scaladsl.Behaviors
-import akka.actor.typed.ActorSystem
 import akka.cluster.ClusterEvent
 import akka.cluster.sharding.typed.scaladsl.ClusterSharding
 import akka.cluster.typed.{Cluster, Subscribe}
 import akka.http.scaladsl.Http
-
 import akka.management.cluster.bootstrap.ClusterBootstrap
 import akka.management.scaladsl.AkkaManagement
-
+import buildinfo.BuildInfo
+import cats.syntax.all._
+import com.typesafe.scalalogging.Logger
 import it.pagopa.interop.catalogmanagement.api.EServiceApi
 import it.pagopa.interop.catalogmanagement.api.impl._
 import it.pagopa.interop.catalogmanagement.common.system.ApplicationConfiguration
-
 import it.pagopa.interop.catalogmanagement.server.Controller
 import it.pagopa.interop.catalogmanagement.service.impl.CatalogFileManagerImpl
 import it.pagopa.interop.commons.logging.renderBuildInfo
-import com.typesafe.scalalogging.Logger
 
-import buildinfo.BuildInfo
-import scala.concurrent.ExecutionContext
-import scala.util.Success
-import scala.util.Failure
-import scala.concurrent.ExecutionContextExecutor
-import akka.actor.typed.DispatcherSelector
+import scala.concurrent.{ExecutionContext, ExecutionContextExecutor}
+import scala.util.{Failure, Success}
 
 object Main extends App with Dependencies {
 
@@ -78,7 +72,7 @@ object Main extends App with Dependencies {
 
       serverBinding.onComplete {
         case Success(b) =>
-          logger.info(s"Started server at ${b.localAddress.getHostString()}:${b.localAddress.getPort()}")
+          logger.info(s"Started server at ${b.localAddress.getHostString}:${b.localAddress.getPort}")
         case Failure(e) =>
           actorSystem.terminate()
           logger.error("Startup error: ", e)

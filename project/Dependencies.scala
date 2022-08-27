@@ -66,10 +66,11 @@ object Dependencies {
   }
 
   private[this] object pagopa {
-    lazy val namespace   = "it.pagopa"
-    lazy val commons     = namespace %% "interop-commons-utils"        % commonsVersion
-    lazy val fileManager = namespace %% "interop-commons-file-manager" % commonsVersion
-    lazy val commonsJWT  = namespace %% "interop-commons-jwt"          % commonsVersion
+    lazy val namespace    = "it.pagopa"
+    lazy val commonsUtils = namespace %% "interop-commons-utils"        % commonsVersion
+    lazy val fileManager  = namespace %% "interop-commons-file-manager" % commonsVersion
+    lazy val commonsJWT   = namespace %% "interop-commons-jwt"          % commonsVersion
+    lazy val commonsCqrs  = namespace %% "interop-commons-cqrs"         % commonsVersion
   }
 
   private[this] object postgres {
@@ -104,11 +105,11 @@ object Dependencies {
   }
 
   object Jars {
-    lazy val overrides: Seq[ModuleID] =
-      Seq(jackson.annotations % Compile, jackson.core % Compile, jackson.databind % Compile)
-    lazy val `server`: Seq[ModuleID]  = Seq(
+    lazy val overrides: List[ModuleID] =
+      List(jackson.annotations % Compile, jackson.core % Compile, jackson.databind % Compile)
+    lazy val `server`: List[ModuleID]  = List(
       // For making Java 12 happy
-      "javax.annotation"           % "javax.annotation-api" % "1.3.2"  % "compile",
+      "javax.annotation"           % "javax.annotation-api"           % "1.3.2"                    % "compile",
       //
       akka.actorTyped              % Compile,
       akka.clusterBootstrap        % Compile,
@@ -135,22 +136,25 @@ object Dependencies {
       commonsFileUpload.fileUpload % Compile,
       logback.classic              % Compile,
       mustache.compiler            % Compile,
-      pagopa.commons               % Compile,
+      pagopa.commonsUtils          % "compile,it",
       pagopa.fileManager           % Compile,
       pagopa.commonsJWT            % Compile,
-      postgres.jdbc                % Compile,
+      pagopa.commonsCqrs           % "compile,it",
+      postgres.jdbc                % "compile,it",
       tika.core                    % Compile,
-      akka.testkit                 % Test,
-      akka.httpTestkit             % Test,
-      scalamock.core               % Test,
+      akka.testkit                 % "test,it",
+      akka.httpTestkit             % "test,it",
+      scalamock.core               % "test,it",
       scalaprotobuf.core           % "protobuf,compile",
-      scalatest.core               % Test,
-      "org.scalameta"             %% "munit-scalacheck"     % "0.7.29" % Test,
-      "com.softwaremill.diffx"    %% "diffx-munit"          % "0.7.0"  % Test
+      scalatest.core               % "test,it",
+      "org.scalameta"             %% "munit-scalacheck"               % "0.7.29"                   % Test,
+      "com.softwaremill.diffx"    %% "diffx-munit"                    % "0.7.0"                    % Test,
+      "com.dimafeng"              %% "testcontainers-scala-scalatest" % testcontainersScalaVersion % IntegrationTest
     )
-    lazy val client: Seq[ModuleID]    =
-      Seq(akka.stream, akka.http, akka.httpJson4s, akka.slf4j, json4s.jackson, json4s.ext, pagopa.commons).map(
+    lazy val client: List[ModuleID]    =
+      List(akka.stream, akka.http, akka.httpJson4s, akka.slf4j, json4s.jackson, json4s.ext, pagopa.commonsUtils).map(
         _ % Compile
       )
+    lazy val models: List[ModuleID]    = List(pagopa.commonsUtils).map(_ % Compile)
   }
 }

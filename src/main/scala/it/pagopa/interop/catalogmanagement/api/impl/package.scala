@@ -2,14 +2,14 @@ package it.pagopa.interop.catalogmanagement.api
 
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import akka.http.scaladsl.model.StatusCode
-import it.pagopa.interop.commons.utils.SprayCommonFormats.uuidFormat
+import it.pagopa.interop.commons.utils.SprayCommonFormats._
 import it.pagopa.interop.commons.utils.errors.ComponentError
 import it.pagopa.interop.catalogmanagement.model._
 import spray.json.{DefaultJsonProtocol, RootJsonFormat}
 
 package object impl extends SprayJsonSupport with DefaultJsonProtocol {
 
-  implicit val eServiceDocFormat: RootJsonFormat[EServiceDoc]                       = jsonFormat5(EServiceDoc)
+  implicit val eServiceDocFormat: RootJsonFormat[EServiceDoc]                       = jsonFormat7(EServiceDoc)
   implicit val eServiceDescriptorSeedFormat: RootJsonFormat[EServiceDescriptorSeed] = jsonFormat5(
     EServiceDescriptorSeed
   )

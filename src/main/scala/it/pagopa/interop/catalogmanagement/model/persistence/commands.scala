@@ -21,7 +21,7 @@ final case class AddClonedCatalogItem(catalogItem: CatalogItem, replyTo: ActorRe
 final case class UpdateCatalogItem(catalogItem: CatalogItem, replyTo: ActorRef[Option[CatalogItem]]) extends Command
 final case class DeleteCatalogItem(eServiceId: String, replyTo: ActorRef[StatusReply[Done]])         extends Command
 
-final case class DeleteCatalogItemWithDescriptor(
+final case class DeleteCatalogItemDescriptor(
   catalogItem: CatalogItem,
   descriptorId: String,
   replyTo: ActorRef[StatusReply[Done]]

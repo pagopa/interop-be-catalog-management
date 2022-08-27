@@ -38,6 +38,7 @@ import java.nio.file.Paths
 import scala.concurrent.duration.Duration
 import scala.concurrent.{Await, ExecutionContext, Future}
 import scala.util.{Failure, Success}
+import it.pagopa.interop.catalogmanagement.model.CatalogAdapters._
 
 class EServiceApiServiceImpl(
   system: ActorSystem[_],
@@ -319,7 +320,7 @@ class EServiceApiServiceImpl(
       _         <- current
         .getDocumentPaths(descriptorId)
         .fold(Future.successful(Seq.empty[Boolean]))(path => Future.traverse(path)(catalogFileManager.delete))
-      deleted   <- commander.ask(ref => DeleteCatalogItemWithDescriptor(current, descriptorId, ref))
+      deleted   <- commander.ask(ref => DeleteCatalogItemDescriptor(current, descriptorId, ref))
     } yield deleted
 
     onComplete(result) {

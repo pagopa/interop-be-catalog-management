@@ -7,6 +7,7 @@ sealed trait Event extends Persistable
 final case class CatalogItemAdded(catalogItem: CatalogItem)                                        extends Event
 final case class ClonedCatalogItemAdded(catalogItem: CatalogItem)                                  extends Event
 final case class CatalogItemUpdated(catalogItem: CatalogItem)                                      extends Event
+// This event leads just the deletion of the descriptor. The old name has been kept to maintain data retrocompatibility
 final case class CatalogItemWithDescriptorsDeleted(catalogItem: CatalogItem, descriptorId: String) extends Event
 final case class CatalogItemDocumentUpdated(
   eServiceId: String,
