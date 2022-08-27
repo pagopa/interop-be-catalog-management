@@ -146,7 +146,7 @@ object Dependencies {
       scalaprotobuf.core           % "protobuf,compile",
       scalatest.core               % Test,
       "org.scalameta"             %% "munit-scalacheck"     % "0.7.29" % Test,
-      "com.softwaremill.diffx"    %% "diffx-munit"          % "0.7.1"  % Test
+      "com.softwaremill.diffx"    %% "diffx-munit"          % "0.7.0"  % Test
     )
     lazy val client: Seq[ModuleID]    =
       Seq(akka.stream, akka.http, akka.httpJson4s, akka.slf4j, json4s.jackson, json4s.ext, pagopa.commons).map(
