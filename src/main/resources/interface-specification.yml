@@ -979,6 +979,7 @@ components:
       properties:
         id:
           type: string
+          format: uuid
         explicitAttributeVerification:
           type: boolean
       required:
