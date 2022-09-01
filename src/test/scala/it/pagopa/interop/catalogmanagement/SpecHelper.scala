@@ -62,14 +62,16 @@ trait SpecHelper extends SpecConfiguration with AnyWordSpecLike with MockFactory
       description = "string",
       technology = EServiceTechnology.REST,
       attributes = Attributes(
-        certified = Seq(Attribute(single = Some(AttributeValue(id = "1234", explicitAttributeVerification = false)))),
-        declared = Seq(Attribute(single = Some(AttributeValue(id = "1234", explicitAttributeVerification = false)))),
+        certified =
+          Seq(Attribute(single = Some(AttributeValue(id = UUID.randomUUID(), explicitAttributeVerification = false)))),
+        declared =
+          Seq(Attribute(single = Some(AttributeValue(id = UUID.randomUUID(), explicitAttributeVerification = false)))),
         verified = Seq(
           Attribute(group =
             Some(
               Seq(
-                AttributeValue(id = "1234", explicitAttributeVerification = false),
-                AttributeValue(id = "5555", explicitAttributeVerification = false)
+                AttributeValue(id = UUID.randomUUID(), explicitAttributeVerification = false),
+                AttributeValue(id = UUID.randomUUID(), explicitAttributeVerification = false)
               )
             )
           )

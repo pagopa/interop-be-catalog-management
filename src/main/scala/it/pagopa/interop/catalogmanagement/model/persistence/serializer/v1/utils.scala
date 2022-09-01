@@ -1,11 +1,12 @@
 package it.pagopa.interop.catalogmanagement.model.persistence.serializer.v1
 
-import cats.implicits.toTraverseOps
+import cats.implicits._
 import it.pagopa.interop.catalogmanagement.model._
 import it.pagopa.interop.catalogmanagement.model.persistence.serializer.v1.catalog_item.CatalogItemTechnologyV1.{
   Unrecognized => UnrecognizedTechnology
 }
 import it.pagopa.interop.catalogmanagement.model.persistence.serializer.v1.catalog_item._
+import it.pagopa.interop.commons.utils.TypeConversions._
 
 import java.time.OffsetDateTime
 import java.time.format.DateTimeFormatter
@@ -14,7 +15,7 @@ import java.util.UUID
 object utils {
 
   def convertAttributeValueToV1(catalogAttributeValue: CatalogAttributeValue): CatalogAttributeValueV1 =
-    CatalogAttributeValueV1(catalogAttributeValue.id, catalogAttributeValue.explicitAttributeVerification)
+    CatalogAttributeValueV1(catalogAttributeValue.id.toString(), catalogAttributeValue.explicitAttributeVerification)
 
   def convertAttributeToV1(catalogAttribute: CatalogAttribute): CatalogAttributeV1 =
     catalogAttribute match {
@@ -32,34 +33,34 @@ object utils {
 
   }
 
-  def convertAttributeFromV1(catalogAttributeV1: CatalogAttributeV1): Either[RuntimeException, CatalogAttribute] = {
-    val singleAttribute: Option[SingleAttribute] = catalogAttributeV1.single.map(attr =>
-      SingleAttribute(CatalogAttributeValue(attr.id, attr.explicitAttributeVerification))
+  def convertAttributeFromV1(catalogAttributeV1: CatalogAttributeV1): Either[Throwable, CatalogAttribute] = {
+    val singleAttribute: Option[Either[Throwable, SingleAttribute]] = catalogAttributeV1.single.map(attr =>
+      attr.id.toUUID.toEither.map(uuid =>
+        SingleAttribute(CatalogAttributeValue(uuid, attr.explicitAttributeVerification))
+      )
     )
 
-    val groupAttribute: Option[GroupAttribute] = {
-      val attributes: Seq[CatalogAttributeValue] =
-        catalogAttributeV1.group.map(attr => CatalogAttributeValue(attr.id, attr.explicitAttributeVerification))
+    val groupAttribute: Option[Either[Throwable, GroupAttribute]] =
+      Option
+        .unless(catalogAttributeV1.group.isEmpty)(catalogAttributeV1.group)
+        .map(attributes =>
+          attributes
+            .traverse(attr =>
+              attr.id.toUUID.toEither.map(id => CatalogAttributeValue(id, attr.explicitAttributeVerification))
+            )
+            .map(GroupAttribute)
+        )
 
-      Option(attributes).filter(_.nonEmpty).map(GroupAttribute)
-    }
-
-    (singleAttribute, groupAttribute) match {
-      case (Some(attr), None) => Right(attr)
-      case (None, Some(attr)) => Right(attr)
-      case _                  => Left(new RuntimeException("Deserialization from protobuf failed"))
-    }
-
+    singleAttribute
+      .orElse(groupAttribute)
+      .getOrElse(new RuntimeException("Deserialization from protobuf failed").asLeft)
   }
 
-  def convertAttributesFromV1(attributes: CatalogAttributesV1): Either[RuntimeException, CatalogAttributes] = {
-    for {
-      certified <- attributes.certified.traverse(convertAttributeFromV1)
-      declared  <- attributes.declared.traverse(convertAttributeFromV1)
-      verified  <- attributes.verified.traverse(convertAttributeFromV1)
-    } yield CatalogAttributes(certified = certified, declared = declared, verified = verified)
-
-  }
+  def convertAttributesFromV1(attributes: CatalogAttributesV1): Either[Throwable, CatalogAttributes] = for {
+    certified <- attributes.certified.traverse(convertAttributeFromV1)
+    declared  <- attributes.declared.traverse(convertAttributeFromV1)
+    verified  <- attributes.verified.traverse(convertAttributeFromV1)
+  } yield CatalogAttributes(certified = certified, declared = declared, verified = verified)
 
   def convertDescriptorToV1(descriptor: CatalogDescriptor): Either[RuntimeException, CatalogDescriptorV1] = {
     Right(
