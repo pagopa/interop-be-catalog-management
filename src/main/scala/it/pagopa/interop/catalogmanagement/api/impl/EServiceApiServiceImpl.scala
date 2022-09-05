@@ -56,7 +56,7 @@ class EServiceApiServiceImpl(
   private[this] def authorize(roles: String*)(
     route: => Route
   )(implicit contexts: Seq[(String, String)], toEntityMarshallerProblem: ToEntityMarshaller[Problem]): Route =
-    authorizeInterop(hasPermissions(roles: _*), problemOf(StatusCodes.Forbidden, List(OperationForbidden))) {
+    authorizeInterop(hasPermissions(roles: _*), problemOf(StatusCodes.Forbidden, OperationForbidden)) {
       route
     }
 
@@ -85,10 +85,10 @@ class EServiceApiServiceImpl(
           s"Error while creating e-service ${eServiceSeed.name} for producer ${eServiceSeed.producerId}",
           statusReply.getError
         )
-        createEService400(problemOf(StatusCodes.Conflict, List(EServiceAlreadyExistingError(eServiceSeed.name))))
+        createEService400(problemOf(StatusCodes.Conflict, EServiceAlreadyExistingError(eServiceSeed.name)))
       case Failure(ex)                                   =>
         logger.error(s"Error while creating e-service ${eServiceSeed.name} for producer ${eServiceSeed.producerId}", ex)
-        createEService400(problemOf(StatusCodes.BadRequest, List(EServiceError)))
+        createEService400(problemOf(StatusCodes.BadRequest, EServiceError))
     }
   }
 
@@ -140,7 +140,7 @@ class EServiceApiServiceImpl(
             s"Failure in creation of e-service document of kind $kind for e-service $eServiceId and descriptor $descriptorId - not found"
           )
           createEServiceDocument404(
-            problemOf(StatusCodes.NotFound, List(DocumentCreationNotFound(kind, eServiceId, descriptorId)))
+            problemOf(StatusCodes.NotFound, DocumentCreationNotFound(kind, eServiceId, descriptorId))
           )
         })(ci => createEServiceDocument200(ci.toApi))
       case Failure(ex)          =>
@@ -149,7 +149,7 @@ class EServiceApiServiceImpl(
           ex
         )
         createEServiceDocument400(
-          problemOf(StatusCodes.BadRequest, List(DocumentCreationNotFound(kind, eServiceId, descriptorId)))
+          problemOf(StatusCodes.BadRequest, DocumentCreationNotFound(kind, eServiceId, descriptorId))
         )
     }
   }
@@ -172,7 +172,7 @@ class EServiceApiServiceImpl(
       case Some(catalogItem) => getEService200(catalogItem.toApi)
       case None              =>
         logger.error(s"E-service $eServiceId not found")
-        getEService404(problemOf(StatusCodes.NotFound, List(EServiceNotFoundError)))
+        getEService404(problemOf(StatusCodes.NotFound, EServiceNotFoundError))
 
     }
   }
@@ -219,7 +219,7 @@ class EServiceApiServiceImpl(
       case Right(items) => getEServices200(items.map(_.toApi))
       case Left(ex)     =>
         logger.error(s"Error while getting e-service for producer $producerId and state $state", ex)
-        getEServices400(problemOf(StatusCodes.BadRequest, List(EServiceRetrievalError)))
+        getEServices400(problemOf(StatusCodes.BadRequest, EServiceRetrievalError))
     }
 
   }
@@ -259,8 +259,8 @@ class EServiceApiServiceImpl(
           ex
         )
         ex match {
-          case ex: EServiceNotFoundError => getEService404(problemOf(StatusCodes.NotFound, List(ex)))
-          case _ => getEService400(problemOf(StatusCodes.BadRequest, List(DocumentRetrievalBadRequest(documentId))))
+          case ex: EServiceNotFoundError => getEService404(problemOf(StatusCodes.NotFound, ex))
+          case _ => getEService400(problemOf(StatusCodes.BadRequest, DocumentRetrievalBadRequest(documentId)))
         }
 
     }
@@ -323,15 +323,11 @@ class EServiceApiServiceImpl(
             s"Error while deleting draft version of descriptor $descriptorId for e-service $eServiceId",
             statusReply.getError
           )
-          deleteDraft400(
-            problemOf(StatusCodes.BadRequest, List(DescriptorDeleteDraftBadRequest(eServiceId, descriptorId)))
-          )
+          deleteDraft400(problemOf(StatusCodes.BadRequest, DescriptorDeleteDraftBadRequest(eServiceId, descriptorId)))
         }
       case Failure(ex)          =>
         logger.error(s"Error while deleting draft version of descriptor $descriptorId for e-service $eServiceId", ex)
-        deleteDraft400(
-          problemOf(StatusCodes.BadRequest, List(DescriptorDeleteDraftBadRequest(eServiceId, descriptorId)))
-        )
+        deleteDraft400(problemOf(StatusCodes.BadRequest, DescriptorDeleteDraftBadRequest(eServiceId, descriptorId)))
     }
   }
 
@@ -386,21 +382,18 @@ class EServiceApiServiceImpl(
         catalogItem.fold({
           logger
             .error(s"Error while updating descriptor $descriptorId for e-service $eServiceId - bad request")
-          updateDescriptor400(
-            problemOf(StatusCodes.BadRequest, List(DescriptorUpdateBadRequest(eServiceId, descriptorId)))
-          )
+          updateDescriptor400(problemOf(StatusCodes.BadRequest, DescriptorUpdateBadRequest(eServiceId, descriptorId)))
         })(ci => updateDescriptor200(ci.toApi))
       case Failure(ex)          =>
         logger.error(s"Error while updating descriptor $descriptorId for e-service $eServiceId", ex)
         ex match {
           case ex: EServiceNotFoundError           =>
-            updateDescriptor404(problemOf(StatusCodes.NotFound, List(ex)))
+            updateDescriptor404(problemOf(StatusCodes.NotFound, ex))
           case ex: EServiceDescriptorNotFoundError =>
-            updateDescriptor404(problemOf(StatusCodes.NotFound, List(ex)))
+            updateDescriptor404(problemOf(StatusCodes.NotFound, ex))
           case _                                   =>
-            updateDescriptor400(
-              problemOf(StatusCodes.BadRequest, List(DescriptorUpdateBadRequest(eServiceId, descriptorId)))
-            )
+            updateDescriptor400(problemOf(StatusCodes.BadRequest, DescriptorUpdateBadRequest(eServiceId, descriptorId)))
+
         }
 
     }
@@ -430,11 +423,11 @@ class EServiceApiServiceImpl(
       case Success(catalogItem) =>
         catalogItem.fold({
           logger.error(s"Error while updating e-service by id $eServiceId - not found")
-          updateEServiceById404(problemOf(StatusCodes.NotFound, List(EServiceNotFoundError(eServiceId))))
+          updateEServiceById404(problemOf(StatusCodes.NotFound, EServiceNotFoundError(eServiceId)))
         })(ci => updateEServiceById200(ci.toApi))
       case Failure(ex)          =>
         logger.error(s"Error while updating e-service by id $eServiceId", ex)
-        updateEServiceById400(problemOf(StatusCodes.BadRequest, List(EServiceUpdateError(eServiceId))))
+        updateEServiceById400(problemOf(StatusCodes.BadRequest, EServiceUpdateError(eServiceId)))
     }
   }
 
@@ -492,7 +485,7 @@ class EServiceApiServiceImpl(
       case Success(descriptor) => createDescriptor200(descriptor.toApi)
       case Failure(ex)         =>
         logger.error(s"Error while creating descriptor for e-service $eServiceId", ex)
-        createDescriptor400(problemOf(StatusCodes.BadRequest, List(DescriptorCreationBadRequest(eServiceId))))
+        createDescriptor400(problemOf(StatusCodes.BadRequest, DescriptorCreationBadRequest(eServiceId)))
     }
   }
 
@@ -528,7 +521,7 @@ class EServiceApiServiceImpl(
             )
             problemOf(
               StatusCodes.BadRequest,
-              List(DeleteEServiceDocumentErrorBadRequest(documentId, descriptorId, eServiceId))
+              DeleteEServiceDocumentErrorBadRequest(documentId, descriptorId, eServiceId)
             )
           })
 
@@ -539,14 +532,14 @@ class EServiceApiServiceImpl(
         )
         ex match {
           case ex: EServiceNotFoundError           =>
-            deleteEServiceDocument404(problemOf(StatusCodes.NotFound, List(ex)))
+            deleteEServiceDocument404(problemOf(StatusCodes.NotFound, ex))
           case ex: EServiceDescriptorNotFoundError =>
-            deleteEServiceDocument404(problemOf(StatusCodes.NotFound, List(ex)))
+            deleteEServiceDocument404(problemOf(StatusCodes.NotFound, ex))
           case _                                   =>
             deleteEServiceDocument400(
               problemOf(
                 StatusCodes.BadRequest,
-                List(DeleteEServiceDocumentErrorBadRequest(documentId, descriptorId, eServiceId))
+                DeleteEServiceDocumentErrorBadRequest(documentId, descriptorId, eServiceId)
               )
             )
         }
@@ -568,15 +561,11 @@ class EServiceApiServiceImpl(
         catalogItem.fold({
           logger
             .error(s"Error during archiviation of descriptor $descriptorId of e-service $eServiceId - bad request")
-          archiveDescriptor400(
-            problemOf(StatusCodes.BadRequest, List(DescriptorArchiveBadRequest(eServiceId, descriptorId)))
-          )
+          archiveDescriptor400(problemOf(StatusCodes.BadRequest, DescriptorArchiveBadRequest(eServiceId, descriptorId)))
         })(_ => archiveDescriptor204)
       case Failure(ex)          =>
         logger.error(s"Error during archiviation of descriptor $descriptorId of e-service $eServiceId", ex)
-        archiveDescriptor400(
-          problemOf(StatusCodes.BadRequest, List(DescriptorArchiveBadRequest(eServiceId, descriptorId)))
-        )
+        archiveDescriptor400(problemOf(StatusCodes.BadRequest, DescriptorArchiveBadRequest(eServiceId, descriptorId)))
     }
   }
 
@@ -596,14 +585,12 @@ class EServiceApiServiceImpl(
           logger
             .error(s"Error during deprecation of descriptor $descriptorId of e-service $eServiceId - bad request")
           deprecateDescriptor400(
-            problemOf(StatusCodes.BadRequest, List(DescriptorDeprecationBadRequest(eServiceId, descriptorId)))
+            problemOf(StatusCodes.BadRequest, DescriptorDeprecationBadRequest(eServiceId, descriptorId))
           )
         })(_ => deprecateDescriptor204)
       case Failure(ex)          =>
         logger.error(s"Error during deprecation of descriptor $descriptorId of e-service $eServiceId", ex)
-        deprecateDescriptor400(
-          problemOf(StatusCodes.BadRequest, List(DescriptorDeprecationError(eServiceId, descriptorId)))
-        )
+        deprecateDescriptor400(problemOf(StatusCodes.BadRequest, DescriptorDeprecationError(eServiceId, descriptorId)))
     }
   }
 
@@ -623,14 +610,12 @@ class EServiceApiServiceImpl(
           logger
             .error(s"Error during suspension of descriptor $descriptorId of e-service $eServiceId - bad request")
           suspendDescriptor400(
-            problemOf(StatusCodes.BadRequest, List(DescriptorSuspensionBadRequest(eServiceId, descriptorId)))
+            problemOf(StatusCodes.BadRequest, DescriptorSuspensionBadRequest(eServiceId, descriptorId))
           )
         })(_ => suspendDescriptor204)
       case Failure(ex)          =>
         logger.error(s"Error during suspension of descriptor $descriptorId of e-service $eServiceId", ex)
-        suspendDescriptor400(
-          problemOf(StatusCodes.BadRequest, List(DescriptorSuspensionError(eServiceId, descriptorId)))
-        )
+        suspendDescriptor400(problemOf(StatusCodes.BadRequest, DescriptorSuspensionError(eServiceId, descriptorId)))
     }
   }
 
@@ -649,13 +634,11 @@ class EServiceApiServiceImpl(
         catalogItem.fold({
           logger
             .error(s"Error while making descriptor $descriptorId of e-service $eServiceId as draft - bad request")
-          draftDescriptor400(
-            problemOf(StatusCodes.BadRequest, List(DescriptorDraftBadRequest(eServiceId, descriptorId)))
-          )
+          draftDescriptor400(problemOf(StatusCodes.BadRequest, DescriptorDraftBadRequest(eServiceId, descriptorId)))
         })(_ => draftDescriptor204)
       case Failure(ex)          =>
         logger.error(s"Error while making descriptor $descriptorId of e-service $eServiceId as draft", ex)
-        draftDescriptor400(problemOf(StatusCodes.BadRequest, List(DescriptorDraftError(eServiceId, descriptorId))))
+        draftDescriptor400(problemOf(StatusCodes.BadRequest, DescriptorDraftError(eServiceId, descriptorId)))
     }
   }
 
@@ -674,13 +657,11 @@ class EServiceApiServiceImpl(
       case Success(catalogItem) =>
         catalogItem.fold({
           logger.error(s"Error while publishing descriptor $descriptorId of e-service $eServiceId - bad request")
-          publishDescriptor400(
-            problemOf(StatusCodes.BadRequest, List(DescriptorPublishBadRequest(eServiceId, descriptorId)))
-          )
+          publishDescriptor400(problemOf(StatusCodes.BadRequest, DescriptorPublishBadRequest(eServiceId, descriptorId)))
         })(_ => publishDescriptor204)
       case Failure(ex)          =>
         logger.error(s"Error while publishing descriptor $descriptorId of e-service $eServiceId", ex)
-        publishDescriptor400(problemOf(StatusCodes.BadRequest, List(DescriptorPublishError(eServiceId, descriptorId))))
+        publishDescriptor400(problemOf(StatusCodes.BadRequest, DescriptorPublishError(eServiceId, descriptorId)))
     }
   }
 
@@ -756,7 +737,7 @@ class EServiceApiServiceImpl(
             s"Error while updating document $documentId of descriptor $descriptorId of e-service $eServiceId - not found"
           )
           updateEServiceDocument404(
-            problemOf(StatusCodes.NotFound, List(DocumentUpdateNotFound(documentId, descriptorId, eServiceId)))
+            problemOf(StatusCodes.NotFound, DocumentUpdateNotFound(documentId, descriptorId, eServiceId))
           )
         })(catalogDocument => updateEServiceDocument200(catalogDocument.toApi))
       case Failure(ex)       =>
@@ -766,14 +747,14 @@ class EServiceApiServiceImpl(
         )
         ex match {
           case ex: EServiceNotFoundError           =>
-            updateEServiceDocument404(problemOf(StatusCodes.NotFound, List(ex)))
+            updateEServiceDocument404(problemOf(StatusCodes.NotFound, ex))
           case ex: EServiceDescriptorNotFoundError =>
-            updateEServiceDocument404(problemOf(StatusCodes.NotFound, List(ex)))
+            updateEServiceDocument404(problemOf(StatusCodes.NotFound, ex))
           case _                                   =>
             updateEServiceDocument400(
               problemOf(
                 StatusCodes.BadRequest,
-                List(DocumentUpdateError(documentId: String, descriptorId: String, eServiceId: String))
+                DocumentUpdateError(documentId: String, descriptorId: String, eServiceId: String)
               )
             )
         }
@@ -819,7 +800,7 @@ class EServiceApiServiceImpl(
           case statusReply                          =>
             logger.error(s"Error while cloning descriptor $descriptorId of e-service $eServiceId", statusReply.getError)
             cloneEServiceByDescriptor400(
-              problemOf(StatusCodes.BadRequest, List(CloningEServiceBadRequest(eServiceId, descriptorId)))
+              problemOf(StatusCodes.BadRequest, CloningEServiceBadRequest(eServiceId, descriptorId))
             )
         }
 
@@ -827,13 +808,14 @@ class EServiceApiServiceImpl(
         logger.error(s"Error while cloning descriptor $descriptorId of e-service $eServiceId", ex)
         ex match {
           case ex: EServiceNotFoundError           =>
-            cloneEServiceByDescriptor404(problemOf(StatusCodes.NotFound, List(ex)))
+            cloneEServiceByDescriptor404(problemOf(StatusCodes.NotFound, ex))
           case ex: EServiceDescriptorNotFoundError =>
-            cloneEServiceByDescriptor404(problemOf(StatusCodes.NotFound, List(ex)))
+            cloneEServiceByDescriptor404(problemOf(StatusCodes.NotFound, ex))
           case _                                   =>
             cloneEServiceByDescriptor400(
-              problemOf(StatusCodes.BadRequest, List(CloningEServiceError(eServiceId, descriptorId)))
+              problemOf(StatusCodes.BadRequest, CloningEServiceError(eServiceId, descriptorId))
             )
+
         }
     }
   }
@@ -895,11 +877,11 @@ class EServiceApiServiceImpl(
           if (statusReply.isSuccess) deleteEService204
           else {
             logger.error(s"Error while deleting e-service $eServiceId", statusReply.getError)
-            deleteEService400(problemOf(StatusCodes.BadRequest, List(DeleteEServiceBadRequest(eServiceId))))
+            deleteEService400(problemOf(StatusCodes.BadRequest, DeleteEServiceBadRequest(eServiceId)))
           }
         case Failure(ex)          =>
           logger.error(s"Error while deleting e-service $eServiceId", ex)
-          deleteEService400(problemOf(StatusCodes.BadRequest, List(DeleteEServiceBadRequest(eServiceId))))
+          deleteEService400(problemOf(StatusCodes.BadRequest, DeleteEServiceBadRequest(eServiceId)))
       }
     }
 
