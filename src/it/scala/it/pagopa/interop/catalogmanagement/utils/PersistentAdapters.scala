@@ -23,7 +23,7 @@ object PersistentAdapters {
         name = p.name,
         description = p.description,
         technology = CatalogItemTechnology.fromApi(p.technology),
-        attributes = CatalogAttributes.fromApi(p.attributes).get,
+        attributes = CatalogAttributes.fromApi(p.attributes).toOption.get,
         descriptors = p.descriptors.map(_.toPersistent)
       )
   }
