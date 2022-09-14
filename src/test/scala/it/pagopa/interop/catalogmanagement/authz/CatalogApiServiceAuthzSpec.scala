@@ -90,7 +90,7 @@ class CatalogApiServiceAuthzSpec extends AnyWordSpecLike with BeforeAndAfterAll 
 
     "accept authorized roles for getEServices" in {
       val endpoint = AuthorizedRoutes.endpoints("getEServices")
-      validateAuthorization(endpoint, { implicit c: Seq[(String, String)] => service.getEServices(None, None) })
+      validateAuthorization(endpoint, { implicit c: Seq[(String, String)] => service.getEServices(None, None, None) })
     }
 
     "accept authorized roles for getEServiceDocument" in {

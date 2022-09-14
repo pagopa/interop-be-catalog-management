@@ -13,7 +13,10 @@ import com.nimbusds.jose.proc.SecurityContext
 import com.nimbusds.jwt.proc.DefaultJWTClaimsVerifier
 import it.pagopa.interop.catalogmanagement.api.impl._
 import it.pagopa.interop.catalogmanagement.common.system.ApplicationConfiguration
-import it.pagopa.interop.catalogmanagement.common.system.ApplicationConfiguration.{numberOfProjectionTags, projectionTag}
+import it.pagopa.interop.catalogmanagement.common.system.ApplicationConfiguration.{
+  numberOfProjectionTags,
+  projectionTag
+}
 import it.pagopa.interop.catalogmanagement.model.Problem
 import it.pagopa.interop.catalogmanagement.model.persistence.projection.EServiceCqrsProjection
 import it.pagopa.interop.catalogmanagement.model.persistence.{CatalogPersistentBehavior, Command}

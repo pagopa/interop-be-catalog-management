@@ -72,6 +72,10 @@ paths:
           schema:
             type: string
         - in: query
+          name: attributeId
+          schema:
+            type: string
+        - in: query
           name: state
           schema:
             $ref: '#/components/schemas/EServiceDescriptorState'
