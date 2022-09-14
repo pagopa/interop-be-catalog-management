@@ -179,12 +179,12 @@ class EServiceApiServiceImpl(
 
   /** Code: 200, Message: A list of EService, DataType: Seq[EService]
     */
-  override def getEServices(producerId: Option[String], state: Option[String])(implicit
+  override def getEServices(producerId: Option[String], attributeId: Option[String], state: Option[String])(implicit
     toEntityMarshallerEServicearray: ToEntityMarshaller[Seq[EService]],
     toEntityMarshallerProblem: ToEntityMarshaller[Problem],
     contexts: Seq[(String, String)]
   ): Route = authorize(ADMIN_ROLE, API_ROLE, SECURITY_ROLE, M2M_ROLE) {
-    logger.info("Getting e-service for producer {} and state {}", producerId.toString, state.toString)
+    logger.info(s"Getting e-service for producer $producerId, attribute $attributeId and state $state")
     val sliceSize = 100
 
     val commanders: Seq[EntityRef[Command]] =
@@ -195,15 +195,16 @@ class EServiceApiServiceImpl(
       from: Int,
       to: Int,
       producerId: Option[String],
+      attributeId: Option[String],
       state: Option[CatalogDescriptorState]
     ): LazyList[CatalogItem] = {
       val slice: Seq[CatalogItem] = Await
-        .result(commander.ask(ref => ListCatalogItem(from, to, producerId, state, ref)), Duration.Inf)
+        .result(commander.ask(ref => ListCatalogItem(from, to, producerId, attributeId, state, ref)), Duration.Inf)
 
       if (slice.isEmpty)
         LazyList.empty[CatalogItem]
       else
-        getSlice(commander, to, to + sliceSize, producerId, state) #::: slice.to(LazyList)
+        getSlice(commander, to, to + sliceSize, producerId, attributeId, state) #::: slice.to(LazyList)
     }
 
     val stringToState: String => Either[Throwable, CatalogDescriptorState] =
@@ -212,13 +213,16 @@ class EServiceApiServiceImpl(
     val stateEnum = state.traverse(stringToState)
 
     val result = stateEnum.map { state =>
-      commanders.flatMap(ref => getSlice(ref, 0, sliceSize, producerId, state))
+      commanders.flatMap(ref => getSlice(ref, 0, sliceSize, producerId, attributeId, state))
     }
 
     result match {
       case Right(items) => getEServices200(items.map(_.toApi))
       case Left(ex)     =>
-        logger.error(s"Error while getting e-service for producer $producerId and state $state", ex)
+        logger.error(
+          s"Error while getting e-service for producer $producerId, attribute $attributeId and state $state",
+          ex
+        )
         getEServices400(problemOf(StatusCodes.BadRequest, EServiceRetrievalError))
     }
 
