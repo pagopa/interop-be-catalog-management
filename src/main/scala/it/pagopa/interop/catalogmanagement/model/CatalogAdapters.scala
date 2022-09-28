@@ -159,7 +159,7 @@ object CatalogAdapters {
       .fromApi(seed.attributes)
       .map(attributes =>
         CatalogItem(
-          id = uuidSupplier.get,
+          id = uuidSupplier.get(),
           producerId = seed.producerId,
           name = seed.name,
           description = seed.description,

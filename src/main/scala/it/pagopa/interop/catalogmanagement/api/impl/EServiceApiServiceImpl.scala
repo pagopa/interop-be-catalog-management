@@ -128,7 +128,7 @@ class EServiceApiServiceImpl(
     val result: Future[Option[CatalogItem]] = for {
       current  <- retrieveCatalogItem(commander, eServiceId)
       verified <- CatalogFileManager.verify(doc, current, descriptorId, isInterface)
-      document <- catalogFileManager.store(id = uuidSupplier.get, prettyName = prettyName, fileParts = doc)
+      document <- catalogFileManager.store(id = uuidSupplier.get(), prettyName = prettyName, fileParts = doc)
       _ <- commander.ask(ref => AddCatalogItemDocument(verified.id.toString, descriptorId, document, isInterface, ref))
       updated <- commander.ask(ref => GetCatalogItem(eServiceId, ref))
     } yield updated
@@ -471,7 +471,7 @@ class EServiceApiServiceImpl(
       current     <- retrieveCatalogItem(commander, eServiceId)
       nextVersion <- VersionGenerator.next(current.currentVersion).toFuture
       createdCatalogDescriptor = CatalogDescriptor(
-        id = uuidSupplier.get,
+        id = uuidSupplier.get(),
         description = eServiceDescriptorSeed.description,
         version = nextVersion,
         interface = None,
@@ -787,10 +787,10 @@ class EServiceApiServiceImpl(
           .toFuture(EServiceDescriptorNotFoundError(eServiceId, descriptorId))
         clonedInterface   <-
           descriptorToClone.interface.fold(Future.successful[Option[CatalogDocument]](None))(interface =>
-            interface.cloneDocument(catalogFileManager)(uuidSupplier.get).map(d => Some(d))
+            interface.cloneDocument(catalogFileManager)(uuidSupplier.get()).map(d => Some(d))
           )
         clonedDocuments   <- Future.traverse(descriptorToClone.docs)(
-          _.cloneDocument(catalogFileManager)(uuidSupplier.get)
+          _.cloneDocument(catalogFileManager)(uuidSupplier.get())
         )
         clonedService     <- cloneItemAsNewDraft(serviceToClone, descriptorToClone, clonedInterface, clonedDocuments)
         cloned <- getCommander(getShard(clonedService.id.toString)).ask(ref => AddClonedCatalogItem(clonedService, ref))
@@ -834,7 +834,7 @@ class EServiceApiServiceImpl(
     for {
       version <- VersionGenerator.next(None).toFuture
       descriptor = CatalogDescriptor(
-        id = uuidSupplier.get,
+        id = uuidSupplier.get(),
         version = version,
         description = descriptorToClone.description,
         interface = clonedInterface,
@@ -846,7 +846,7 @@ class EServiceApiServiceImpl(
         dailyCallsTotal = descriptorToClone.dailyCallsTotal
       )
     } yield CatalogItem(
-      id = uuidSupplier.get,
+      id = uuidSupplier.get(),
       producerId = serviceToClone.producerId,
       name = s"${serviceToClone.name} - clone",
       description = serviceToClone.description,

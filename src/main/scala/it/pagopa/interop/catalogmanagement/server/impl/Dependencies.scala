@@ -27,7 +27,6 @@ import it.pagopa.interop.commons.jwt.{JWTConfiguration, PublicKeysHolder}
 import it.pagopa.interop.commons.utils.OpenapiUtils
 import it.pagopa.interop.commons.utils.TypeConversions._
 import it.pagopa.interop.commons.utils.service.UUIDSupplier
-import it.pagopa.interop.commons.utils.service.impl.UUIDSupplierImpl
 import slick.basic.DatabaseConfig
 import slick.jdbc.JdbcProfile
 
@@ -47,7 +46,7 @@ trait Dependencies {
   val catalogPersistentEntity: Entity[Command, ShardingEnvelope[Command]] =
     Entity(CatalogPersistentBehavior.TypeKey)(behaviorFactory)
 
-  val uuidSupplier: UUIDSupplier = new UUIDSupplierImpl
+  val uuidSupplier: UUIDSupplier = UUIDSupplier
 
   def getFileManager(blockingEc: ExecutionContextExecutor): FileManager =
     FileManager.get(ApplicationConfiguration.storageKind match {
