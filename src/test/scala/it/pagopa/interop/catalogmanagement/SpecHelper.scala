@@ -34,7 +34,7 @@ trait SpecHelper extends SpecConfiguration with AnyWordSpecLike with MockFactory
   def createEServiceDescriptor(eserviceId: String, descriptorId: UUID)(implicit
     actorSystem: ActorSystem[_]
   ): EServiceDescriptor = {
-    (() => mockUUIDSupplier.get).expects().returning(descriptorId).once()
+    (() => mockUUIDSupplier.get()).expects().returning(descriptorId).once()
 
     val seed = EServiceDescriptorSeed(
       audience = Seq("audience"),
@@ -54,7 +54,7 @@ trait SpecHelper extends SpecConfiguration with AnyWordSpecLike with MockFactory
   }
 
   def createEService(uuid: String)(implicit actorSystem: ActorSystem[_]): EService = {
-    (() => mockUUIDSupplier.get).expects().returning(UUID.fromString(uuid)).once()
+    (() => mockUUIDSupplier.get()).expects().returning(UUID.fromString(uuid)).once()
 
     val seed = EServiceSeed(
       producerId = UUID.randomUUID(),

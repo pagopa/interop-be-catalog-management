@@ -45,7 +45,7 @@ class CatalogApiServiceAuthzSpec extends AnyWordSpecLike with BeforeAndAfterAll 
       testAkkaSharding,
       testPersistentEntity,
       new UUIDSupplier {
-        override def get: UUID = UUID.randomUUID()
+        override def get(): UUID = UUID.randomUUID()
       },
       new CatalogFileManagerImpl(FileManager.get(FileManager.File)(blockingEc))
     )
