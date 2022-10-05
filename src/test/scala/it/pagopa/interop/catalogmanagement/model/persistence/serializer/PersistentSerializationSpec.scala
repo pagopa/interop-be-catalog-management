@@ -94,9 +94,9 @@ object PersistentSerializationSpec {
     Gen.oneOf((Rest, CatalogItemTechnologyV1.REST), (Soap, CatalogItemTechnologyV1.SOAP))
 
   val catalogAttributeValueGen: Gen[(CatalogAttributeValue, CatalogAttributeValueV1)] = for {
-    id                   <- stringGen
+    id                   <- Gen.uuid
     explicitVerification <- Gen.oneOf(true, false)
-  } yield (CatalogAttributeValue(id, explicitVerification), CatalogAttributeValueV1(id, explicitVerification))
+  } yield (CatalogAttributeValue(id, explicitVerification), CatalogAttributeValueV1(id.toString, explicitVerification))
 
   val singleCatalogAttributeGen: Gen[(SingleAttribute, CatalogAttributeV1)] =
     catalogAttributeValueGen.map { case (av, avv1) =>

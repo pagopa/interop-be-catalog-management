@@ -7,7 +7,14 @@ import akka.cluster.sharding.typed.scaladsl.{ClusterSharding, EntityTypeKey}
 import akka.pattern.StatusReply
 import akka.persistence.typed.PersistenceId
 import akka.persistence.typed.scaladsl.{Effect, EventSourcedBehavior, RetentionCriteria}
-import it.pagopa.interop.catalogmanagement.model.{CatalogDescriptor, CatalogDocument, CatalogItem}
+import it.pagopa.interop.catalogmanagement.model.{
+  CatalogAttribute,
+  CatalogDescriptor,
+  CatalogDocument,
+  CatalogItem,
+  GroupAttribute,
+  SingleAttribute
+}
 
 import java.time.temporal.ChronoUnit
 import scala.concurrent.duration.{DurationInt, DurationLong}
@@ -190,9 +197,16 @@ object CatalogPersistentBehavior {
         replyTo ! catalogItem
         Effect.none[Event, State]
 
-      case ListCatalogItem(from, to, producerId, status, replyTo) =>
+      case ListCatalogItem(from, to, producerId, attributeId, status, replyTo) =>
         val catalogItems: Seq[CatalogItem] = state.items
-          .filter(item => producerId.forall(filter => filter == item._2.producerId.toString))
+          .filter(item => producerId.forall(_ == item._2.producerId.toString))
+          .filter(item =>
+            attributeId.forall(id =>
+              item._2.attributes.verified.exists(containsAttribute(_, id)) ||
+                item._2.attributes.declared.exists(containsAttribute(_, id)) ||
+                item._2.attributes.certified.exists(containsAttribute(_, id))
+            )
+          )
           .filter(item => status.forall(s => item._2.descriptors.exists(_.state == s)))
           .values
           .toSeq
@@ -206,6 +220,12 @@ object CatalogPersistentBehavior {
         Effect.none[Event, State]
     }
   }
+
+  def containsAttribute(attribute: CatalogAttribute, attributeId: String): Boolean =
+    attribute match {
+      case SingleAttribute(id) => id.id.toString == attributeId
+      case GroupAttribute(ids) => ids.exists(_.id.toString == attributeId)
+    }
 
   val eventHandler: (State, Event) => State = (state, event) =>
     event match {

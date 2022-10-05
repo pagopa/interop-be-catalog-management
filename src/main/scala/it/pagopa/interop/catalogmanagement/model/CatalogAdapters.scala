@@ -2,6 +2,7 @@ package it.pagopa.interop.catalogmanagement.model
 
 import it.pagopa.interop.catalogmanagement.error.CatalogManagementErrors.InvalidAttribute
 import it.pagopa.interop.catalogmanagement.service.CatalogFileManager
+import it.pagopa.interop.commons.utils.TypeConversions._
 import scala.concurrent.{ExecutionContext, Future}
 import it.pagopa.interop.commons.utils.service.UUIDSupplier
 import cats.implicits._
@@ -18,31 +19,27 @@ object CatalogAdapters {
   }
 
   implicit class CatalogAttributeObjectWrapper(private val p: CatalogAttribute.type) extends AnyVal {
-    def fromApi(attribute: Attribute): Try[CatalogAttribute] = {
+    def fromApi(attribute: Attribute): Either[Throwable, CatalogAttribute] = {
+      val single: Option[SingleAttribute] =
+        attribute.single.map(CatalogAttributeValue.fromApi).map(SingleAttribute(_))
 
-      val single: Option[CatalogAttributeValue]     = attribute.single.map(CatalogAttributeValue.fromApi)
-      val group: Option[Seq[CatalogAttributeValue]] =
-        attribute.group.map(_.map(CatalogAttributeValue.fromApi)).filter(_.nonEmpty)
+      val group: Option[GroupAttribute] =
+        attribute.group.filterNot(_.isEmpty).map(_.map(CatalogAttributeValue.fromApi)).map(GroupAttribute)
 
-      (single, group) match {
-        case (Some(attr), None)  => Success[CatalogAttribute](SingleAttribute(attr))
-        case (None, Some(attrs)) => Success[CatalogAttribute](GroupAttribute(attrs))
-        case _                   => Failure[CatalogAttribute](InvalidAttribute(attribute))
-      }
+      single.orElse(group).toRight[Throwable](InvalidAttribute(attribute))
     }
   }
 
   implicit class CatalogAttributesWrapper(private val p: CatalogAttributes) extends AnyVal {
-    def toApi: Attributes =
-      Attributes(
-        certified = p.certified.map(_.toApi),
-        declared = p.declared.map(_.toApi),
-        verified = p.verified.map(_.toApi)
-      )
+    def toApi: Attributes = Attributes(
+      certified = p.certified.map(_.toApi),
+      declared = p.declared.map(_.toApi),
+      verified = p.verified.map(_.toApi)
+    )
   }
 
   implicit class CatalogAttributesObjectWrapper(private val p: CatalogAttributes.type) extends AnyVal {
-    def fromApi(attributes: Attributes): Try[CatalogAttributes] = for {
+    def fromApi(attributes: Attributes): Either[Throwable, CatalogAttributes] = for {
       certified <- attributes.certified.toList.traverse(CatalogAttribute.fromApi)
       declared  <- attributes.declared.toList.traverse(CatalogAttribute.fromApi)
       verified  <- attributes.verified.toList.traverse(CatalogAttribute.fromApi)
@@ -141,34 +138,37 @@ object CatalogAdapters {
       documents <- p.descriptors.find(_.id == UUID.fromString(descriptorId))
     } yield documents.docs.map(_.path)
 
-    def mergeWithSeed(updateEServiceSeed: UpdateEServiceSeed): Future[CatalogItem] = Future.fromTry {
-      for {
-        attributes <- CatalogAttributes.fromApi(updateEServiceSeed.attributes)
-      } yield p.copy(
-        name = updateEServiceSeed.name,
-        description = updateEServiceSeed.description,
-        technology = CatalogItemTechnology.fromApi(updateEServiceSeed.technology),
-        attributes = attributes
-      )
-    }
+    def mergeWithSeed(updateEServiceSeed: UpdateEServiceSeed): Future[CatalogItem] =
+      CatalogAttributes
+        .fromApi(updateEServiceSeed.attributes)
+        .map(attributes =>
+          p.copy(
+            name = updateEServiceSeed.name,
+            description = updateEServiceSeed.description,
+            technology = CatalogItemTechnology.fromApi(updateEServiceSeed.technology),
+            attributes = attributes
+          )
+        )
+        .toFuture
 
     def currentVersion: Option[String] = p.descriptors.flatMap(_.version.toLongOption).maxOption.map(_.toString)
   }
 
   implicit class CatalogItemObjectWrapper(private val p: CatalogItem.type) extends AnyVal {
-    def create(seed: EServiceSeed, uuidSupplier: UUIDSupplier): Future[CatalogItem] = Future.fromTry {
-      for {
-        attributes <- CatalogAttributes.fromApi(seed.attributes)
-      } yield CatalogItem(
-        id = uuidSupplier.get,
-        producerId = seed.producerId,
-        name = seed.name,
-        description = seed.description,
-        technology = CatalogItemTechnology.fromApi(seed.technology),
-        attributes = attributes,
-        descriptors = Seq.empty[CatalogDescriptor]
+    def create(seed: EServiceSeed, uuidSupplier: UUIDSupplier): Future[CatalogItem] = CatalogAttributes
+      .fromApi(seed.attributes)
+      .map(attributes =>
+        CatalogItem(
+          id = uuidSupplier.get(),
+          producerId = seed.producerId,
+          name = seed.name,
+          description = seed.description,
+          technology = CatalogItemTechnology.fromApi(seed.technology),
+          attributes = attributes,
+          descriptors = Seq.empty[CatalogDescriptor]
+        )
       )
-    }
+      .toFuture
   }
 
   implicit class CatalogItemTechnologyWrapper(private val p: CatalogItemTechnology) extends AnyVal {

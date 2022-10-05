@@ -17,6 +17,7 @@ import it.pagopa.interop.catalogmanagement.common.system.ApplicationConfiguratio
   numberOfProjectionTags,
   projectionTag
 }
+import it.pagopa.interop.catalogmanagement.model.Problem
 import it.pagopa.interop.catalogmanagement.model.persistence.projection.EServiceCqrsProjection
 import it.pagopa.interop.catalogmanagement.model.persistence.{CatalogPersistentBehavior, Command}
 import it.pagopa.interop.commons.files.service.FileManager
@@ -25,9 +26,7 @@ import it.pagopa.interop.commons.jwt.service.impl.{DefaultJWTReader, getClaimsVe
 import it.pagopa.interop.commons.jwt.{JWTConfiguration, PublicKeysHolder}
 import it.pagopa.interop.commons.utils.OpenapiUtils
 import it.pagopa.interop.commons.utils.TypeConversions._
-import it.pagopa.interop.commons.utils.errors.GenericComponentErrors.ValidationRequestError
 import it.pagopa.interop.commons.utils.service.UUIDSupplier
-import it.pagopa.interop.commons.utils.service.impl.UUIDSupplierImpl
 import slick.basic.DatabaseConfig
 import slick.jdbc.JdbcProfile
 
@@ -47,7 +46,7 @@ trait Dependencies {
   val catalogPersistentEntity: Entity[Command, ShardingEnvelope[Command]] =
     Entity(CatalogPersistentBehavior.TypeKey)(behaviorFactory)
 
-  val uuidSupplier: UUIDSupplier = new UUIDSupplierImpl
+  val uuidSupplier: UUIDSupplier = UUIDSupplier
 
   def getFileManager(blockingEc: ExecutionContextExecutor): FileManager =
     FileManager.get(ApplicationConfiguration.storageKind match {
@@ -85,9 +84,8 @@ trait Dependencies {
   }
 
   val validationExceptionToRoute: ValidationReport => Route = report => {
-    val error =
-      problemOf(StatusCodes.BadRequest, ValidationRequestError(OpenapiUtils.errorFromRequestValidationReport(report)))
-    complete(error.status, error)(EServiceApiMarshallerImpl.toEntityMarshallerProblem)
+    val error: Problem = problemOf(StatusCodes.BadRequest, OpenapiUtils.errorFromRequestValidationReport(report))
+    complete(error.status, error)(entityMarshallerProblem)
   }
 
 }

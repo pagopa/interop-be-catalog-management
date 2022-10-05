@@ -8,7 +8,7 @@ import it.pagopa.interop.catalogmanagement.model._
 import spray.json._
 object EServiceApiMarshallerImpl extends EServiceApiMarshaller with SprayJsonSupport with DefaultJsonProtocol {
 
-  override implicit def toEntityMarshallerProblem: ToEntityMarshaller[Problem] = sprayJsonMarshaller[Problem]
+  override implicit def toEntityMarshallerProblem: ToEntityMarshaller[Problem] = entityMarshallerProblem
 
   override implicit def toEntityMarshallerEServicearray: ToEntityMarshaller[Seq[EService]] =
     sprayJsonMarshaller[Seq[EService]]

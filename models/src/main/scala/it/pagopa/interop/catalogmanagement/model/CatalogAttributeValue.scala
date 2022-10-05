@@ -1,5 +1,7 @@
 package it.pagopa.interop.catalogmanagement.model
 
-final case class CatalogAttributeValue(id: String, explicitAttributeVerification: Boolean)
+import java.util.UUID
+
+final case class CatalogAttributeValue(id: UUID, explicitAttributeVerification: Boolean)
 
 object CatalogAttributeValue
