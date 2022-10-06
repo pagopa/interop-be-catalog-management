@@ -108,7 +108,7 @@ class CatalogApiServiceAuthzSpec extends AnyWordSpecLike with BeforeAndAfterAll 
 
     "accept authorized roles for updateDescriptor" in {
       val endpoint = AuthorizedRoutes.endpoints("updateDescriptor")
-      val fakeSeed = UpdateEServiceDescriptorSeed(None, EServiceDescriptorState.DRAFT, Seq.empty, 0, 0, 0)
+      val fakeSeed = UpdateEServiceDescriptorSeed(None, EServiceDescriptorState.DRAFT, Seq.empty, 0, 0, 0, false)
       validateAuthorization(
         endpoint,
         { implicit c: Seq[(String, String)] => service.updateDescriptor("fake", "fake", fakeSeed) }
@@ -127,7 +127,7 @@ class CatalogApiServiceAuthzSpec extends AnyWordSpecLike with BeforeAndAfterAll 
 
     "accept authorized roles for createDescriptor" in {
       val endpoint = AuthorizedRoutes.endpoints("createDescriptor")
-      val fakeSeed = EServiceDescriptorSeed(None, Seq.empty, 0, 0, 0)
+      val fakeSeed = EServiceDescriptorSeed(None, Seq.empty, 0, 0, 0, false)
       validateAuthorization(
         endpoint,
         { implicit c: Seq[(String, String)] => service.createDescriptor("fake", fakeSeed) }

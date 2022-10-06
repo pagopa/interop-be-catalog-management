@@ -69,7 +69,8 @@ object CatalogAdapters {
       audience = p.audience,
       voucherLifespan = p.voucherLifespan,
       dailyCallsPerConsumer = p.dailyCallsPerConsumer,
-      dailyCallsTotal = p.dailyCallsTotal
+      dailyCallsTotal = p.dailyCallsTotal,
+      requireAgreementManualApproval = p.requireAgreementManualApproval.getOrElse(false)
     )
 
     def isDraft: Boolean = p.state == Draft

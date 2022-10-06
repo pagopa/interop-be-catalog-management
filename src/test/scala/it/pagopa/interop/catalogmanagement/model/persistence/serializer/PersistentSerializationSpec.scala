@@ -162,16 +162,17 @@ object PersistentSerializationSpec {
     )
 
   val catalogDescriptorGen: Gen[(CatalogDescriptor, CatalogDescriptorV1)] = for {
-    id                       <- Gen.uuid
-    version                  <- stringGen
-    description              <- Gen.alphaNumStr.map(Option(_).filter(_.nonEmpty))
-    (interface, interfaceV1) <- catalogDocumentGen.map { case (a, b) => (Option(a), Option(b)) }
-    (docs, docsV1)           <- listOf(catalogDocumentGen).map(_.separate)
-    (state, stateV1)         <- catalogDescriptorStateGen
-    audience                 <- listOf(stringGen)
-    voucherLifespan          <- Gen.posNum[Int]
-    dailyCallsPerConsumer    <- Gen.posNum[Int]
-    dailyCallsTotal          <- Gen.posNum[Int]
+    id                             <- Gen.uuid
+    version                        <- stringGen
+    description                    <- Gen.alphaNumStr.map(Option(_).filter(_.nonEmpty))
+    (interface, interfaceV1)       <- catalogDocumentGen.map { case (a, b) => (Option(a), Option(b)) }
+    (docs, docsV1)                 <- listOf(catalogDocumentGen).map(_.separate)
+    (state, stateV1)               <- catalogDescriptorStateGen
+    audience                       <- listOf(stringGen)
+    voucherLifespan                <- Gen.posNum[Int]
+    dailyCallsPerConsumer          <- Gen.posNum[Int]
+    dailyCallsTotal                <- Gen.posNum[Int]
+    requireAgreementManualApproval <- Gen.oneOf(true, false)
   } yield (
     CatalogDescriptor(
       id = id,
@@ -183,7 +184,8 @@ object PersistentSerializationSpec {
       audience = audience,
       voucherLifespan = voucherLifespan,
       dailyCallsPerConsumer = dailyCallsPerConsumer,
-      dailyCallsTotal = dailyCallsTotal
+      dailyCallsTotal = dailyCallsTotal,
+      requireAgreementManualApproval = requireAgreementManualApproval.some
     ),
     CatalogDescriptorV1(
       id = id.toString(),
@@ -195,7 +197,8 @@ object PersistentSerializationSpec {
       audience = audience,
       voucherLifespan = voucherLifespan,
       dailyCallsPerConsumer = dailyCallsPerConsumer,
-      dailyCallsTotal = dailyCallsTotal
+      dailyCallsTotal = dailyCallsTotal,
+      requireAgreementManualApproval = requireAgreementManualApproval.some
     )
   )
 

@@ -12,5 +12,6 @@ final case class CatalogDescriptor(
   audience: Seq[String],
   voucherLifespan: Int,
   dailyCallsPerConsumer: Int,
-  dailyCallsTotal: Int
+  dailyCallsTotal: Int,
+  requireAgreementManualApproval: Option[Boolean]
 )

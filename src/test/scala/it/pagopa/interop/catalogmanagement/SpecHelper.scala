@@ -41,7 +41,8 @@ trait SpecHelper extends SpecConfiguration with AnyWordSpecLike with MockFactory
       voucherLifespan = 1984,
       dailyCallsPerConsumer = 2022,
       dailyCallsTotal = 2099,
-      description = Some("string")
+      description = Some("string"),
+      requireAgreementManualApproval = false
     )
 
     val data = seed.toJson.compactPrint

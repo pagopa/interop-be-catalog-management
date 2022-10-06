@@ -44,6 +44,7 @@ message CatalogDescriptorV1 {
   required int32 voucherLifespan = 8;
   required int32 dailyCallsPerConsumer = 9;
   required int32 dailyCallsTotal = 10;
+  optional bool requireAgreementManualApproval = 11;
 }
 
 message CatalogDocumentV1 {

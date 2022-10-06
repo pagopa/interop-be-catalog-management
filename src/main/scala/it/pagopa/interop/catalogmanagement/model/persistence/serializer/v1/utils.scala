@@ -15,7 +15,7 @@ import java.util.UUID
 object utils {
 
   def convertAttributeValueToV1(catalogAttributeValue: CatalogAttributeValue): CatalogAttributeValueV1 =
-    CatalogAttributeValueV1(catalogAttributeValue.id.toString(), catalogAttributeValue.explicitAttributeVerification)
+    CatalogAttributeValueV1(catalogAttributeValue.id.toString, catalogAttributeValue.explicitAttributeVerification)
 
   def convertAttributeToV1(catalogAttribute: CatalogAttribute): CatalogAttributeV1 =
     catalogAttribute match {
@@ -62,7 +62,7 @@ object utils {
     verified  <- attributes.verified.traverse(convertAttributeFromV1)
   } yield CatalogAttributes(certified = certified, declared = declared, verified = verified)
 
-  def convertDescriptorToV1(descriptor: CatalogDescriptor): Either[RuntimeException, CatalogDescriptorV1] = {
+  def convertDescriptorToV1(descriptor: CatalogDescriptor): Either[RuntimeException, CatalogDescriptorV1] =
     Right(
       CatalogDescriptorV1(
         id = descriptor.id.toString,
@@ -94,10 +94,10 @@ object utils {
         audience = descriptor.audience,
         voucherLifespan = descriptor.voucherLifespan,
         dailyCallsPerConsumer = descriptor.dailyCallsPerConsumer,
-        dailyCallsTotal = descriptor.dailyCallsTotal
+        dailyCallsTotal = descriptor.dailyCallsTotal,
+        requireAgreementManualApproval = descriptor.requireAgreementManualApproval
       )
     )
-  }
 
   def convertDescriptorsToV1(
     descriptors: Seq[CatalogDescriptor]
@@ -137,7 +137,8 @@ object utils {
         audience = ver1.audience,
         voucherLifespan = ver1.voucherLifespan,
         dailyCallsPerConsumer = ver1.dailyCallsPerConsumer,
-        dailyCallsTotal = ver1.dailyCallsTotal
+        dailyCallsTotal = ver1.dailyCallsTotal,
+        requireAgreementManualApproval = ver1.requireAgreementManualApproval
       )
     }
   }

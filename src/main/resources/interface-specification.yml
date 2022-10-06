@@ -881,6 +881,7 @@ components:
         - voucherLifespan
         - dailyCallsPerConsumer
         - dailyCallsTotal
+        - requireAgreementManualApproval
       properties:
         id:
           type: string
@@ -914,12 +915,18 @@ components:
             $ref: '#/components/schemas/EServiceDoc'
         state:
           $ref: '#/components/schemas/EServiceDescriptorState'
+        requireAgreementManualApproval:
+          description: |
+            If true, the Producer must approve every agreement for this Descriptor.
+            If false, the agreement will be automatically approved if Consumer attributes are met
+          type: boolean
     EServiceDescriptorSeed:
       required:
         - audience
         - voucherLifespan
         - dailyCallsPerConsumer
         - dailyCallsTotal
+        - requireAgreementManualApproval
       type: object
       properties:
         description:
@@ -941,6 +948,11 @@ components:
           type: integer
           format: int32
           minimum: 0
+        requireAgreementManualApproval:
+          description: |
+            If true, the Producer must approve every agreement for this Descriptor.
+            If false, the agreement will be automatically approved if Consumer attributes are met
+          type: boolean
     UpdateEServiceDescriptorSeed:
       required:
         - state
@@ -948,6 +960,7 @@ components:
         - voucherLifespan
         - dailyCallsPerConsumer
         - dailyCallsTotal
+        - requireAgreementManualApproval
       type: object
       properties:
         description:
@@ -971,6 +984,11 @@ components:
           type: integer
           format: int32
           minimum: 0
+        requireAgreementManualApproval:
+          description: |
+            If true, the Producer must approve every agreement for this Descriptor.
+            If false, the agreement will be automatically approved if Consumer attributes are met
+          type: boolean
     UpdateEServiceDescriptorDocumentSeed:
       required:
         - prettyName
