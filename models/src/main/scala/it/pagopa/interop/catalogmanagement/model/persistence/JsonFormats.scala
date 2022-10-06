@@ -41,6 +41,20 @@ object JsonFormats {
       }
     }
 
+  implicit val appFormat: RootJsonFormat[PersistentAgreementApprovalPolicy] =
+    new RootJsonFormat[PersistentAgreementApprovalPolicy] {
+      override def read(json: JsValue): PersistentAgreementApprovalPolicy = json match {
+        case JsString("Automatic") => Automatic
+        case JsString("Manual")    => Manual
+        case other => deserializationError(s"Unable to deserialize json as a AgreementApprovalPolicy: $other")
+      }
+
+      override def write(obj: PersistentAgreementApprovalPolicy): JsValue = obj match {
+        case Automatic => JsString("Automatic")
+        case Manual    => JsString("Manual")
+      }
+    }
+
   implicit val cdocFormat: RootJsonFormat[CatalogDocument] = jsonFormat7(CatalogDocument.apply)
 
   implicit val cavFormat: RootJsonFormat[CatalogAttributeValue] = jsonFormat2(CatalogAttributeValue.apply)

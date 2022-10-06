@@ -16,6 +16,7 @@ import akka.http.scaladsl.unmarshalling.Unmarshal
 import it.pagopa.interop.catalogmanagement.api._
 import it.pagopa.interop.catalogmanagement.api.impl._
 import it.pagopa.interop.catalogmanagement.common.system.ApplicationConfiguration
+import it.pagopa.interop.catalogmanagement.model.AgreementApprovalPolicy.AUTOMATIC
 import it.pagopa.interop.catalogmanagement.model._
 import it.pagopa.interop.catalogmanagement.model.persistence.{CatalogPersistentBehavior, Command}
 import it.pagopa.interop.catalogmanagement.server.Controller
@@ -117,7 +118,7 @@ trait ItSpecHelper
       dailyCallsPerConsumer = 2022,
       dailyCallsTotal = 2099,
       description = Some("string"),
-      requireAgreementManualApproval = false
+      agreementApprovalPolicy = AUTOMATIC
     )
 
     val data = seed.toJson.compactPrint
@@ -306,7 +307,7 @@ trait ItSpecHelper
       voucherLifespan = 987654,
       dailyCallsPerConsumer = 556644,
       dailyCallsTotal = 884455,
-      requireAgreementManualApproval = false
+      agreementApprovalPolicy = AUTOMATIC
     )
 
     val data = seed.toJson.compactPrint

@@ -482,7 +482,8 @@ class EServiceApiServiceImpl(
         audience = eServiceDescriptorSeed.audience,
         dailyCallsPerConsumer = eServiceDescriptorSeed.dailyCallsPerConsumer,
         dailyCallsTotal = eServiceDescriptorSeed.dailyCallsTotal,
-        requireAgreementManualApproval = eServiceDescriptorSeed.requireAgreementManualApproval.some
+        agreementApprovalPolicy =
+          PersistentAgreementApprovalPolicy.fromApi(eServiceDescriptorSeed.agreementApprovalPolicy).some
       )
       _ <- commander.ask(ref => AddCatalogItemDescriptor(current.id.toString, createdCatalogDescriptor, ref))
     } yield createdCatalogDescriptor
@@ -846,7 +847,7 @@ class EServiceApiServiceImpl(
         voucherLifespan = descriptorToClone.voucherLifespan,
         dailyCallsPerConsumer = descriptorToClone.dailyCallsPerConsumer,
         dailyCallsTotal = descriptorToClone.dailyCallsTotal,
-        requireAgreementManualApproval = descriptorToClone.requireAgreementManualApproval
+        agreementApprovalPolicy = descriptorToClone.agreementApprovalPolicy
       )
     } yield CatalogItem(
       id = uuidSupplier.get(),

@@ -1,21 +1,26 @@
 package it.pagopa.interop.catalogmanagement.model.persistence.serializer
 import cats.implicits._
-import org.scalacheck.Prop.forAll
-import org.scalacheck.Gen
-import java.time.OffsetDateTime
-import java.time.format.DateTimeFormatter
-import munit.ScalaCheckSuite
+import com.softwaremill.diffx.Diff
+import com.softwaremill.diffx.generic.auto._
+import com.softwaremill.diffx.munit.DiffxAssertions
 import it.pagopa.interop.catalogmanagement.model._
 import it.pagopa.interop.catalogmanagement.model.persistence._
-import it.pagopa.interop.catalogmanagement.model.persistence.serializer.v1.state._
-import it.pagopa.interop.catalogmanagement.model.persistence.serializer.v1.events._
+import it.pagopa.interop.catalogmanagement.model.persistence.serializer.PersistentSerializationSpec._
+import it.pagopa.interop.catalogmanagement.model.persistence.serializer.v1.catalog_item.AgreementApprovalPolicyV1.{
+  AUTOMATIC,
+  MANUAL
+}
 import it.pagopa.interop.catalogmanagement.model.persistence.serializer.v1.catalog_item.CatalogDescriptorStateV1._
 import it.pagopa.interop.catalogmanagement.model.persistence.serializer.v1.catalog_item._
-import PersistentSerializationSpec._
-import com.softwaremill.diffx.munit.DiffxAssertions
-import com.softwaremill.diffx.generic.auto._
-import com.softwaremill.diffx.Diff
-import scala.reflect.runtime.universe.{typeOf, TypeTag}
+import it.pagopa.interop.catalogmanagement.model.persistence.serializer.v1.events._
+import it.pagopa.interop.catalogmanagement.model.persistence.serializer.v1.state._
+import munit.ScalaCheckSuite
+import org.scalacheck.Gen
+import org.scalacheck.Prop.forAll
+
+import java.time.OffsetDateTime
+import java.time.format.DateTimeFormatter
+import scala.reflect.runtime.universe.{TypeTag, typeOf}
 
 class PersistentSerializationSpec extends ScalaCheckSuite with DiffxAssertions {
 
@@ -161,18 +166,21 @@ object PersistentSerializationSpec {
       (Archived, ARCHIVED)
     )
 
+  val agreementApprovalPolicyGen: Gen[(PersistentAgreementApprovalPolicy, AgreementApprovalPolicyV1)] =
+    Gen.oneOf((Automatic, AUTOMATIC), (Manual, MANUAL))
+
   val catalogDescriptorGen: Gen[(CatalogDescriptor, CatalogDescriptorV1)] = for {
-    id                             <- Gen.uuid
-    version                        <- stringGen
-    description                    <- Gen.alphaNumStr.map(Option(_).filter(_.nonEmpty))
-    (interface, interfaceV1)       <- catalogDocumentGen.map { case (a, b) => (Option(a), Option(b)) }
-    (docs, docsV1)                 <- listOf(catalogDocumentGen).map(_.separate)
-    (state, stateV1)               <- catalogDescriptorStateGen
-    audience                       <- listOf(stringGen)
-    voucherLifespan                <- Gen.posNum[Int]
-    dailyCallsPerConsumer          <- Gen.posNum[Int]
-    dailyCallsTotal                <- Gen.posNum[Int]
-    requireAgreementManualApproval <- Gen.oneOf(true, false)
+    id                       <- Gen.uuid
+    version                  <- stringGen
+    description              <- Gen.alphaNumStr.map(Option(_).filter(_.nonEmpty))
+    (interface, interfaceV1) <- catalogDocumentGen.map { case (a, b) => (Option(a), Option(b)) }
+    (docs, docsV1)           <- listOf(catalogDocumentGen).map(_.separate)
+    (state, stateV1)         <- catalogDescriptorStateGen
+    audience                 <- listOf(stringGen)
+    voucherLifespan          <- Gen.posNum[Int]
+    dailyCallsPerConsumer    <- Gen.posNum[Int]
+    dailyCallsTotal          <- Gen.posNum[Int]
+    (policy, policyV1)       <- agreementApprovalPolicyGen
   } yield (
     CatalogDescriptor(
       id = id,
@@ -185,7 +193,7 @@ object PersistentSerializationSpec {
       voucherLifespan = voucherLifespan,
       dailyCallsPerConsumer = dailyCallsPerConsumer,
       dailyCallsTotal = dailyCallsTotal,
-      requireAgreementManualApproval = requireAgreementManualApproval.some
+      agreementApprovalPolicy = policy.some
     ),
     CatalogDescriptorV1(
       id = id.toString(),
@@ -198,7 +206,7 @@ object PersistentSerializationSpec {
       voucherLifespan = voucherLifespan,
       dailyCallsPerConsumer = dailyCallsPerConsumer,
       dailyCallsTotal = dailyCallsTotal,
-      requireAgreementManualApproval = requireAgreementManualApproval.some
+      agreementApprovalPolicy = policyV1.some
     )
   )
 

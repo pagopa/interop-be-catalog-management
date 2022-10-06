@@ -13,5 +13,5 @@ final case class CatalogDescriptor(
   voucherLifespan: Int,
   dailyCallsPerConsumer: Int,
   dailyCallsTotal: Int,
-  requireAgreementManualApproval: Option[Boolean]
+  agreementApprovalPolicy: Option[PersistentAgreementApprovalPolicy]
 )

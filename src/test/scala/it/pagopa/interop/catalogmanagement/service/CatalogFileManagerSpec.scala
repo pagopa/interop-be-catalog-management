@@ -35,7 +35,7 @@ class CatalogFileManagerSpec() extends AnyWordSpec with Matchers with ScalaFutur
         voucherLifespan = 1,
         dailyCallsPerConsumer = 1,
         dailyCallsTotal = 1,
-        requireAgreementManualApproval = Some(false)
+        agreementApprovalPolicy = Some(Automatic)
       )
     )
   )

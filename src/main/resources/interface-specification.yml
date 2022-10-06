@@ -881,7 +881,7 @@ components:
         - voucherLifespan
         - dailyCallsPerConsumer
         - dailyCallsTotal
-        - requireAgreementManualApproval
+        - agreementApprovalPolicy
       properties:
         id:
           type: string
@@ -915,18 +915,15 @@ components:
             $ref: '#/components/schemas/EServiceDoc'
         state:
           $ref: '#/components/schemas/EServiceDescriptorState'
-        requireAgreementManualApproval:
-          description: |
-            If true, the Producer must approve every agreement for this Descriptor.
-            If false, the agreement will be automatically approved if Consumer attributes are met
-          type: boolean
+        agreementApprovalPolicy:
+          $ref: '#/components/schemas/AgreementApprovalPolicy'
     EServiceDescriptorSeed:
       required:
         - audience
         - voucherLifespan
         - dailyCallsPerConsumer
         - dailyCallsTotal
-        - requireAgreementManualApproval
+        - agreementApprovalPolicy
       type: object
       properties:
         description:
@@ -948,11 +945,8 @@ components:
           type: integer
           format: int32
           minimum: 0
-        requireAgreementManualApproval:
-          description: |
-            If true, the Producer must approve every agreement for this Descriptor.
-            If false, the agreement will be automatically approved if Consumer attributes are met
-          type: boolean
+        agreementApprovalPolicy:
+          $ref: '#/components/schemas/AgreementApprovalPolicy'
     UpdateEServiceDescriptorSeed:
       required:
         - state
@@ -960,7 +954,7 @@ components:
         - voucherLifespan
         - dailyCallsPerConsumer
         - dailyCallsTotal
-        - requireAgreementManualApproval
+        - agreementApprovalPolicy
       type: object
       properties:
         description:
@@ -984,11 +978,8 @@ components:
           type: integer
           format: int32
           minimum: 0
-        requireAgreementManualApproval:
-          description: |
-            If true, the Producer must approve every agreement for this Descriptor.
-            If false, the agreement will be automatically approved if Consumer attributes are met
-          type: boolean
+        agreementApprovalPolicy:
+          $ref: '#/components/schemas/AgreementApprovalPolicy'
     UpdateEServiceDescriptorDocumentSeed:
       required:
         - prettyName
@@ -1069,6 +1060,15 @@ components:
         - DEPRECATED
         - SUSPENDED
         - ARCHIVED
+    AgreementApprovalPolicy:
+      type: string
+      description: | 
+        EService Descriptor policy for new Agreements approval.
+        AUTOMATIC - the agreement will be automatically approved if Consumer attributes are met
+        MANUAL - the Producer must approve every agreement for this Descriptor.
+      enum:
+        - AUTOMATIC
+        - MANUAL
     Problem:
       properties:
         type:
