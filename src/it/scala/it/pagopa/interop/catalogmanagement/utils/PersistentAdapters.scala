@@ -40,7 +40,8 @@ object PersistentAdapters {
         audience = p.audience,
         voucherLifespan = p.voucherLifespan,
         dailyCallsPerConsumer = p.dailyCallsPerConsumer,
-        dailyCallsTotal = p.dailyCallsTotal
+        dailyCallsTotal = p.dailyCallsTotal,
+        requireAgreementManualApproval = Some(false)
       )
   }
 
