@@ -6,6 +6,7 @@ import akka.http.scaladsl.model.ContentTypes
 import akka.http.scaladsl.server.directives.FileInfo
 import it.pagopa.interop.catalogmanagement.api.impl.EServiceApiMarshallerImpl._
 import it.pagopa.interop.catalogmanagement.api.impl.EServiceApiServiceImpl
+import it.pagopa.interop.catalogmanagement.model.AgreementApprovalPolicy.AUTOMATIC
 import it.pagopa.interop.catalogmanagement.model.{
   Attributes,
   EServiceDescriptorSeed,
@@ -27,6 +28,7 @@ import java.io.File
 import java.util.UUID
 import it.pagopa.interop.commons.files.service.FileManager
 import org.scalatest.BeforeAndAfterAll
+
 import scala.concurrent.ExecutionContextExecutor
 import java.util.concurrent.Executors
 import scala.concurrent.ExecutionContext
@@ -108,7 +110,7 @@ class CatalogApiServiceAuthzSpec extends AnyWordSpecLike with BeforeAndAfterAll 
 
     "accept authorized roles for updateDescriptor" in {
       val endpoint = AuthorizedRoutes.endpoints("updateDescriptor")
-      val fakeSeed = UpdateEServiceDescriptorSeed(None, EServiceDescriptorState.DRAFT, Seq.empty, 0, 0, 0)
+      val fakeSeed = UpdateEServiceDescriptorSeed(None, EServiceDescriptorState.DRAFT, Seq.empty, 0, 0, 0, AUTOMATIC)
       validateAuthorization(
         endpoint,
         { implicit c: Seq[(String, String)] => service.updateDescriptor("fake", "fake", fakeSeed) }
@@ -127,7 +129,7 @@ class CatalogApiServiceAuthzSpec extends AnyWordSpecLike with BeforeAndAfterAll 
 
     "accept authorized roles for createDescriptor" in {
       val endpoint = AuthorizedRoutes.endpoints("createDescriptor")
-      val fakeSeed = EServiceDescriptorSeed(None, Seq.empty, 0, 0, 0)
+      val fakeSeed = EServiceDescriptorSeed(None, Seq.empty, 0, 0, 0, AUTOMATIC)
       validateAuthorization(
         endpoint,
         { implicit c: Seq[(String, String)] => service.createDescriptor("fake", fakeSeed) }

@@ -1,21 +1,26 @@
 package it.pagopa.interop.catalogmanagement.model.persistence.serializer
 import cats.implicits._
-import org.scalacheck.Prop.forAll
-import org.scalacheck.Gen
-import java.time.OffsetDateTime
-import java.time.format.DateTimeFormatter
-import munit.ScalaCheckSuite
+import com.softwaremill.diffx.Diff
+import com.softwaremill.diffx.generic.auto._
+import com.softwaremill.diffx.munit.DiffxAssertions
 import it.pagopa.interop.catalogmanagement.model._
 import it.pagopa.interop.catalogmanagement.model.persistence._
-import it.pagopa.interop.catalogmanagement.model.persistence.serializer.v1.state._
-import it.pagopa.interop.catalogmanagement.model.persistence.serializer.v1.events._
+import it.pagopa.interop.catalogmanagement.model.persistence.serializer.PersistentSerializationSpec._
+import it.pagopa.interop.catalogmanagement.model.persistence.serializer.v1.catalog_item.AgreementApprovalPolicyV1.{
+  AUTOMATIC,
+  MANUAL
+}
 import it.pagopa.interop.catalogmanagement.model.persistence.serializer.v1.catalog_item.CatalogDescriptorStateV1._
 import it.pagopa.interop.catalogmanagement.model.persistence.serializer.v1.catalog_item._
-import PersistentSerializationSpec._
-import com.softwaremill.diffx.munit.DiffxAssertions
-import com.softwaremill.diffx.generic.auto._
-import com.softwaremill.diffx.Diff
-import scala.reflect.runtime.universe.{typeOf, TypeTag}
+import it.pagopa.interop.catalogmanagement.model.persistence.serializer.v1.events._
+import it.pagopa.interop.catalogmanagement.model.persistence.serializer.v1.state._
+import munit.ScalaCheckSuite
+import org.scalacheck.Gen
+import org.scalacheck.Prop.forAll
+
+import java.time.OffsetDateTime
+import java.time.format.DateTimeFormatter
+import scala.reflect.runtime.universe.{TypeTag, typeOf}
 
 class PersistentSerializationSpec extends ScalaCheckSuite with DiffxAssertions {
 
@@ -161,6 +166,9 @@ object PersistentSerializationSpec {
       (Archived, ARCHIVED)
     )
 
+  val agreementApprovalPolicyGen: Gen[(PersistentAgreementApprovalPolicy, AgreementApprovalPolicyV1)] =
+    Gen.oneOf((Automatic, AUTOMATIC), (Manual, MANUAL))
+
   val catalogDescriptorGen: Gen[(CatalogDescriptor, CatalogDescriptorV1)] = for {
     id                       <- Gen.uuid
     version                  <- stringGen
@@ -172,6 +180,7 @@ object PersistentSerializationSpec {
     voucherLifespan          <- Gen.posNum[Int]
     dailyCallsPerConsumer    <- Gen.posNum[Int]
     dailyCallsTotal          <- Gen.posNum[Int]
+    (policy, policyV1)       <- agreementApprovalPolicyGen
   } yield (
     CatalogDescriptor(
       id = id,
@@ -183,7 +192,8 @@ object PersistentSerializationSpec {
       audience = audience,
       voucherLifespan = voucherLifespan,
       dailyCallsPerConsumer = dailyCallsPerConsumer,
-      dailyCallsTotal = dailyCallsTotal
+      dailyCallsTotal = dailyCallsTotal,
+      agreementApprovalPolicy = policy.some
     ),
     CatalogDescriptorV1(
       id = id.toString(),
@@ -195,7 +205,8 @@ object PersistentSerializationSpec {
       audience = audience,
       voucherLifespan = voucherLifespan,
       dailyCallsPerConsumer = dailyCallsPerConsumer,
-      dailyCallsTotal = dailyCallsTotal
+      dailyCallsTotal = dailyCallsTotal,
+      agreementApprovalPolicy = policyV1.some
     )
   )
 

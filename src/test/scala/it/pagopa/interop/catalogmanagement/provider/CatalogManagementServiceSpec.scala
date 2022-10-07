@@ -106,6 +106,7 @@ class CatalogManagementServiceSpec
           |   , "voucherLifespan": 30
           |   , "dailyCallsPerConsumer": 30000
           |   , "dailyCallsTotal": 900
+          |   , "agreementApprovalPolicy": "AUTOMATIC"
           |   , "audience": ["a", "b", "c"]
           |   , "state": "ARCHIVED"
           |}""".stripMargin
@@ -149,6 +150,7 @@ class CatalogManagementServiceSpec
           |  "voucherLifespan": 20,
           |  "dailyCallsPerConsumer": 30000,
           |  "dailyCallsTotal": 30000,
+          |  "agreementApprovalPolicy": "AUTOMATIC",
           |  "state": "DRAFT"
           |}""".stripMargin
 
@@ -176,6 +178,7 @@ class CatalogManagementServiceSpec
           |  "voucherLifespan": 20,
           |  "dailyCallsPerConsumer": 30000,
           |  "dailyCallsTotal": 30000,
+          |  "agreementApprovalPolicy": "AUTOMATIC",
           |  "state": "DRAFT"
           |}""".stripMargin
 
@@ -208,6 +211,7 @@ class CatalogManagementServiceSpec
           |  "voucherLifespan": 20,
           |  "dailyCallsPerConsumer": 30000,
           |  "dailyCallsTotal": 30000,
+          |  "requireAgreementManualApproval": false,
           |  "state": "not_existing_state"
           |}""".stripMargin
 

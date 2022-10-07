@@ -1,13 +1,15 @@
 package it.pagopa.interop.catalogmanagement.model
 
+import cats.implicits._
 import it.pagopa.interop.catalogmanagement.error.CatalogManagementErrors.InvalidAttribute
+import it.pagopa.interop.catalogmanagement.model.AgreementApprovalPolicy.AUTOMATIC
 import it.pagopa.interop.catalogmanagement.service.CatalogFileManager
 import it.pagopa.interop.commons.utils.TypeConversions._
-import scala.concurrent.{ExecutionContext, Future}
 import it.pagopa.interop.commons.utils.service.UUIDSupplier
-import cats.implicits._
-import scala.util._
+
 import java.util.UUID
+import scala.concurrent.{ExecutionContext, Future}
+import scala.util._
 
 object CatalogAdapters {
 
@@ -69,7 +71,8 @@ object CatalogAdapters {
       audience = p.audience,
       voucherLifespan = p.voucherLifespan,
       dailyCallsPerConsumer = p.dailyCallsPerConsumer,
-      dailyCallsTotal = p.dailyCallsTotal
+      dailyCallsTotal = p.dailyCallsTotal,
+      agreementApprovalPolicy = p.agreementApprovalPolicy.map(_.toApi).getOrElse(AUTOMATIC)
     )
 
     def isDraft: Boolean = p.state == Draft
@@ -92,6 +95,22 @@ object CatalogAdapters {
       case EServiceDescriptorState.DEPRECATED => Deprecated
       case EServiceDescriptorState.SUSPENDED  => Suspended
       case EServiceDescriptorState.ARCHIVED   => Archived
+    }
+  }
+
+  implicit class PersistentAgreementApprovalPolicyWrapper(private val p: PersistentAgreementApprovalPolicy)
+      extends AnyVal {
+    def toApi: AgreementApprovalPolicy = p match {
+      case Automatic => AgreementApprovalPolicy.AUTOMATIC
+      case Manual    => AgreementApprovalPolicy.MANUAL
+    }
+  }
+
+  implicit class PersistentAgreementApprovalPolicyObjectWrapper(private val p: PersistentAgreementApprovalPolicy.type)
+      extends AnyVal {
+    def fromApi(policy: AgreementApprovalPolicy): PersistentAgreementApprovalPolicy = policy match {
+      case AgreementApprovalPolicy.AUTOMATIC => Automatic
+      case AgreementApprovalPolicy.MANUAL    => Manual
     }
   }
 

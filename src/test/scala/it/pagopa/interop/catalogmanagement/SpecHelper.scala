@@ -9,6 +9,7 @@ import akka.http.scaladsl.server.directives.Credentials
 import akka.http.scaladsl.server.directives.Credentials.{Missing, Provided}
 import akka.http.scaladsl.unmarshalling.Unmarshal
 import it.pagopa.interop.catalogmanagement.api.impl._
+import it.pagopa.interop.catalogmanagement.model.AgreementApprovalPolicy.AUTOMATIC
 import it.pagopa.interop.catalogmanagement.model._
 import it.pagopa.interop.catalogmanagement.provider.CatalogManagementServiceSpec.mockUUIDSupplier
 import it.pagopa.interop.commons.utils.{BEARER, USER_ROLES}
@@ -41,7 +42,8 @@ trait SpecHelper extends SpecConfiguration with AnyWordSpecLike with MockFactory
       voucherLifespan = 1984,
       dailyCallsPerConsumer = 2022,
       dailyCallsTotal = 2099,
-      description = Some("string")
+      description = Some("string"),
+      agreementApprovalPolicy = AUTOMATIC
     )
 
     val data = seed.toJson.compactPrint

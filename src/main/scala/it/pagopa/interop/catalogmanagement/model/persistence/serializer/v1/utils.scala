@@ -15,7 +15,7 @@ import java.util.UUID
 object utils {
 
   def convertAttributeValueToV1(catalogAttributeValue: CatalogAttributeValue): CatalogAttributeValueV1 =
-    CatalogAttributeValueV1(catalogAttributeValue.id.toString(), catalogAttributeValue.explicitAttributeVerification)
+    CatalogAttributeValueV1(catalogAttributeValue.id.toString, catalogAttributeValue.explicitAttributeVerification)
 
   def convertAttributeToV1(catalogAttribute: CatalogAttribute): CatalogAttributeV1 =
     catalogAttribute match {
@@ -62,7 +62,7 @@ object utils {
     verified  <- attributes.verified.traverse(convertAttributeFromV1)
   } yield CatalogAttributes(certified = certified, declared = declared, verified = verified)
 
-  def convertDescriptorToV1(descriptor: CatalogDescriptor): Either[RuntimeException, CatalogDescriptorV1] = {
+  def convertDescriptorToV1(descriptor: CatalogDescriptor): Either[RuntimeException, CatalogDescriptorV1] =
     Right(
       CatalogDescriptorV1(
         id = descriptor.id.toString,
@@ -94,10 +94,10 @@ object utils {
         audience = descriptor.audience,
         voucherLifespan = descriptor.voucherLifespan,
         dailyCallsPerConsumer = descriptor.dailyCallsPerConsumer,
-        dailyCallsTotal = descriptor.dailyCallsTotal
+        dailyCallsTotal = descriptor.dailyCallsTotal,
+        agreementApprovalPolicy = descriptor.agreementApprovalPolicy.map(convertAgreementApprovalPolicyToV1)
       )
     )
-  }
 
   def convertDescriptorsToV1(
     descriptors: Seq[CatalogDescriptor]
@@ -105,42 +105,43 @@ object utils {
     descriptors.traverse { convertDescriptorToV1 }
   }
 
-  def convertDescriptorFromV1(ver1: CatalogDescriptorV1): Either[Throwable, CatalogDescriptor] = {
-    convertDescriptorStateFromV1(ver1.state).map { state =>
-      CatalogDescriptor(
-        id = UUID.fromString(ver1.id),
-        version = ver1.version,
-        description = ver1.description,
-        interface = ver1.interface.map { doc =>
-          CatalogDocument(
-            id = UUID.fromString(doc.id),
-            name = doc.name,
-            contentType = doc.contentType,
-            prettyName = doc.prettyName,
-            path = doc.path,
-            checksum = doc.checksum,
-            uploadDate = OffsetDateTime.parse(doc.uploadDate, DateTimeFormatter.ISO_DATE_TIME)
-          )
-        },
-        docs = ver1.docs.map { doc =>
-          CatalogDocument(
-            id = UUID.fromString(doc.id),
-            name = doc.name,
-            contentType = doc.contentType,
-            prettyName = doc.prettyName,
-            path = doc.path,
-            checksum = doc.checksum,
-            uploadDate = OffsetDateTime.parse(doc.uploadDate, DateTimeFormatter.ISO_DATE_TIME)
-          )
-        },
-        state = state,
-        audience = ver1.audience,
-        voucherLifespan = ver1.voucherLifespan,
-        dailyCallsPerConsumer = ver1.dailyCallsPerConsumer,
-        dailyCallsTotal = ver1.dailyCallsTotal
-      )
-    }
-  }
+  def convertDescriptorFromV1(ver1: CatalogDescriptorV1): Either[Throwable, CatalogDescriptor] =
+    for {
+      state                   <- convertDescriptorStateFromV1(ver1.state)
+      agreementApprovalPolicy <- ver1.agreementApprovalPolicy.traverse(convertAgreementApprovalPolicyFromV1)
+    } yield CatalogDescriptor(
+      id = UUID.fromString(ver1.id),
+      version = ver1.version,
+      description = ver1.description,
+      interface = ver1.interface.map { doc =>
+        CatalogDocument(
+          id = UUID.fromString(doc.id),
+          name = doc.name,
+          contentType = doc.contentType,
+          prettyName = doc.prettyName,
+          path = doc.path,
+          checksum = doc.checksum,
+          uploadDate = OffsetDateTime.parse(doc.uploadDate, DateTimeFormatter.ISO_DATE_TIME)
+        )
+      },
+      docs = ver1.docs.map { doc =>
+        CatalogDocument(
+          id = UUID.fromString(doc.id),
+          name = doc.name,
+          contentType = doc.contentType,
+          prettyName = doc.prettyName,
+          path = doc.path,
+          checksum = doc.checksum,
+          uploadDate = OffsetDateTime.parse(doc.uploadDate, DateTimeFormatter.ISO_DATE_TIME)
+        )
+      },
+      state = state,
+      audience = ver1.audience,
+      voucherLifespan = ver1.voucherLifespan,
+      dailyCallsPerConsumer = ver1.dailyCallsPerConsumer,
+      dailyCallsTotal = ver1.dailyCallsTotal,
+      agreementApprovalPolicy = agreementApprovalPolicy
+    )
 
   def convertDescriptorsFromV1(descriptors: Seq[CatalogDescriptorV1]): Either[Throwable, Seq[CatalogDescriptor]] = {
     descriptors.traverse(convertDescriptorFromV1)
@@ -164,6 +165,22 @@ object utils {
       case Deprecated => CatalogDescriptorStateV1.DEPRECATED
       case Suspended  => CatalogDescriptorStateV1.SUSPENDED
       case Archived   => CatalogDescriptorStateV1.ARCHIVED
+    }
+
+  def convertAgreementApprovalPolicyFromV1(
+    policyV1: AgreementApprovalPolicyV1
+  ): Either[Throwable, PersistentAgreementApprovalPolicy] =
+    policyV1 match {
+      case AgreementApprovalPolicyV1.AUTOMATIC           => Right(Automatic)
+      case AgreementApprovalPolicyV1.MANUAL              => Right(Manual)
+      case AgreementApprovalPolicyV1.Unrecognized(value) =>
+        Left(new RuntimeException(s"Unable to deserialize agreement approval policy value $value"))
+    }
+
+  def convertAgreementApprovalPolicyToV1(policy: PersistentAgreementApprovalPolicy): AgreementApprovalPolicyV1 =
+    policy match {
+      case Automatic => AgreementApprovalPolicyV1.AUTOMATIC
+      case Manual    => AgreementApprovalPolicyV1.MANUAL
     }
 
   def convertItemTechnologyFromV1(technology: CatalogItemTechnologyV1): Either[Throwable, CatalogItemTechnology] =

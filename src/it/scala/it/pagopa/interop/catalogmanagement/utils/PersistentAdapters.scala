@@ -1,6 +1,7 @@
 package it.pagopa.interop.catalogmanagement.utils
 
 import it.pagopa.interop.catalogmanagement.model.{
+  Automatic,
   CatalogAttributes,
   CatalogDescriptor,
   CatalogDescriptorState,
@@ -40,7 +41,8 @@ object PersistentAdapters {
         audience = p.audience,
         voucherLifespan = p.voucherLifespan,
         dailyCallsPerConsumer = p.dailyCallsPerConsumer,
-        dailyCallsTotal = p.dailyCallsTotal
+        dailyCallsTotal = p.dailyCallsTotal,
+        agreementApprovalPolicy = Some(Automatic)
       )
   }
 

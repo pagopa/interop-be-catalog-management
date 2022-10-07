@@ -25,6 +25,7 @@ import it.pagopa.interop.commons.utils.AkkaUtils
 import it.pagopa.interop.commons.utils.TypeConversions.{EitherOps, OptionOps}
 import it.pagopa.interop.commons.utils.errors.GenericComponentErrors.OperationForbidden
 import it.pagopa.interop.commons.utils.service.UUIDSupplier
+import cats.implicits._
 
 import java.io.File
 import java.nio.file.Paths
@@ -480,7 +481,9 @@ class EServiceApiServiceImpl(
         voucherLifespan = eServiceDescriptorSeed.voucherLifespan,
         audience = eServiceDescriptorSeed.audience,
         dailyCallsPerConsumer = eServiceDescriptorSeed.dailyCallsPerConsumer,
-        dailyCallsTotal = eServiceDescriptorSeed.dailyCallsTotal
+        dailyCallsTotal = eServiceDescriptorSeed.dailyCallsTotal,
+        agreementApprovalPolicy =
+          PersistentAgreementApprovalPolicy.fromApi(eServiceDescriptorSeed.agreementApprovalPolicy).some
       )
       _ <- commander.ask(ref => AddCatalogItemDescriptor(current.id.toString, createdCatalogDescriptor, ref))
     } yield createdCatalogDescriptor
@@ -843,7 +846,8 @@ class EServiceApiServiceImpl(
         audience = descriptorToClone.audience,
         voucherLifespan = descriptorToClone.voucherLifespan,
         dailyCallsPerConsumer = descriptorToClone.dailyCallsPerConsumer,
-        dailyCallsTotal = descriptorToClone.dailyCallsTotal
+        dailyCallsTotal = descriptorToClone.dailyCallsTotal,
+        agreementApprovalPolicy = descriptorToClone.agreementApprovalPolicy
       )
     } yield CatalogItem(
       id = uuidSupplier.get(),

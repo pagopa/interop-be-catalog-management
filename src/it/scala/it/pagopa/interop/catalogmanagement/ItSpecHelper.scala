@@ -16,6 +16,7 @@ import akka.http.scaladsl.unmarshalling.Unmarshal
 import it.pagopa.interop.catalogmanagement.api._
 import it.pagopa.interop.catalogmanagement.api.impl._
 import it.pagopa.interop.catalogmanagement.common.system.ApplicationConfiguration
+import it.pagopa.interop.catalogmanagement.model.AgreementApprovalPolicy.AUTOMATIC
 import it.pagopa.interop.catalogmanagement.model._
 import it.pagopa.interop.catalogmanagement.model.persistence.{CatalogPersistentBehavior, Command}
 import it.pagopa.interop.catalogmanagement.server.Controller
@@ -109,14 +110,15 @@ trait ItSpecHelper
     eService.copy(descriptors = eService.descriptors.sortBy(_.id).map(desc => desc.copy(docs = desc.docs.sortBy(_.id))))
 
   def createEServiceDescriptor(eServiceId: UUID, descriptorId: UUID): EServiceDescriptor = {
-    (() => mockUUIDSupplier.get).expects().returning(descriptorId).once()
+    (() => mockUUIDSupplier.get()).expects().returning(descriptorId).once()
 
     val seed = EServiceDescriptorSeed(
       audience = Seq("audience"),
       voucherLifespan = 1984,
       dailyCallsPerConsumer = 2022,
       dailyCallsTotal = 2099,
-      description = Some("string")
+      description = Some("string"),
+      agreementApprovalPolicy = AUTOMATIC
     )
 
     val data = seed.toJson.compactPrint
@@ -129,7 +131,7 @@ trait ItSpecHelper
   }
 
   def createEService(uuid: UUID): EService = {
-    (() => mockUUIDSupplier.get).expects().returning(uuid).once()
+    (() => mockUUIDSupplier.get()).expects().returning(uuid).once()
 
     val seed = EServiceSeed(
       producerId = UUID.randomUUID(),
@@ -179,7 +181,7 @@ trait ItSpecHelper
       uploadDate = OffsetDateTime.now()
     )
 
-    (() => mockUUIDSupplier.get).expects().returning(documentId).once()
+    (() => mockUUIDSupplier.get()).expects().returning(documentId).once()
     (mockFileManager
       .store(_: UUID, _: String, _: (FileInfo, File))(_: ExecutionContext))
       .expects(*, *, *, *)
@@ -253,8 +255,8 @@ trait ItSpecHelper
   }
 
   def cloneEService(eServiceId: UUID, descriptorId: UUID): EService = {
-    (() => mockUUIDSupplier.get).expects().returning(UUID.randomUUID()).once()
-    (() => mockUUIDSupplier.get).expects().returning(UUID.randomUUID()).once()
+    (() => mockUUIDSupplier.get()).expects().returning(UUID.randomUUID()).once()
+    (() => mockUUIDSupplier.get()).expects().returning(UUID.randomUUID()).once()
 
     val response = request(s"$serviceURL/eservices/$eServiceId/descriptors/$descriptorId/clone", HttpMethods.POST)
 
@@ -304,7 +306,8 @@ trait ItSpecHelper
       audience = Seq("newAud1", "newAud2"),
       voucherLifespan = 987654,
       dailyCallsPerConsumer = 556644,
-      dailyCallsTotal = 884455
+      dailyCallsTotal = 884455,
+      agreementApprovalPolicy = AUTOMATIC
     )
 
     val data = seed.toJson.compactPrint
