@@ -366,7 +366,9 @@ class EServiceApiServiceImpl(
           voucherLifespan = eServiceDescriptorSeed.voucherLifespan,
           dailyCallsPerConsumer = eServiceDescriptorSeed.dailyCallsPerConsumer,
           state = CatalogDescriptorState.fromApi(eServiceDescriptorSeed.state),
-          dailyCallsTotal = eServiceDescriptorSeed.dailyCallsTotal
+          dailyCallsTotal = eServiceDescriptorSeed.dailyCallsTotal,
+          agreementApprovalPolicy =
+            PersistentAgreementApprovalPolicy.fromApi(eServiceDescriptorSeed.agreementApprovalPolicy).some
         )
 
     val result: Future[Option[CatalogItem]] = for {
