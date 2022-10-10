@@ -106,7 +106,7 @@ class CatalogManagementServiceSpec
           |   , "voucherLifespan": 30
           |   , "dailyCallsPerConsumer": 30000
           |   , "dailyCallsTotal": 900
-          |   , "agreementApprovalPolicy": "AUTOMATIC"
+          |   , "agreementApprovalPolicy": "MANUAL"
           |   , "audience": ["a", "b", "c"]
           |   , "state": "ARCHIVED"
           |}""".stripMargin
@@ -135,6 +135,7 @@ class CatalogManagementServiceSpec
       updatedDescriptor.dailyCallsTotal shouldBe 900
       updatedDescriptor.audience shouldBe Seq("a", "b", "c")
       updatedDescriptor.state shouldBe EServiceDescriptorState.ARCHIVED
+      updatedDescriptor.agreementApprovalPolicy shouldBe AgreementApprovalPolicy.MANUAL
     }
 
     "fail with 404 code when updating a non-existing descriptor of existing eservice" in {
@@ -150,7 +151,7 @@ class CatalogManagementServiceSpec
           |  "voucherLifespan": 20,
           |  "dailyCallsPerConsumer": 30000,
           |  "dailyCallsTotal": 30000,
-          |  "agreementApprovalPolicy": "AUTOMATIC",
+          |  "agreementApprovalPolicy": "MANUAL",
           |  "state": "DRAFT"
           |}""".stripMargin
 
@@ -178,7 +179,7 @@ class CatalogManagementServiceSpec
           |  "voucherLifespan": 20,
           |  "dailyCallsPerConsumer": 30000,
           |  "dailyCallsTotal": 30000,
-          |  "agreementApprovalPolicy": "AUTOMATIC",
+          |  "agreementApprovalPolicy": "MANUAL",
           |  "state": "DRAFT"
           |}""".stripMargin
 
@@ -211,7 +212,7 @@ class CatalogManagementServiceSpec
           |  "voucherLifespan": 20,
           |  "dailyCallsPerConsumer": 30000,
           |  "dailyCallsTotal": 30000,
-          |  "requireAgreementManualApproval": false,
+          |  "agreementApprovalPolicy": "MANUAL",
           |  "state": "not_existing_state"
           |}""".stripMargin
 
