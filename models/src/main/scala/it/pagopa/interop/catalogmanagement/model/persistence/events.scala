@@ -1,8 +1,9 @@
 package it.pagopa.interop.catalogmanagement.model.persistence
 
 import it.pagopa.interop.catalogmanagement.model.{CatalogDescriptor, CatalogDocument, CatalogItem}
+import it.pagopa.interop.commons.queue.message.ProjectableEvent
 
-sealed trait Event extends Persistable
+sealed trait Event extends Persistable with ProjectableEvent
 
 final case class CatalogItemAdded(catalogItem: CatalogItem)                                        extends Event
 final case class ClonedCatalogItemAdded(catalogItem: CatalogItem)                                  extends Event

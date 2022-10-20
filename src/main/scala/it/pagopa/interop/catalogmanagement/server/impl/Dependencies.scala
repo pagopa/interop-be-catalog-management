@@ -18,12 +18,16 @@ import it.pagopa.interop.catalogmanagement.common.system.ApplicationConfiguratio
   projectionTag
 }
 import it.pagopa.interop.catalogmanagement.model.Problem
-import it.pagopa.interop.catalogmanagement.model.persistence.projection.EServiceCqrsProjection
-import it.pagopa.interop.catalogmanagement.model.persistence.{CatalogPersistentBehavior, Command}
+import it.pagopa.interop.catalogmanagement.model.persistence.projection.{
+  CatalogNotificationProjection,
+  EServiceCqrsProjection
+}
+import it.pagopa.interop.catalogmanagement.model.persistence.{CatalogEventsSerde, CatalogPersistentBehavior, Command}
 import it.pagopa.interop.commons.files.service.FileManager
 import it.pagopa.interop.commons.jwt.service.JWTReader
 import it.pagopa.interop.commons.jwt.service.impl.{DefaultJWTReader, getClaimsVerifier}
 import it.pagopa.interop.commons.jwt.{JWTConfiguration, PublicKeysHolder}
+import it.pagopa.interop.commons.queue.QueueWriter
 import it.pagopa.interop.commons.utils.OpenapiUtils
 import it.pagopa.interop.commons.utils.TypeConversions._
 import it.pagopa.interop.commons.utils.service.UUIDSupplier
@@ -66,7 +70,14 @@ trait Dependencies {
     )
     .toFuture
 
-  def initProjections()(implicit actorSystem: ActorSystem[_], ec: ExecutionContext): Unit = {
+  def initProjections(
+    blockingEc: ExecutionContextExecutor
+  )(implicit actorSystem: ActorSystem[_], ec: ExecutionContext): Unit = {
+    initNotificationProjection(blockingEc)
+    initCqrsProjection()
+  }
+
+  def initCqrsProjection()(implicit actorSystem: ActorSystem[_], ec: ExecutionContext): Unit = {
     val dbConfig: DatabaseConfig[JdbcProfile] =
       DatabaseConfig.forConfig("akka-persistence-jdbc.shared-databases.slick")
 
@@ -79,6 +90,27 @@ trait Dependencies {
       name = projectionId,
       numberOfInstances = numberOfProjectionTags,
       behaviorFactory = (i: Int) => ProjectionBehavior(cqrsProjection.projection(projectionTag(i))),
+      stopMessage = ProjectionBehavior.Stop
+    )
+  }
+
+  def initNotificationProjection(
+    blockingEc: ExecutionContextExecutor
+  )(implicit actorSystem: ActorSystem[_], ec: ExecutionContext): Unit = {
+    val queueWriter: QueueWriter =
+      QueueWriter.get(ApplicationConfiguration.queueUrl)(CatalogEventsSerde.projectableCatalogToJson)(blockingEc)
+
+    val dbConfig: DatabaseConfig[JdbcProfile] =
+      DatabaseConfig.forConfig("akka-persistence-jdbc.shared-databases.slick")
+
+    val notificationProjectionId = "catalog-notification-projections"
+
+    val catalogNotificationProjection = CatalogNotificationProjection(dbConfig, queueWriter, notificationProjectionId)
+
+    ShardedDaemonProcess(actorSystem).init[ProjectionBehavior.Command](
+      name = notificationProjectionId,
+      numberOfInstances = numberOfProjectionTags,
+      behaviorFactory = (i: Int) => ProjectionBehavior(catalogNotificationProjection.projection(projectionTag(i))),
       stopMessage = ProjectionBehavior.Stop
     )
   }
