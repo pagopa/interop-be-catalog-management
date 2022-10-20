@@ -37,16 +37,16 @@ object CatalogEventsSerde {
   }
 
   def getKind(e: Event): String = e match {
-    case CatalogItemAdded(_)                     => catalogItemAdded
-    case ClonedCatalogItemAdded(_)               => clonedCatalogItemAdded
-    case CatalogItemUpdated(_)                   => catalogItemUpdated
-    case CatalogItemWithDescriptorsDeleted(_, _) => catalogItemWithDescriptorsDeleted
-    case CatalogItemDocumentUpdated(_, _, _, _)  => catalogItemDocumentUpdated
-    case CatalogItemDeleted(_)                   => catalogItemDeleted
-    case CatalogItemDocumentAdded(_, _, _, _)    => catalogItemDocumentAdded
-    case CatalogItemDocumentDeleted(_, _, _)     => catalogItemDocumentDeleted
-    case CatalogItemDescriptorAdded(_, _)        => catalogItemDescriptorAdded
-    case CatalogItemDescriptorUpdated(_, _)      => catalogItemDescriptorUpdated
+    case _: CatalogItemAdded                  => catalogItemAdded
+    case _: ClonedCatalogItemAdded            => clonedCatalogItemAdded
+    case _: CatalogItemUpdated                => catalogItemUpdated
+    case _: CatalogItemWithDescriptorsDeleted => catalogItemWithDescriptorsDeleted
+    case _: CatalogItemDocumentUpdated        => catalogItemDocumentUpdated
+    case _: CatalogItemDeleted                => catalogItemDeleted
+    case _: CatalogItemDocumentAdded          => catalogItemDocumentAdded
+    case _: CatalogItemDocumentDeleted        => catalogItemDocumentDeleted
+    case _: CatalogItemDescriptorAdded        => catalogItemDescriptorAdded
+    case _: CatalogItemDescriptorUpdated      => catalogItemDescriptorUpdated
   }
 
   private val catalogItemAdded                  = "catalog_item_added"
