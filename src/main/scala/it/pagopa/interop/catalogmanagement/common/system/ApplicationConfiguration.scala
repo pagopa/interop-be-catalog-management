@@ -23,6 +23,8 @@ object ApplicationConfiguration {
   def projectionTag(index: Int)   = s"interop-be-catalog-management-persistence|$index"
   val projectionsEnabled: Boolean = config.getBoolean("akka.projection.enabled")
 
+  val queueUrl: String = config.getString("catalog-management.persistence-events-queue-url")
+
   // Loaded only if projections are enabled
   lazy val mongoDb: MongoDbConfig = {
     val connectionString: String = config.getString("cqrs-projection.db.connection-string")

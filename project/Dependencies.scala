@@ -67,10 +67,11 @@ object Dependencies {
 
   private[this] object pagopa {
     lazy val namespace    = "it.pagopa"
-    lazy val commonsUtils = namespace %% "interop-commons-utils"        % commonsVersion
-    lazy val fileManager  = namespace %% "interop-commons-file-manager" % commonsVersion
-    lazy val commonsJWT   = namespace %% "interop-commons-jwt"          % commonsVersion
-    lazy val commonsCqrs  = namespace %% "interop-commons-cqrs"         % commonsVersion
+    lazy val commonsUtils = namespace %% "interop-commons-utils"         % commonsVersion
+    lazy val fileManager  = namespace %% "interop-commons-file-manager"  % commonsVersion
+    lazy val commonsJWT   = namespace %% "interop-commons-jwt"           % commonsVersion
+    lazy val commonsQueue = namespace %% "interop-commons-queue-manager" % commonsVersion
+    lazy val commonsCqrs  = namespace %% "interop-commons-cqrs"          % commonsVersion
   }
 
   private[this] object postgres {
@@ -140,6 +141,7 @@ object Dependencies {
       pagopa.fileManager           % Compile,
       pagopa.commonsJWT            % Compile,
       pagopa.commonsCqrs           % "compile,it",
+      pagopa.commonsQueue          % Compile,
       postgres.jdbc                % "compile,it",
       tika.core                    % Compile,
       akka.testkit                 % "test,it",
@@ -155,6 +157,6 @@ object Dependencies {
       List(akka.stream, akka.http, akka.httpJson4s, akka.slf4j, json4s.jackson, json4s.ext, pagopa.commonsUtils).map(
         _ % Compile
       )
-    lazy val models: List[ModuleID]    = List(pagopa.commonsUtils).map(_ % Compile)
+    lazy val models: List[ModuleID]    = List(pagopa.commonsUtils, pagopa.commonsQueue).map(_ % Compile)
   }
 }
