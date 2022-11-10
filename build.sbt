@@ -77,7 +77,12 @@ lazy val generated = project
   .configs(IntegrationTest)
   .settings(Defaults.itSettings: _*)
   .in(file("generated"))
-  .settings(scalacOptions := Seq(), scalafmtOnCompile := true, libraryDependencies := Dependencies.Jars.`server`)
+  .settings(
+    scalacOptions       := Seq(),
+    scalafmtOnCompile   := true,
+    libraryDependencies := Dependencies.Jars.`server`,
+    Docker / publish    := {}
+  )
   .setupBuildInfo
 
 lazy val models = project
