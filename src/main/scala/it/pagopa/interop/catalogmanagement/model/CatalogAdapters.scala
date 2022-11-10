@@ -2,7 +2,6 @@ package it.pagopa.interop.catalogmanagement.model
 
 import cats.implicits._
 import it.pagopa.interop.catalogmanagement.error.CatalogManagementErrors.InvalidAttribute
-import it.pagopa.interop.catalogmanagement.model.AgreementApprovalPolicy.AUTOMATIC
 import it.pagopa.interop.catalogmanagement.service.CatalogFileManager
 import it.pagopa.interop.commons.utils.TypeConversions._
 import it.pagopa.interop.commons.utils.service.UUIDSupplier
