@@ -150,7 +150,7 @@ object Dependencies {
       scalaprotobuf.core           % "protobuf,compile",
       scalatest.core               % "test,it",
       "org.scalameta"             %% "munit-scalacheck"               % "0.7.29"                   % Test,
-      "com.softwaremill.diffx"    %% "diffx-munit"                    % "0.7.1"                    % Test,
+      "com.softwaremill.diffx"    %% "diffx-munit"                    % "0.8.2"                    % Test,
       "com.dimafeng"              %% "testcontainers-scala-scalatest" % testcontainersScalaVersion % IntegrationTest
     )
     lazy val client: List[ModuleID]    =
