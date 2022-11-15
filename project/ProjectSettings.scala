@@ -1,7 +1,14 @@
-import sbt.Project
+import sbt._
+import sbt.nio.Keys._
+import sbt.Keys._
 import sbtbuildinfo.BuildInfoKeys.buildInfoOptions
 import sbtbuildinfo.BuildInfoPlugin.autoImport.{BuildInfoKey, buildInfoKeys}
 import sbtbuildinfo.{BuildInfoOption, BuildInfoPlugin}
+import sbtghactions.GitHubActionsPlugin.autoImport._
+import sbtghactions.GenerativePlugin.autoImport._
+import sbtghpackages.GitHubPackagesPlugin.autoImport._
+import RefPredicate._
+import Ref._
 
 import scala.sys.process._
 import scala.util.Try
@@ -42,4 +49,12 @@ object ProjectSettings {
         .settings(buildInfoOptions += BuildInfoOption.ToJson)
     }
   }
+
+  val sbtGithubActionsSettings: List[Def.Setting[_]] = List[Def.Setting[_]](
+    githubWorkflowPublishTargetBranches := Seq(Equals(Branch("1.0.x")), StartsWith(Tag("v"))),
+    githubWorkflowTargetTags            := Seq("v*"),
+    githubWorkflowScalaVersions         := Seq("2.13.10"),
+    githubOwner                         := "pagopa",
+    githubRepository                    := "interop-commons"
+  )
 }
