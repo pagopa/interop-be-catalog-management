@@ -9,6 +9,7 @@ import sbtghactions.GenerativePlugin.autoImport._
 import sbtghpackages.GitHubPackagesPlugin.autoImport._
 import RefPredicate._
 import Ref._
+import UseRef._
 
 import scala.sys.process._
 import scala.util.Try
@@ -54,6 +55,17 @@ object ProjectSettings {
     githubWorkflowPublishTargetBranches := Seq(Equals(Branch("1.0.x")), StartsWith(Tag("v"))),
     githubWorkflowTargetTags            := Seq("v*"),
     githubWorkflowScalaVersions         := Seq("2.13.10"),
+    githubWorkflowBuildPreamble         := Seq(
+      WorkflowStep.Use(
+        Public("actions", "setup-node", "v3"),
+        name = Some("Install node 16"),
+        params = Map("node-version" -> "16")
+      ),
+      WorkflowStep.Run(
+        List("npm install -g @openapitools/openapi-generator-cli"),
+        name = Some("Installing openapi-generator-cli")
+      )
+    ),
     githubOwner                         := "pagopa",
     githubRepository                    := "interop-commons"
   )
