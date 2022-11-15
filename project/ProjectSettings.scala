@@ -52,6 +52,10 @@ object ProjectSettings {
   }
 
   val sbtGithubActionsSettings: List[Def.Setting[_]] = List[Def.Setting[_]](
+    githubWorkflowEnv                   := Map(
+      "GITHUB_TOKEN" -> "${{ secrets.GITHUB_TOKEN }}",
+      "ECR_REGISTRY" -> "505630707203.dkr.ecr.eu-central-1.amazonaws.com"
+    ),
     githubWorkflowPublishTargetBranches := Seq(Equals(Branch("1.0.x")), StartsWith(Tag("v"))),
     githubWorkflowTargetTags            := Seq("v*"),
     githubWorkflowScalaVersions         := Seq("2.13.10"),
