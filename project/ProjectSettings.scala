@@ -1,7 +1,15 @@
-import sbt.Project
+import sbt._
+import sbt.nio.Keys._
+import sbt.Keys._
 import sbtbuildinfo.BuildInfoKeys.buildInfoOptions
 import sbtbuildinfo.BuildInfoPlugin.autoImport.{BuildInfoKey, buildInfoKeys}
 import sbtbuildinfo.{BuildInfoOption, BuildInfoPlugin}
+import sbtghactions.GitHubActionsPlugin.autoImport._
+import sbtghactions.GenerativePlugin.autoImport._
+import sbtghpackages.GitHubPackagesPlugin.autoImport._
+import RefPredicate._
+import Ref._
+import UseRef._
 
 import scala.sys.process._
 import scala.util.Try
@@ -42,4 +50,47 @@ object ProjectSettings {
         .settings(buildInfoOptions += BuildInfoOption.ToJson)
     }
   }
+
+  val workflowPreamble = Seq(
+    WorkflowStep
+      .Use(Public("actions", "setup-node", "v3"), name = Some("Install node 16"), params = Map("node-version" -> "16")),
+    WorkflowStep.Run(
+      List("npm install -g @openapitools/openapi-generator-cli"),
+      name = Some("Installing openapi-generator-cli")
+    )
+  )
+
+  val sbtGithubActionsSettings: List[Def.Setting[_]] = List[Def.Setting[_]](
+    githubWorkflowEnv                   := Map(
+      "GITHUB_TOKEN" -> "${{ secrets.GITHUB_TOKEN }}",
+      "ECR_REGISTRY" -> "505630707203.dkr.ecr.eu-central-1.amazonaws.com"
+    ),
+    githubWorkflowTargetTags            := Seq("v*"),
+    githubWorkflowScalaVersions         := Seq("2.13.10"),
+    githubWorkflowBuildPreamble         := workflowPreamble,
+    githubOwner                         := "pagopa",
+    githubRepository                    := "interop-be-catalog-management",
+    githubWorkflowPublishTargetBranches := Seq(Equals(Branch("1.0.x")), StartsWith(Tag("v"))),
+    githubWorkflowPublishPreamble       := workflowPreamble,
+    githubWorkflowPublish               := Seq(
+      WorkflowStep.Sbt(List("generateCode"), name = Some("Regenerating code")),
+      WorkflowStep.Sbt(List("+publish"), name = Some("Publish project"))
+    ),
+    githubWorkflowPublishPostamble      := Seq(
+      WorkflowStep.Use(
+        Public("aws-actions", "configure-aws-credentials", "v1"),
+        name = Some("Configure AWS Credentials"),
+        params = Map(
+          "aws-region"     -> "eu-central-1",
+          "role-to-assume" -> "arn:aws:iam::505630707203:role/interop-github-ecr-dev"
+        )
+      ),
+      WorkflowStep.Use(
+        Public("aws-actions", "amazon-ecr-login", "v1"),
+        name = Some("Login to Amazon ECR"),
+        id = Some("login-ecr")
+      ),
+      WorkflowStep.Sbt(List("docker:publish"), name = Some("Build, tag, and push image to Amazon ECR"))
+    )
+  )
 }
