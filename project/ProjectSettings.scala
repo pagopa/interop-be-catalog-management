@@ -67,6 +67,23 @@ object ProjectSettings {
       )
     ),
     githubOwner                         := "pagopa",
-    githubRepository                    := "interop-commons"
+    githubRepository                    := "interop-commons",
+    githubWorkflowPublishPostamble      := Seq(
+      WorkflowStep.Use(
+        Public("aws-actions", "configure-aws-credentials", "v1"),
+        name = Some("Configure AWS Credentials"),
+        params = Map(
+          "aws-region"        -> "eu-central-1",
+          "role-to-assume"    -> "arn:aws:iam::505630707203:role/interop-github-ecr-dev",
+          "role-session-name" -> "thisShouldBeTheRepoName-${{ github.workflow }}-${{ github.run_id }}"
+        )
+      ),
+      WorkflowStep.Use(
+        Public("aws-actions", "amazon-ecr-login", "v1"),
+        name = Some("Login to Amazon ECR"),
+        id = Some("login-ecr")
+      ),
+      WorkflowStep.Sbt(List("docker:publish"), name = Some("Build, tag, and push image to Amazon ECR"))
+    )
   )
 }
