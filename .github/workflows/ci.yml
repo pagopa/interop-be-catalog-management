@@ -72,7 +72,10 @@ jobs:
           path: targets.tar
 
   publish:
-    name: Publish Artifacts
+    name: Publish artifacts
+    permissions:
+      id-token: write
+      contents: read
     needs: [build]
     strategy:
       matrix:
