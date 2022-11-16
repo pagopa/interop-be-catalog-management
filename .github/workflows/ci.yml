@@ -16,7 +16,6 @@ on:
 
 env:
   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-  ECR_REGISTRY: 505630707203.dkr.ecr.eu-central-1.amazonaws.com
 
 jobs:
   build:
@@ -74,9 +73,6 @@ jobs:
 
   publish:
     name: Publish Artifacts
-    permissions:
-      id-token: write
-      contents: read
     needs: [build]
     strategy:
       matrix:
@@ -127,9 +123,6 @@ jobs:
       - name: Installing openapi-generator-cli
         run: npm install -g @openapitools/openapi-generator-cli
 
-      - name: Publish project
-        run: sbt ++${{ matrix.scala }} +publish
-
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v1
         with:
@@ -141,4 +134,6 @@ jobs:
         uses: aws-actions/amazon-ecr-login@v1
 
       - name: Build, tag, and push image to Amazon ECR
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
         run: 'sbt ++${{ matrix.scala }} docker:publish'
