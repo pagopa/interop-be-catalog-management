@@ -65,7 +65,7 @@ object ProjectSettings {
       "GITHUB_TOKEN" -> "${{ secrets.GITHUB_TOKEN }}",
       "ECR_REGISTRY" -> "505630707203.dkr.ecr.eu-central-1.amazonaws.com"
     ),
-    githubWorkflowTargetTags            := Seq("v*"),
+    githubWorkflowTargetTags            := Seq("**"),
     githubWorkflowScalaVersions         := Seq("2.13.10"),
     githubWorkflowBuildPreamble         := workflowPreamble,
     githubOwner                         := "pagopa",
