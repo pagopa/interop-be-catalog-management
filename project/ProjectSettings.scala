@@ -70,7 +70,7 @@ object ProjectSettings {
     githubWorkflowBuildPreamble         := workflowPreamble,
     githubOwner                         := "pagopa",
     githubRepository                    := "interop-be-catalog-management",
-    githubWorkflowPublishTargetBranches := Seq(Equals(Branch("1.0.x")), StartsWith(Tag("v"))),
+    githubWorkflowPublishTargetBranches := Seq(Equals(Branch("1.0.x")), StartsWith(Tag("*"))),
     githubWorkflowPublishPreamble       := workflowPreamble,
     githubWorkflowPublish               := Seq(
       WorkflowStep.Sbt(List("generateCode"), name = Some("Regenerating code")),
