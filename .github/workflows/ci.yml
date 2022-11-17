@@ -128,22 +128,6 @@ jobs:
       - name: Installing openapi-generator-cli
         run: npm install -g @openapitools/openapi-generator-cli
 
-      - name: 'Deleting models'
-        # if: ${{ env.GITHUB_BASE_REF == '1.0.x' }}
-        uses: actions/delete-package-versions@v3
-        with:
-          package-name: 'it.pagopa.interop-be-catalog-management-models_2.13'
-          min-versions-to-keep: 0
-          delete-only-pre-release-versions: 'true'
-
-      - name: 'Deleting client'
-        # if: ${{ env.GITHUB_BASE_REF == '1.0.x' }}
-        uses: actions/delete-package-versions@v3
-        with:
-          package-name: 'it.pagopa.interop-be-catalog-management-client_2.13'
-          min-versions-to-keep: 0
-          delete-only-pre-release-versions: 'true'
-
       - name: Publish project
         run: sbt ++${{ matrix.scala }} +publish
 

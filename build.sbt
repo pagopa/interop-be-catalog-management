@@ -1,13 +1,13 @@
 import ProjectSettings._
 import com.typesafe.sbt.packager.docker.Cmd
 
-ThisBuild / scalaVersion      := "2.13.10"
-ThisBuild / organization      := "it.pagopa"
-ThisBuild / organizationName  := "Pagopa S.p.A."
-Global / onChangedBuildSource := ReloadOnSourceChanges
+ThisBuild / scalaVersion         := "2.13.10"
+ThisBuild / organization         := "it.pagopa"
+ThisBuild / organizationName     := "Pagopa S.p.A."
+Global / onChangedBuildSource    := ReloadOnSourceChanges
 ThisBuild / dependencyOverrides ++= Dependencies.Jars.overrides
-ThisBuild / version           := ComputeVersion.version
-// trigger
+ThisBuild / version              := ComputeVersion.version
+ThisBuild / publishConfiguration := publishConfiguration.value.withOverwrite(true)
 inThisBuild(sbtGithubActionsSettings)
 
 ThisBuild / resolvers += Resolver.githubPackages("pagopa")
