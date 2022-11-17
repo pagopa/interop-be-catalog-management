@@ -7,6 +7,7 @@ ThisBuild / organizationName  := "Pagopa S.p.A."
 Global / onChangedBuildSource := ReloadOnSourceChanges
 ThisBuild / dependencyOverrides ++= Dependencies.Jars.overrides
 ThisBuild / version           := ComputeVersion.version
+ThisBuild / logLevel          := Level.Debug
 
 inThisBuild(sbtGithubActionsSettings)
 
