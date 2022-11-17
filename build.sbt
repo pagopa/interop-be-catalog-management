@@ -7,7 +7,7 @@ ThisBuild / organizationName  := "Pagopa S.p.A."
 Global / onChangedBuildSource := ReloadOnSourceChanges
 ThisBuild / dependencyOverrides ++= Dependencies.Jars.overrides
 ThisBuild / version           := ComputeVersion.version
-
+// trigger
 inThisBuild(sbtGithubActionsSettings)
 
 ThisBuild / resolvers += Resolver.githubPackages("pagopa")
