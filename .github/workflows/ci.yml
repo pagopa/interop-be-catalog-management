@@ -84,6 +84,11 @@ jobs:
         os: [ubuntu-latest]
         scala: [2.13.10]
         java: [temurin@11]
+        package:
+          [
+            it.pagopa.interop-be-catalog-management-client_2.13,
+            it.pagopa.interop-be-catalog-management-models_2.13,
+          ]
     runs-on: ${{ matrix.os }}
     steps:
       - name: Checkout current branch (full)
@@ -127,6 +132,10 @@ jobs:
 
       - name: Installing openapi-generator-cli
         run: npm install -g @openapitools/openapi-generator-cli
+
+      - name: Deleting 1.0.x-SNAPSHOT if on 1.0.x
+        # if: github.ref == 'refs/heads/1.0.x'
+        run: "gh api -H 'Accept: application/vnd.github+json' /orgs/pagopa/packages/maven/${{ matrix.package }}/versions?name=1.0.x-SNAPSHOT --jq 'map(.id)[]' | xargs -I % gh api -H 'Accept: application/vnd.github+json' --method DELETE /orgs/pagopa/packages/maven/${{ matrix.package }}/versions/%"
 
       - name: Publish project
         run: sbt ++${{ matrix.scala }} +publish
