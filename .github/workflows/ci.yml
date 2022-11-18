@@ -63,7 +63,7 @@ jobs:
         run: sbt ++${{ matrix.scala }} test
 
       - name: Compress target directories
-        run: tar cf targets.tar target generated/src generated/target models/target client/target project/target
+        run: tar cf targets.tar target generated/target models/target client/target project/target
 
       - name: Upload target directories
         uses: actions/upload-artifact@v2
@@ -128,16 +128,22 @@ jobs:
       - name: Installing openapi-generator-cli
         run: npm install -g @openapitools/openapi-generator-cli
 
-      - uses: castlabs/get-package-version-id-action@v2.0
-        if: github.ref == 'refs/heads/1.0.x'
+      - name: Get 1.0.x-SNAPSHOTS versionIds
         id: version
+        if: github.ref == 'refs/heads/1.0.x'
+        uses: castlabs/get-package-version-id-action@v2.0
         with:
-          version: '1.0.x-SNAPSHOT'
+          version: 1.0.x-SNAPSHOT
 
-      - uses: actions/delete-package-versions@v2
+      - name: Deleting 1.0.x-SNAPSHOTS versions
+        id: version
         if: ${{ github.ref == 'refs/heads/1.0.x' && steps.version.outputs.ids != '' }}
+        uses: actions/delete-package-versions@v2
         with:
-          package-version-ids: '${{ steps.version.outputs.ids }}'
+          package-version-ids: ${{ steps.version.outputs.ids }}
+
+      - name: Regenerating code
+        run: sbt ++${{ matrix.scala }} generateCode
 
       - name: Publish project
         run: sbt ++${{ matrix.scala }} +publish

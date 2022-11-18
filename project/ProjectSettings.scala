@@ -61,10 +61,6 @@ object ProjectSettings {
   )
 
   val sbtGithubActionsSettings: List[Def.Setting[_]] = List[Def.Setting[_]](
-    githubWorkflowEnv                   := Map(
-      "GITHUB_TOKEN" -> "${{ secrets.GITHUB_TOKEN }}",
-      "ECR_REGISTRY" -> "505630707203.dkr.ecr.eu-central-1.amazonaws.com"
-    ),
     githubWorkflowTargetTags            := Seq("**"),
     githubWorkflowScalaVersions         := Seq("2.13.10"),
     githubWorkflowBuildPreamble         := workflowPreamble,
@@ -73,6 +69,20 @@ object ProjectSettings {
     githubWorkflowPublishTargetBranches := Seq(Equals(Branch("1.0.x")), StartsWith(Tag(""))),
     githubWorkflowPublishPreamble       := workflowPreamble,
     githubWorkflowPublish               := Seq(
+      WorkflowStep.Use(
+        Public("castlabs", "get-package-version-id-action", "v2.0"),
+        name = "Get 1.0.x-SNAPSHOTS versionIds".some,
+        id = "version".some,
+        cond = "github.ref == 'refs/heads/1.0.x'".some,
+        params = Map("version" -> "1.0.x-SNAPSHOT")
+      ),
+      WorkflowStep.Use(
+        Public("actions", "delete-package-versions", "v2"),
+        name = "Deleting 1.0.x-SNAPSHOTS versions".some,
+        id = "version".some,
+        cond = "${{ github.ref == 'refs/heads/1.0.x' && steps.version.outputs.ids != '' }}".some,
+        params = Map("package-version-ids" -> "${{ steps.version.outputs.ids }}")
+      ),
       WorkflowStep.Sbt(List("generateCode"), name = Some("Regenerating code")),
       WorkflowStep.Sbt(List("+publish"), name = Some("Publish project"))
     ),
@@ -90,7 +100,11 @@ object ProjectSettings {
         name = Some("Login to Amazon ECR"),
         id = Some("login-ecr")
       ),
-      WorkflowStep.Sbt(List("docker:publish"), name = Some("Build, tag, and push image to Amazon ECR"))
+      WorkflowStep.Sbt(
+        List("docker:publish"),
+        env = Map("ECR_REGISTRY" -> "${{ steps.login-ecr.outputs.registry }}"),
+        name = Some("Build, tag, and push image to Amazon ECR")
+      )
     )
   )
 }
