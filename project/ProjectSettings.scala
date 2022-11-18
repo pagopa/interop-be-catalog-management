@@ -72,14 +72,12 @@ object ProjectSettings {
       WorkflowStep.Use(
         Public("castlabs", "get-package-version-id-action", "v2.0"),
         name = "Get 1.0.x-SNAPSHOTS versionIds".some,
-        id = "version".some,
         cond = "github.ref == 'refs/heads/1.0.x'".some,
         params = Map("version" -> "1.0.x-SNAPSHOT")
       ),
       WorkflowStep.Use(
         Public("actions", "delete-package-versions", "v2"),
         name = "Deleting 1.0.x-SNAPSHOTS versions".some,
-        id = "version".some,
         cond = "${{ github.ref == 'refs/heads/1.0.x' && steps.version.outputs.ids != '' }}".some,
         params = Map("package-version-ids" -> "${{ steps.version.outputs.ids }}")
       ),
