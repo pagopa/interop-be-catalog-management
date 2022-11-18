@@ -74,6 +74,10 @@ jobs:
   publish:
     name: Publish Artifacts
     needs: [build]
+    permissions:
+      id-token: write
+      contents: read
+      packages: write
     if: github.event_name != 'pull_request' && (github.ref == 'refs/heads/1.0.x' || startsWith(github.ref, 'refs/tags/'))
     strategy:
       matrix:
@@ -125,6 +129,7 @@ jobs:
         run: npm install -g @openapitools/openapi-generator-cli
 
       - name: Get 1.0.x-SNAPSHOTS versionIds
+        id: version
         if: github.ref == 'refs/heads/1.0.x'
         uses: castlabs/get-package-version-id-action@v2.0
         with:

@@ -71,6 +71,7 @@ object ProjectSettings {
     githubWorkflowPublish               := Seq(
       WorkflowStep.Use(
         Public("castlabs", "get-package-version-id-action", "v2.0"),
+        id = "version".some,
         name = "Get 1.0.x-SNAPSHOTS versionIds".some,
         cond = "github.ref == 'refs/heads/1.0.x'".some,
         params = Map("version" -> "1.0.x-SNAPSHOT")
