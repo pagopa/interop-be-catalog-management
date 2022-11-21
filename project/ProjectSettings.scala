@@ -60,12 +60,14 @@ object ProjectSettings {
     )
   )
 
+  val projectScalaVersion: String  = "2.13.10"
+  val githubRepositoryName: String = "interop-be-catalog-management"
+  val githubRepoOwner: String      = "pagopa"
+
   val sbtGithubActionsSettings: List[Def.Setting[_]] = List[Def.Setting[_]](
     githubWorkflowTargetTags            := Seq("**"),
-    githubWorkflowScalaVersions         := Seq("2.13.10"),
+    githubWorkflowScalaVersions         := Seq(projectScalaVersion),
     githubWorkflowBuildPreamble         := workflowPreamble,
-    githubOwner                         := "pagopa",
-    githubRepository                    := "interop-be-catalog-management",
     githubWorkflowPublishTargetBranches := Seq(Equals(Branch("1.0.x")), StartsWith(Tag(""))),
     githubWorkflowPublishPreamble       := workflowPreamble,
     githubWorkflowPublish               := Seq(
@@ -90,8 +92,9 @@ object ProjectSettings {
         Public("aws-actions", "configure-aws-credentials", "v1"),
         name = Some("Configure AWS Credentials"),
         params = Map(
-          "aws-region"     -> "eu-central-1",
-          "role-to-assume" -> "arn:aws:iam::505630707203:role/interop-github-ecr-dev"
+          "aws-region"        -> "eu-central-1",
+          "role-to-assume"    -> "arn:aws:iam::505630707203:role/interop-github-ecr-dev",
+          "role-session-name" -> (s"${githubRepositoryName}-" + "${{ github.job }}")
         )
       ),
       WorkflowStep.Use(

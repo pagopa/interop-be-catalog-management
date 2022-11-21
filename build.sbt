@@ -1,16 +1,17 @@
 import ProjectSettings._
 import com.typesafe.sbt.packager.docker.Cmd
 
-ThisBuild / scalaVersion      := "2.13.10"
+ThisBuild / scalaVersion      := projectScalaVersion
 ThisBuild / organization      := "it.pagopa"
 ThisBuild / organizationName  := "Pagopa S.p.A."
 Global / onChangedBuildSource := ReloadOnSourceChanges
 ThisBuild / dependencyOverrides ++= Dependencies.Jars.overrides
 ThisBuild / version           := ComputeVersion.version
+ThisBuild / githubOwner       := githubRepoOwner
+ThisBuild / githubRepository  := githubRepositoryName
+ThisBuild / resolvers += Resolver.githubPackages(githubRepoOwner)
 
 inThisBuild(sbtGithubActionsSettings)
-
-ThisBuild / resolvers += Resolver.githubPackages("pagopa")
 
 lazy val generateCode = taskKey[Unit]("A task for generating the code starting from the swagger definition")
 
