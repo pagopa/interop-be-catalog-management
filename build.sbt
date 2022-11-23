@@ -83,6 +83,7 @@ lazy val generated = project
     libraryDependencies := Dependencies.Jars.`server`,
     Docker / publish    := {}
   )
+  .enablePlugins(NoPublishPlugin)
   .setupBuildInfo
 
 lazy val models = project
