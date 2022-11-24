@@ -81,9 +81,11 @@ lazy val generated = project
     scalacOptions       := Seq(),
     scalafmtOnCompile   := true,
     libraryDependencies := Dependencies.Jars.`server`,
-    Docker / publish    := {}
+    publish / skip      := true,
+    publish             := (()),
+    publishLocal        := (()),
+    publishTo           := None
   )
-  .enablePlugins(NoPublishPlugin)
   .setupBuildInfo
 
 lazy val models = project
@@ -131,5 +133,6 @@ lazy val root = (project in file("."))
   .aggregate(client, models)
   .dependsOn(generated, models)
   .enablePlugins(JavaAppPackaging)
+  .enablePlugins(DockerPlugin)
   .enablePlugins(NoPublishPlugin)
   .setupBuildInfo
