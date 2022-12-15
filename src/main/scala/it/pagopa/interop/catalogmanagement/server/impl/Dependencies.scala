@@ -30,7 +30,7 @@ import it.pagopa.interop.commons.jwt.{JWTConfiguration, PublicKeysHolder}
 import it.pagopa.interop.commons.queue.QueueWriter
 import it.pagopa.interop.commons.utils.OpenapiUtils
 import it.pagopa.interop.commons.utils.TypeConversions._
-import it.pagopa.interop.commons.utils.service.UUIDSupplier
+import it.pagopa.interop.commons.utils.service.{OffsetDateTimeSupplier, UUIDSupplier}
 import slick.basic.DatabaseConfig
 import slick.jdbc.JdbcProfile
 
@@ -50,7 +50,8 @@ trait Dependencies {
   val catalogPersistentEntity: Entity[Command, ShardingEnvelope[Command]] =
     Entity(CatalogPersistentBehavior.TypeKey)(behaviorFactory)
 
-  val uuidSupplier: UUIDSupplier = UUIDSupplier
+  val uuidSupplier: UUIDSupplier                     = UUIDSupplier
+  val offsetDateTimeSupplier: OffsetDateTimeSupplier = OffsetDateTimeSupplier
 
   def getFileManager(blockingEc: ExecutionContextExecutor): FileManager =
     FileManager.get(ApplicationConfiguration.storageKind match {

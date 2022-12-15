@@ -12,7 +12,12 @@ import it.pagopa.interop.catalogmanagement.model.persistence.serializer.v1.event
 import it.pagopa.interop.catalogmanagement.model.persistence.serializer.v1.state.{CatalogItemsV1, StateV1}
 import it.pagopa.interop.catalogmanagement.model.persistence.serializer.v1.utils._
 
+import java.time.{OffsetDateTime, ZoneOffset}
+
 package object v1 {
+
+  final val defaultCreatedAt: OffsetDateTime   = OffsetDateTime.of(2022, 10, 21, 12, 0, 0, 0, ZoneOffset.UTC)
+  final val defaultActivatedAt: OffsetDateTime = OffsetDateTime.of(2022, 12, 15, 12, 0, 0, 0, ZoneOffset.UTC)
 
   implicit def stateV1PersistEventDeserializer: PersistEventDeserializer[StateV1, State] =
     state => {
@@ -23,6 +28,7 @@ package object v1 {
           technology  <- convertItemTechnologyFromV1(itemsV1.value.technology)
           uuid        <- itemsV1.value.id.toUUID.toEither
           producerId  <- itemsV1.value.producerId.toUUID.toEither
+          createdAt   <- itemsV1.value.createdAt.traverse(_.toOffsetDateTime).toEither
         } yield itemsV1.key -> CatalogItem(
           id = uuid,
           producerId = producerId,
@@ -30,7 +36,8 @@ package object v1 {
           description = itemsV1.value.description,
           technology = technology,
           attributes = attributes,
-          descriptors = descriptors
+          descriptors = descriptors,
+          createdAt = createdAt.getOrElse(defaultCreatedAt)
         )
       }
       items.map(its => State(its.toMap))
@@ -38,22 +45,23 @@ package object v1 {
 
   implicit def stateV1PersistEventSerializer: PersistEventSerializer[State, StateV1] =
     state => {
-      val itemsV1: Either[RuntimeException, Seq[CatalogItemsV1]] = state.items.toSeq.traverse {
-        case (key, catalogItem) =>
-          for {
-            descriptors <- convertDescriptorsToV1(catalogItem.descriptors)
-          } yield CatalogItemsV1(
-            key,
-            CatalogItemV1(
-              id = catalogItem.id.toString,
-              producerId = catalogItem.producerId.toString,
-              name = catalogItem.name,
-              description = catalogItem.description,
-              technology = convertItemTechnologyToV1(catalogItem.technology),
-              attributes = convertAttributesToV1(catalogItem.attributes),
-              descriptors = descriptors
-            )
+      val itemsV1: Either[Throwable, Seq[CatalogItemsV1]] = state.items.toSeq.traverse { case (key, catalogItem) =>
+        for {
+          descriptors <- convertDescriptorsToV1(catalogItem.descriptors)
+          createdAt   <- catalogItem.createdAt.asFormattedString.toEither
+        } yield CatalogItemsV1(
+          key,
+          CatalogItemV1(
+            id = catalogItem.id.toString,
+            producerId = catalogItem.producerId.toString,
+            name = catalogItem.name,
+            description = catalogItem.description,
+            technology = convertItemTechnologyToV1(catalogItem.technology),
+            attributes = convertAttributesToV1(catalogItem.attributes),
+            descriptors = descriptors,
+            createdAt = createdAt.some
           )
+        )
 
       }
 
@@ -69,6 +77,7 @@ package object v1 {
         technology  <- convertItemTechnologyFromV1(event.catalogItem.technology)
         uuid        <- event.catalogItem.id.toUUID.toEither
         producerId  <- event.catalogItem.producerId.toUUID.toEither
+        createdAt   <- event.catalogItem.createdAt.traverse(_.toOffsetDateTime).toEither
       } yield CatalogItemAdded(catalogItem =
         CatalogItem(
           id = uuid,
@@ -77,7 +86,8 @@ package object v1 {
           description = event.catalogItem.description,
           technology = technology,
           attributes = attributes,
-          descriptors = descriptors
+          descriptors = descriptors,
+          createdAt = createdAt.getOrElse(defaultCreatedAt)
         )
       )
 
@@ -88,6 +98,7 @@ package object v1 {
     event => {
       for {
         descriptors <- convertDescriptorsToV1(event.catalogItem.descriptors)
+        createdAt   <- event.catalogItem.createdAt.asFormattedString.toEither
       } yield CatalogItemV1AddedV1
         .of(
           CatalogItemV1(
@@ -97,7 +108,8 @@ package object v1 {
             description = event.catalogItem.description,
             technology = convertItemTechnologyToV1(event.catalogItem.technology),
             attributes = convertAttributesToV1(event.catalogItem.attributes),
-            descriptors = descriptors
+            descriptors = descriptors,
+            createdAt = createdAt.some
           )
         )
     }
@@ -111,6 +123,7 @@ package object v1 {
         technology  <- convertItemTechnologyFromV1(event.catalogItem.technology)
         uuid        <- event.catalogItem.id.toUUID.toEither
         producerId  <- event.catalogItem.producerId.toUUID.toEither
+        createdAt   <- event.catalogItem.createdAt.traverse(_.toOffsetDateTime).toEither
       } yield ClonedCatalogItemAdded(catalogItem =
         CatalogItem(
           id = uuid,
@@ -119,7 +132,8 @@ package object v1 {
           description = event.catalogItem.description,
           technology = technology,
           attributes = attributes,
-          descriptors = descriptors
+          descriptors = descriptors,
+          createdAt = createdAt.getOrElse(defaultCreatedAt)
         )
       )
 
@@ -130,6 +144,7 @@ package object v1 {
     event => {
       for {
         descriptors <- convertDescriptorsToV1(event.catalogItem.descriptors)
+        createdAt   <- event.catalogItem.createdAt.asFormattedString.toEither
       } yield ClonedCatalogItemV1AddedV1
         .of(
           CatalogItemV1(
@@ -139,7 +154,8 @@ package object v1 {
             description = event.catalogItem.description,
             technology = convertItemTechnologyToV1(event.catalogItem.technology),
             attributes = convertAttributesToV1(event.catalogItem.attributes),
-            descriptors = descriptors
+            descriptors = descriptors,
+            createdAt = createdAt.some
           )
         )
     }
@@ -153,6 +169,7 @@ package object v1 {
         technology  <- convertItemTechnologyFromV1(event.catalogItem.technology)
         uuid        <- event.catalogItem.id.toUUID.toEither
         producerId  <- event.catalogItem.producerId.toUUID.toEither
+        createdAt   <- event.catalogItem.createdAt.traverse(_.toOffsetDateTime).toEither
       } yield CatalogItemWithDescriptorsDeleted(
         catalogItem = CatalogItem(
           id = uuid,
@@ -161,7 +178,8 @@ package object v1 {
           description = event.catalogItem.description,
           technology = technology,
           attributes = attributes,
-          descriptors = descriptors
+          descriptors = descriptors,
+          createdAt = createdAt.getOrElse(defaultCreatedAt)
         ),
         descriptorId = event.descriptorId
       )
@@ -173,6 +191,7 @@ package object v1 {
     event => {
       for {
         descriptors <- convertDescriptorsToV1(event.catalogItem.descriptors)
+        createdAt   <- event.catalogItem.createdAt.asFormattedString.toEither
       } yield CatalogItemWithDescriptorsDeletedV1
         .of(
           CatalogItemV1(
@@ -182,7 +201,8 @@ package object v1 {
             description = event.catalogItem.description,
             technology = convertItemTechnologyToV1(event.catalogItem.technology),
             attributes = convertAttributesToV1(event.catalogItem.attributes),
-            descriptors = descriptors
+            descriptors = descriptors,
+            createdAt = createdAt.some
           ),
           descriptorId = event.descriptorId
         )
@@ -205,6 +225,7 @@ package object v1 {
         technology  <- convertItemTechnologyFromV1(event.catalogItem.technology)
         uuid        <- event.catalogItem.id.toUUID.toEither
         producerId  <- event.catalogItem.producerId.toUUID.toEither
+        createdAt   <- event.catalogItem.createdAt.traverse(_.toOffsetDateTime).toEither
       } yield CatalogItemUpdated(catalogItem =
         CatalogItem(
           id = uuid,
@@ -213,7 +234,8 @@ package object v1 {
           description = event.catalogItem.description,
           technology = technology,
           attributes = attributes,
-          descriptors = descriptors
+          descriptors = descriptors,
+          createdAt = createdAt.getOrElse(defaultCreatedAt)
         )
       )
 
@@ -224,6 +246,7 @@ package object v1 {
     event => {
       for {
         descriptors <- convertDescriptorsToV1(event.catalogItem.descriptors)
+        createdAt   <- event.catalogItem.createdAt.asFormattedString.toEither
       } yield CatalogItemV1UpdatedV1
         .of(
           CatalogItemV1(
@@ -233,7 +256,8 @@ package object v1 {
             description = event.catalogItem.description,
             technology = convertItemTechnologyToV1(event.catalogItem.technology),
             attributes = convertAttributesToV1(event.catalogItem.attributes),
-            descriptors = descriptors
+            descriptors = descriptors,
+            createdAt = createdAt.some
           )
         )
     }

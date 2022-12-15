@@ -147,7 +147,7 @@ object PersistentSerializationSpec {
       uploadDate = uploadDate
     ),
     CatalogDocumentV1(
-      id = id.toString(),
+      id = id.toString,
       name = name,
       contentType = contentType,
       path = path,
@@ -170,17 +170,19 @@ object PersistentSerializationSpec {
     Gen.oneOf((Automatic, AUTOMATIC), (Manual, MANUAL))
 
   val catalogDescriptorGen: Gen[(CatalogDescriptor, CatalogDescriptorV1)] = for {
-    id                       <- Gen.uuid
-    version                  <- stringGen
-    description              <- Gen.alphaNumStr.map(Option(_).filter(_.nonEmpty))
-    (interface, interfaceV1) <- catalogDocumentGen.map { case (a, b) => (Option(a), Option(b)) }
-    (docs, docsV1)           <- listOf(catalogDocumentGen).map(_.separate)
-    (state, stateV1)         <- catalogDescriptorStateGen
-    audience                 <- listOf(stringGen)
-    voucherLifespan          <- Gen.posNum[Int]
-    dailyCallsPerConsumer    <- Gen.posNum[Int]
-    dailyCallsTotal          <- Gen.posNum[Int]
-    (policy, policyV1)       <- agreementApprovalPolicyGen
+    id                           <- Gen.uuid
+    version                      <- stringGen
+    description                  <- Gen.alphaNumStr.map(Option(_).filter(_.nonEmpty))
+    (interface, interfaceV1)     <- catalogDocumentGen.map { case (a, b) => (Option(a), Option(b)) }
+    (docs, docsV1)               <- listOf(catalogDocumentGen).map(_.separate)
+    (state, stateV1)             <- catalogDescriptorStateGen
+    audience                     <- listOf(stringGen)
+    voucherLifespan              <- Gen.posNum[Int]
+    dailyCallsPerConsumer        <- Gen.posNum[Int]
+    dailyCallsTotal              <- Gen.posNum[Int]
+    (policy, policyV1)           <- agreementApprovalPolicyGen
+    (createdAt, createdAtV1)     <- offsetDatetimeGen
+    (activatedAt, activatedAtV1) <- offsetDatetimeGen
   } yield (
     CatalogDescriptor(
       id = id,
@@ -193,10 +195,12 @@ object PersistentSerializationSpec {
       voucherLifespan = voucherLifespan,
       dailyCallsPerConsumer = dailyCallsPerConsumer,
       dailyCallsTotal = dailyCallsTotal,
-      agreementApprovalPolicy = policy.some
+      agreementApprovalPolicy = policy.some,
+      createdAt = createdAt,
+      activatedAt = if (state == Draft) None else activatedAt.some
     ),
     CatalogDescriptorV1(
-      id = id.toString(),
+      id = id.toString,
       version = version,
       description = description,
       docs = docsV1,
@@ -206,21 +210,24 @@ object PersistentSerializationSpec {
       voucherLifespan = voucherLifespan,
       dailyCallsPerConsumer = dailyCallsPerConsumer,
       dailyCallsTotal = dailyCallsTotal,
-      agreementApprovalPolicy = policyV1.some
+      agreementApprovalPolicy = policyV1.some,
+      createdAt = createdAtV1.some,
+      activatedAt = if (stateV1.isDraft) None else activatedAtV1.some
     )
   )
 
   val catalogItemGen: Gen[(CatalogItem, CatalogItemV1)] = for {
-    id             <- Gen.uuid
-    producerId     <- Gen.uuid
-    name           <- stringGen
-    description    <- stringGen
-    (tech, techV1) <- catalogItemTechnologyGen
-    (attr, attrV1) <- catalogAttributesGen
-    (desc, descV1) <- listOf(catalogDescriptorGen).map(_.separate)
+    id                       <- Gen.uuid
+    producerId               <- Gen.uuid
+    name                     <- stringGen
+    description              <- stringGen
+    (tech, techV1)           <- catalogItemTechnologyGen
+    (attr, attrV1)           <- catalogAttributesGen
+    (desc, descV1)           <- listOf(catalogDescriptorGen).map(_.separate)
+    (createdAt, createdAtV1) <- offsetDatetimeGen
   } yield (
-    CatalogItem(id, producerId, name, description, tech, attr, desc),
-    CatalogItemV1(id.toString(), producerId.toString(), name, description, techV1, attrV1, descV1)
+    CatalogItem(id, producerId, name, description, tech, attr, desc, createdAt),
+    CatalogItemV1(id.toString, producerId.toString, name, description, techV1, attrV1, descV1, createdAtV1.some)
   )
 
   val stateGen: Gen[(State, StateV1)] =
