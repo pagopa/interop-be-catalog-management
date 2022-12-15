@@ -75,9 +75,9 @@ object JsonFormats {
       }
     }
 
-  implicit val cdFormat: RootJsonFormat[CatalogDescriptor]  = jsonFormat11(CatalogDescriptor.apply)
+  implicit val cdFormat: RootJsonFormat[CatalogDescriptor]  = jsonFormat13(CatalogDescriptor.apply)
   implicit val casFormat: RootJsonFormat[CatalogAttributes] = jsonFormat3(CatalogAttributes.apply)
-  implicit val ciFormat: RootJsonFormat[CatalogItem]        = jsonFormat7(CatalogItem.apply)
+  implicit val ciFormat: RootJsonFormat[CatalogItem]        = jsonFormat8(CatalogItem.apply)
 
   implicit val ciaFormat: RootJsonFormat[CatalogItemAdded]        = jsonFormat1(CatalogItemAdded.apply)
   implicit val cciaFormat: RootJsonFormat[ClonedCatalogItemAdded] = jsonFormat1(ClonedCatalogItemAdded.apply)

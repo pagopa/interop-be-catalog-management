@@ -15,6 +15,7 @@ message CatalogItemV1 {
   required CatalogItemTechnologyV1 technology = 5;
   required CatalogAttributesV1  attributes = 6;
   repeated CatalogDescriptorV1 descriptors = 7;
+  optional int64 createdAt = 8;
 }
 
 message CatalogAttributeValueV1 {
@@ -45,6 +46,8 @@ message CatalogDescriptorV1 {
   required int32 dailyCallsPerConsumer = 9;
   required int32 dailyCallsTotal = 10;
   optional AgreementApprovalPolicyV1 agreementApprovalPolicy = 11;
+  optional int64 createdAt = 12;
+  optional int64 activatedAt = 13;
 }
 
 message CatalogDocumentV1 {

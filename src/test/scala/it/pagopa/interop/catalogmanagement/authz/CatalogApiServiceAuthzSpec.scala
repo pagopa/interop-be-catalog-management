@@ -7,32 +7,20 @@ import akka.http.scaladsl.server.directives.FileInfo
 import it.pagopa.interop.catalogmanagement.api.impl.EServiceApiMarshallerImpl._
 import it.pagopa.interop.catalogmanagement.api.impl.EServiceApiServiceImpl
 import it.pagopa.interop.catalogmanagement.model.AgreementApprovalPolicy.AUTOMATIC
-import it.pagopa.interop.catalogmanagement.model.{
-  Attributes,
-  EServiceDescriptorSeed,
-  EServiceDescriptorState,
-  EServiceSeed,
-  EServiceTechnology,
-  UpdateEServiceDescriptorDocumentSeed,
-  UpdateEServiceDescriptorSeed,
-  UpdateEServiceSeed
-}
 import it.pagopa.interop.catalogmanagement.model.persistence.Command
+import it.pagopa.interop.catalogmanagement.model._
 import it.pagopa.interop.catalogmanagement.server.impl.Main.catalogPersistentEntity
 import it.pagopa.interop.catalogmanagement.service.impl.CatalogFileManagerImpl
 import it.pagopa.interop.catalogmanagement.util.{AuthorizedRoutes, ClusteredScalatestRouteTest}
-import it.pagopa.interop.commons.utils.service.UUIDSupplier
+import it.pagopa.interop.commons.files.service.FileManager
+import org.scalatest.BeforeAndAfterAll
 import org.scalatest.wordspec.AnyWordSpecLike
 
 import java.io.File
+import java.time.OffsetDateTime
 import java.util.UUID
-import it.pagopa.interop.commons.files.service.FileManager
-import org.scalatest.BeforeAndAfterAll
-
-import scala.concurrent.ExecutionContextExecutor
-import java.util.concurrent.Executors
-import scala.concurrent.ExecutionContext
-import java.util.concurrent.ExecutorService
+import java.util.concurrent.{ExecutorService, Executors}
+import scala.concurrent.{ExecutionContext, ExecutionContextExecutor}
 
 class CatalogApiServiceAuthzSpec extends AnyWordSpecLike with BeforeAndAfterAll with ClusteredScalatestRouteTest {
 
@@ -46,9 +34,8 @@ class CatalogApiServiceAuthzSpec extends AnyWordSpecLike with BeforeAndAfterAll 
       testTypedSystem,
       testAkkaSharding,
       testPersistentEntity,
-      new UUIDSupplier {
-        override def get(): UUID = UUID.randomUUID()
-      },
+      () => UUID.randomUUID(),
+      () => OffsetDateTime.now(),
       new CatalogFileManagerImpl(FileManager.get(FileManager.File)(blockingEc))
     )
 

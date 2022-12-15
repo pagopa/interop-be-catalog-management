@@ -24,11 +24,12 @@ import it.pagopa.interop.commons.logging.{CanLogContextFields, ContextFieldsToLo
 import it.pagopa.interop.commons.utils.AkkaUtils
 import it.pagopa.interop.commons.utils.TypeConversions.{EitherOps, OptionOps}
 import it.pagopa.interop.commons.utils.errors.GenericComponentErrors.OperationForbidden
-import it.pagopa.interop.commons.utils.service.UUIDSupplier
+import it.pagopa.interop.commons.utils.service.{OffsetDateTimeSupplier, UUIDSupplier}
 import cats.implicits._
 
 import java.io.File
 import java.nio.file.Paths
+import java.time.OffsetDateTime
 import scala.concurrent.duration.Duration
 import scala.concurrent.{Await, ExecutionContext, Future}
 import scala.util.{Failure, Success}
@@ -38,6 +39,7 @@ class EServiceApiServiceImpl(
   sharding: ClusterSharding,
   entity: Entity[Command, ShardingEnvelope[Command]],
   uuidSupplier: UUIDSupplier,
+  offsetDateTimeSupplier: OffsetDateTimeSupplier,
   catalogFileManager: CatalogFileManager
 )(implicit ec: ExecutionContext)
     extends EServiceApiService {
@@ -73,7 +75,7 @@ class EServiceApiServiceImpl(
 
     val result: Future[StatusReply[CatalogItem]] =
       for {
-        catalogItem <- CatalogItem.create(eServiceSeed, uuidSupplier)
+        catalogItem <- CatalogItem.create(eServiceSeed, uuidSupplier, offsetDateTimeSupplier)
         shard = getShard(catalogItem.id.toString)
         added <- getCommander(shard).ask(ref => AddCatalogItem(catalogItem, ref))
       } yield added
@@ -485,7 +487,9 @@ class EServiceApiServiceImpl(
         dailyCallsPerConsumer = eServiceDescriptorSeed.dailyCallsPerConsumer,
         dailyCallsTotal = eServiceDescriptorSeed.dailyCallsTotal,
         agreementApprovalPolicy =
-          PersistentAgreementApprovalPolicy.fromApi(eServiceDescriptorSeed.agreementApprovalPolicy).some
+          PersistentAgreementApprovalPolicy.fromApi(eServiceDescriptorSeed.agreementApprovalPolicy).some,
+        createdAt = offsetDateTimeSupplier.get(),
+        activatedAt = None
       )
       _ <- commander.ask(ref => AddCatalogItemDescriptor(current.id.toString, createdCatalogDescriptor, ref))
     } yield createdCatalogDescriptor
@@ -690,7 +694,10 @@ class EServiceApiServiceImpl(
       descriptor: CatalogDescriptor,
       updateEServiceDescriptorState: CatalogDescriptorState
     ): Either[ValidationError, CatalogDescriptor] = {
-      Right(descriptor.copy(state = updateEServiceDescriptorState))
+      val activatedAt: Option[OffsetDateTime] =
+        if (descriptor.state == Draft && updateEServiceDescriptorState == Published) offsetDateTimeSupplier.get().some
+        else descriptor.activatedAt
+      Right(descriptor.copy(state = updateEServiceDescriptorState, activatedAt = activatedAt))
     }
 
     for {
@@ -849,7 +856,9 @@ class EServiceApiServiceImpl(
         voucherLifespan = descriptorToClone.voucherLifespan,
         dailyCallsPerConsumer = descriptorToClone.dailyCallsPerConsumer,
         dailyCallsTotal = descriptorToClone.dailyCallsTotal,
-        agreementApprovalPolicy = descriptorToClone.agreementApprovalPolicy
+        agreementApprovalPolicy = descriptorToClone.agreementApprovalPolicy,
+        createdAt = offsetDateTimeSupplier.get(),
+        activatedAt = None
       )
     } yield CatalogItem(
       id = uuidSupplier.get(),
@@ -858,7 +867,8 @@ class EServiceApiServiceImpl(
       description = serviceToClone.description,
       technology = serviceToClone.technology,
       attributes = serviceToClone.attributes,
-      descriptors = Seq(descriptor)
+      descriptors = Seq(descriptor),
+      createdAt = offsetDateTimeSupplier.get()
     )
   }
 

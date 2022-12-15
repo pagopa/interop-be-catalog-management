@@ -4,7 +4,7 @@ import cats.implicits._
 import it.pagopa.interop.catalogmanagement.error.CatalogManagementErrors.InvalidAttribute
 import it.pagopa.interop.catalogmanagement.service.CatalogFileManager
 import it.pagopa.interop.commons.utils.TypeConversions._
-import it.pagopa.interop.commons.utils.service.UUIDSupplier
+import it.pagopa.interop.commons.utils.service.{OffsetDateTimeSupplier, UUIDSupplier}
 
 import java.util.UUID
 import scala.concurrent.{ExecutionContext, Future}
@@ -173,7 +173,11 @@ object CatalogAdapters {
   }
 
   implicit class CatalogItemObjectWrapper(private val p: CatalogItem.type) extends AnyVal {
-    def create(seed: EServiceSeed, uuidSupplier: UUIDSupplier): Future[CatalogItem] = CatalogAttributes
+    def create(
+      seed: EServiceSeed,
+      uuidSupplier: UUIDSupplier,
+      offsetDateTimeSupplier: OffsetDateTimeSupplier
+    ): Future[CatalogItem] = CatalogAttributes
       .fromApi(seed.attributes)
       .map(attributes =>
         CatalogItem(
@@ -183,7 +187,8 @@ object CatalogAdapters {
           description = seed.description,
           technology = CatalogItemTechnology.fromApi(seed.technology),
           attributes = attributes,
-          descriptors = Seq.empty[CatalogDescriptor]
+          descriptors = Seq.empty[CatalogDescriptor],
+          createdAt = offsetDateTimeSupplier.get()
         )
       )
       .toFuture

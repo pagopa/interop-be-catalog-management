@@ -18,18 +18,20 @@ import it.pagopa.interop.catalogmanagement.server.Controller
 import it.pagopa.interop.catalogmanagement.server.impl.Main.behaviorFactory
 import it.pagopa.interop.catalogmanagement.service.CatalogFileManager
 import it.pagopa.interop.catalogmanagement.{AdminMockAuthenticator, SpecConfiguration, SpecHelper}
-import it.pagopa.interop.commons.utils.service.UUIDSupplier
+import it.pagopa.interop.commons.utils.service.{OffsetDateTimeSupplier, UUIDSupplier}
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.wordspec.AnyWordSpecLike
 
+import java.time.OffsetDateTime
 import java.util.UUID
 import scala.concurrent.duration.{Duration, DurationInt}
 import scala.concurrent.{Await, ExecutionContextExecutor, Future}
 
 object CatalogManagementServiceSpec extends MockFactory {
 
-  val mockUUIDSupplier: UUIDSupplier      = mock[UUIDSupplier]
-  val mockFileManager: CatalogFileManager = mock[CatalogFileManager]
+  val mockUUIDSupplier: UUIDSupplier                     = mock[UUIDSupplier]
+  val mockOffsetDateTimeSupplier: OffsetDateTimeSupplier = mock[OffsetDateTimeSupplier]
+  val mockFileManager: CatalogFileManager                = mock[CatalogFileManager]
 }
 
 /** Local integration test.
@@ -67,7 +69,14 @@ class CatalogManagementServiceSpec
     sharding.init(persistentEntity)
 
     val partyApi = new EServiceApi(
-      new EServiceApiServiceImpl(system, sharding, persistentEntity, mockUUIDSupplier, mockFileManager),
+      new EServiceApiServiceImpl(
+        system,
+        sharding,
+        persistentEntity,
+        mockUUIDSupplier,
+        mockOffsetDateTimeSupplier,
+        mockFileManager
+      ),
       payloadMarshaller,
       wrappingDirective
     )
@@ -239,6 +248,8 @@ class CatalogManagementServiceSpec
       val eService     = createEService(eServiceUuid.toString)
       val descriptorId = UUID.randomUUID()
       val descriptor   = createEServiceDescriptor(eServiceUuid.toString, descriptorId)
+
+      (() => mockOffsetDateTimeSupplier.get()).expects().returning(OffsetDateTime.now()).repeat(2)
 
       val response = Await.result(
         Http().singleRequest(

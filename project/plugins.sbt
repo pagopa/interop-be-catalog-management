@@ -10,6 +10,10 @@ addSbtPlugin("org.scalameta" % "sbt-scalafmt" % "2.4.6")
 
 addSbtPlugin("com.thesamet" % "sbt-protoc" % "1.0.6")
 
+addSbtPlugin("com.codecommit" % "sbt-github-packages" % "0.5.3")
+
+addSbtPlugin("io.chrisdavenport" % "sbt-no-publish" % "0.1.0")
+
 libraryDependencies += "com.thesamet.scalapb" %% "compilerplugin" % "0.11.11"
 
 addSbtPlugin("com.codecommit" % "sbt-github-actions" % "0.14.2")

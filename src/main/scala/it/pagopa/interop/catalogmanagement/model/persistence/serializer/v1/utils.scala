@@ -62,7 +62,7 @@ object utils {
     verified  <- attributes.verified.traverse(convertAttributeFromV1)
   } yield CatalogAttributes(certified = certified, declared = declared, verified = verified)
 
-  def convertDescriptorToV1(descriptor: CatalogDescriptor): Either[RuntimeException, CatalogDescriptorV1] =
+  def convertDescriptorToV1(descriptor: CatalogDescriptor): Either[Throwable, CatalogDescriptorV1] = {
     Right(
       CatalogDescriptorV1(
         id = descriptor.id.toString,
@@ -95,20 +95,22 @@ object utils {
         voucherLifespan = descriptor.voucherLifespan,
         dailyCallsPerConsumer = descriptor.dailyCallsPerConsumer,
         dailyCallsTotal = descriptor.dailyCallsTotal,
-        agreementApprovalPolicy = descriptor.agreementApprovalPolicy.map(convertAgreementApprovalPolicyToV1)
+        agreementApprovalPolicy = descriptor.agreementApprovalPolicy.map(convertAgreementApprovalPolicyToV1),
+        createdAt = descriptor.createdAt.toMillis.some,
+        activatedAt = descriptor.activatedAt.map(_.toMillis)
       )
     )
-
-  def convertDescriptorsToV1(
-    descriptors: Seq[CatalogDescriptor]
-  ): Either[RuntimeException, Seq[CatalogDescriptorV1]] = {
-    descriptors.traverse { convertDescriptorToV1 }
   }
+
+  def convertDescriptorsToV1(descriptors: Seq[CatalogDescriptor]): Either[Throwable, Seq[CatalogDescriptorV1]] =
+    descriptors.traverse(convertDescriptorToV1)
 
   def convertDescriptorFromV1(ver1: CatalogDescriptorV1): Either[Throwable, CatalogDescriptor] =
     for {
       state                   <- convertDescriptorStateFromV1(ver1.state)
       agreementApprovalPolicy <- ver1.agreementApprovalPolicy.traverse(convertAgreementApprovalPolicyFromV1)
+      createdAt               <- ver1.createdAt.traverse(_.toOffsetDateTime.toEither)
+      activatedAt             <- ver1.activatedAt.traverse(_.toOffsetDateTime.toEither)
     } yield CatalogDescriptor(
       id = UUID.fromString(ver1.id),
       version = ver1.version,
@@ -140,7 +142,9 @@ object utils {
       voucherLifespan = ver1.voucherLifespan,
       dailyCallsPerConsumer = ver1.dailyCallsPerConsumer,
       dailyCallsTotal = ver1.dailyCallsTotal,
-      agreementApprovalPolicy = agreementApprovalPolicy
+      agreementApprovalPolicy = agreementApprovalPolicy,
+      createdAt = createdAt.getOrElse(defaultCreatedAt),
+      activatedAt = if (state == Draft) None else activatedAt orElse defaultActivatedAt.some
     )
 
   def convertDescriptorsFromV1(descriptors: Seq[CatalogDescriptorV1]): Either[Throwable, Seq[CatalogDescriptor]] = {
