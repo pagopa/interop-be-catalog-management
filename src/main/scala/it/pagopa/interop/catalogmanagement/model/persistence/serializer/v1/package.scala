@@ -1,7 +1,7 @@
 package it.pagopa.interop.catalogmanagement.model.persistence.serializer
 
 import cats.implicits._
-import it.pagopa.interop.commons.utils.TypeConversions.{OffsetDateTimeOps, StringOps}
+import it.pagopa.interop.commons.utils.TypeConversions.{OffsetDateTimeOps, StringOps, LongOps}
 import it.pagopa.interop.catalogmanagement.model._
 import it.pagopa.interop.catalogmanagement.model.persistence._
 import it.pagopa.interop.catalogmanagement.model.persistence.serializer.v1.catalog_item.{
@@ -28,7 +28,7 @@ package object v1 {
           technology  <- convertItemTechnologyFromV1(itemsV1.value.technology)
           uuid        <- itemsV1.value.id.toUUID.toEither
           producerId  <- itemsV1.value.producerId.toUUID.toEither
-          createdAt   <- itemsV1.value.createdAt.traverse(_.toOffsetDateTime).toEither
+          createdAt   <- itemsV1.value.createdAt.traverse(_.toOffsetDateTime.toEither)
         } yield itemsV1.key -> CatalogItem(
           id = uuid,
           producerId = producerId,
@@ -48,7 +48,6 @@ package object v1 {
       val itemsV1: Either[Throwable, Seq[CatalogItemsV1]] = state.items.toSeq.traverse { case (key, catalogItem) =>
         for {
           descriptors <- convertDescriptorsToV1(catalogItem.descriptors)
-          createdAt   <- catalogItem.createdAt.asFormattedString.toEither
         } yield CatalogItemsV1(
           key,
           CatalogItemV1(
@@ -59,7 +58,7 @@ package object v1 {
             technology = convertItemTechnologyToV1(catalogItem.technology),
             attributes = convertAttributesToV1(catalogItem.attributes),
             descriptors = descriptors,
-            createdAt = createdAt.some
+            createdAt = catalogItem.createdAt.toMillis.some
           )
         )
 
@@ -98,7 +97,6 @@ package object v1 {
     event => {
       for {
         descriptors <- convertDescriptorsToV1(event.catalogItem.descriptors)
-        createdAt   <- event.catalogItem.createdAt.asFormattedString.toEither
       } yield CatalogItemV1AddedV1
         .of(
           CatalogItemV1(
@@ -109,7 +107,7 @@ package object v1 {
             technology = convertItemTechnologyToV1(event.catalogItem.technology),
             attributes = convertAttributesToV1(event.catalogItem.attributes),
             descriptors = descriptors,
-            createdAt = createdAt.some
+            createdAt = event.catalogItem.createdAt.toMillis.some
           )
         )
     }
@@ -144,7 +142,6 @@ package object v1 {
     event => {
       for {
         descriptors <- convertDescriptorsToV1(event.catalogItem.descriptors)
-        createdAt   <- event.catalogItem.createdAt.asFormattedString.toEither
       } yield ClonedCatalogItemV1AddedV1
         .of(
           CatalogItemV1(
@@ -155,7 +152,7 @@ package object v1 {
             technology = convertItemTechnologyToV1(event.catalogItem.technology),
             attributes = convertAttributesToV1(event.catalogItem.attributes),
             descriptors = descriptors,
-            createdAt = createdAt.some
+            createdAt = event.catalogItem.createdAt.toMillis.some
           )
         )
     }
@@ -191,7 +188,6 @@ package object v1 {
     event => {
       for {
         descriptors <- convertDescriptorsToV1(event.catalogItem.descriptors)
-        createdAt   <- event.catalogItem.createdAt.asFormattedString.toEither
       } yield CatalogItemWithDescriptorsDeletedV1
         .of(
           CatalogItemV1(
@@ -202,7 +198,7 @@ package object v1 {
             technology = convertItemTechnologyToV1(event.catalogItem.technology),
             attributes = convertAttributesToV1(event.catalogItem.attributes),
             descriptors = descriptors,
-            createdAt = createdAt.some
+            createdAt = event.catalogItem.createdAt.toMillis.some
           ),
           descriptorId = event.descriptorId
         )
@@ -246,7 +242,6 @@ package object v1 {
     event => {
       for {
         descriptors <- convertDescriptorsToV1(event.catalogItem.descriptors)
-        createdAt   <- event.catalogItem.createdAt.asFormattedString.toEither
       } yield CatalogItemV1UpdatedV1
         .of(
           CatalogItemV1(
@@ -257,7 +252,7 @@ package object v1 {
             technology = convertItemTechnologyToV1(event.catalogItem.technology),
             attributes = convertAttributesToV1(event.catalogItem.attributes),
             descriptors = descriptors,
-            createdAt = createdAt.some
+            createdAt = event.catalogItem.createdAt.toMillis.some
           )
         )
     }

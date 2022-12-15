@@ -18,8 +18,8 @@ import munit.ScalaCheckSuite
 import org.scalacheck.Gen
 import org.scalacheck.Prop.forAll
 
-import java.time.OffsetDateTime
 import java.time.format.DateTimeFormatter
+import java.time.{OffsetDateTime, ZoneOffset}
 import scala.reflect.runtime.universe.{TypeTag, typeOf}
 
 class PersistentSerializationSpec extends ScalaCheckSuite with DiffxAssertions {
@@ -84,11 +84,19 @@ object PersistentSerializationSpec {
     s <- Gen.containerOfN[List, Char](n, Gen.alphaNumChar)
   } yield s.foldLeft("")(_ + _)
 
-  val offsetDatetimeGen: Gen[(OffsetDateTime, String)] = for {
+  val offsetDatetimeStringGen: Gen[(OffsetDateTime, String)] = for {
     n <- Gen.chooseNum(0, 10000L)
     now = OffsetDateTime.now()
     time <- Gen.oneOf(now.minusSeconds(n), now.plusSeconds(n))
   } yield (time, DateTimeFormatter.ISO_OFFSET_DATE_TIME.format(time))
+
+  val offsetDatetimeLongGen: Gen[(OffsetDateTime, Long)] = for {
+    n <- Gen.chooseNum(0, 10000L)
+    now      = OffsetDateTime.now(ZoneOffset.UTC)
+    // Truncate to millis precision
+    nowMills = now.withNano(now.getNano - (now.getNano % 1000000))
+    time <- Gen.oneOf(nowMills.minusSeconds(n), nowMills.plusSeconds(n))
+  } yield (time, time.toInstant.toEpochMilli)
 
   def listOf[T](gen: => Gen[T]): Gen[List[T]] = for {
     n    <- Gen.chooseNum(0, 10)
@@ -135,7 +143,7 @@ object PersistentSerializationSpec {
     prettyName                <- stringGen
     path                      <- stringGen
     checksum                  <- stringGen
-    (uploadDate, uploadDateS) <- offsetDatetimeGen
+    (uploadDate, uploadDateS) <- offsetDatetimeStringGen
   } yield (
     CatalogDocument(
       id = id,
@@ -181,8 +189,8 @@ object PersistentSerializationSpec {
     dailyCallsPerConsumer        <- Gen.posNum[Int]
     dailyCallsTotal              <- Gen.posNum[Int]
     (policy, policyV1)           <- agreementApprovalPolicyGen
-    (createdAt, createdAtV1)     <- offsetDatetimeGen
-    (activatedAt, activatedAtV1) <- offsetDatetimeGen
+    (createdAt, createdAtV1)     <- offsetDatetimeLongGen
+    (activatedAt, activatedAtV1) <- offsetDatetimeLongGen
   } yield (
     CatalogDescriptor(
       id = id,
@@ -224,7 +232,7 @@ object PersistentSerializationSpec {
     (tech, techV1)           <- catalogItemTechnologyGen
     (attr, attrV1)           <- catalogAttributesGen
     (desc, descV1)           <- listOf(catalogDescriptorGen).map(_.separate)
-    (createdAt, createdAtV1) <- offsetDatetimeGen
+    (createdAt, createdAtV1) <- offsetDatetimeLongGen
   } yield (
     CatalogItem(id, producerId, name, description, tech, attr, desc, createdAt),
     CatalogItemV1(id.toString, producerId.toString, name, description, techV1, attrV1, descV1, createdAtV1.some)

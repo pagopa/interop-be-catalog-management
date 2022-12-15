@@ -63,45 +63,43 @@ object utils {
   } yield CatalogAttributes(certified = certified, declared = declared, verified = verified)
 
   def convertDescriptorToV1(descriptor: CatalogDescriptor): Either[Throwable, CatalogDescriptorV1] = {
-    for {
-      createdAt   <- descriptor.createdAt.asFormattedString.toEither
-      activatedAt <- descriptor.activatedAt.traverse(_.asFormattedString.toEither)
-    } yield CatalogDescriptorV1(
-      id = descriptor.id.toString,
-      version = descriptor.version,
-      description = descriptor.description,
-      docs = descriptor.docs.map { doc =>
-        CatalogDocumentV1(
-          id = doc.id.toString,
-          name = doc.name,
-          contentType = doc.contentType,
-          prettyName = doc.prettyName,
-          path = doc.path,
-          checksum = doc.checksum,
-          uploadDate = doc.uploadDate.format(DateTimeFormatter.ISO_DATE_TIME)
-        )
-      },
-      interface = descriptor.interface.map { doc =>
-        CatalogDocumentV1(
-          id = doc.id.toString,
-          name = doc.name,
-          contentType = doc.contentType,
-          prettyName = doc.prettyName,
-          path = doc.path,
-          checksum = doc.checksum,
-          uploadDate = doc.uploadDate.format(DateTimeFormatter.ISO_DATE_TIME)
-        )
-      },
-      state = convertDescriptorStateToV1(descriptor.state),
-      audience = descriptor.audience,
-      voucherLifespan = descriptor.voucherLifespan,
-      dailyCallsPerConsumer = descriptor.dailyCallsPerConsumer,
-      dailyCallsTotal = descriptor.dailyCallsTotal,
-      agreementApprovalPolicy = descriptor.agreementApprovalPolicy.map(convertAgreementApprovalPolicyToV1),
-      createdAt = createdAt.some,
-      activatedAt = activatedAt
+    Right(
+      CatalogDescriptorV1(
+        id = descriptor.id.toString,
+        version = descriptor.version,
+        description = descriptor.description,
+        docs = descriptor.docs.map { doc =>
+          CatalogDocumentV1(
+            id = doc.id.toString,
+            name = doc.name,
+            contentType = doc.contentType,
+            prettyName = doc.prettyName,
+            path = doc.path,
+            checksum = doc.checksum,
+            uploadDate = doc.uploadDate.format(DateTimeFormatter.ISO_DATE_TIME)
+          )
+        },
+        interface = descriptor.interface.map { doc =>
+          CatalogDocumentV1(
+            id = doc.id.toString,
+            name = doc.name,
+            contentType = doc.contentType,
+            prettyName = doc.prettyName,
+            path = doc.path,
+            checksum = doc.checksum,
+            uploadDate = doc.uploadDate.format(DateTimeFormatter.ISO_DATE_TIME)
+          )
+        },
+        state = convertDescriptorStateToV1(descriptor.state),
+        audience = descriptor.audience,
+        voucherLifespan = descriptor.voucherLifespan,
+        dailyCallsPerConsumer = descriptor.dailyCallsPerConsumer,
+        dailyCallsTotal = descriptor.dailyCallsTotal,
+        agreementApprovalPolicy = descriptor.agreementApprovalPolicy.map(convertAgreementApprovalPolicyToV1),
+        createdAt = descriptor.createdAt.toMillis.some,
+        activatedAt = descriptor.activatedAt.map(_.toMillis)
+      )
     )
-
   }
 
   def convertDescriptorsToV1(descriptors: Seq[CatalogDescriptor]): Either[Throwable, Seq[CatalogDescriptorV1]] =
