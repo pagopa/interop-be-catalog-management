@@ -1,5 +1,6 @@
 package it.pagopa.interop.catalogmanagement.model
 
+import java.time.OffsetDateTime
 import java.util.UUID
 
 final case class CatalogItem(
@@ -9,7 +10,8 @@ final case class CatalogItem(
   description: String,
   technology: CatalogItemTechnology,
   attributes: CatalogAttributes,
-  descriptors: Seq[CatalogDescriptor]
+  descriptors: Seq[CatalogDescriptor],
+  createdAt: OffsetDateTime
 )
 
 object CatalogItem

@@ -62,7 +62,14 @@ object Main extends App with Dependencies {
       val serverBinding = for {
         jwtReader <- getJwtValidator()
         eServiceApi = new EServiceApi(
-          new EServiceApiServiceImpl(actorSystem, sharding, catalogPersistentEntity, uuidSupplier, catalogFileManager),
+          new EServiceApiServiceImpl(
+            actorSystem,
+            sharding,
+            catalogPersistentEntity,
+            uuidSupplier,
+            offsetDateTimeSupplier,
+            catalogFileManager
+          ),
           EServiceApiMarshallerImpl,
           jwtReader.OAuth2JWTValidatorAsContexts
         )

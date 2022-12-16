@@ -11,7 +11,10 @@ import akka.http.scaladsl.unmarshalling.Unmarshal
 import it.pagopa.interop.catalogmanagement.api.impl._
 import it.pagopa.interop.catalogmanagement.model.AgreementApprovalPolicy.AUTOMATIC
 import it.pagopa.interop.catalogmanagement.model._
-import it.pagopa.interop.catalogmanagement.provider.CatalogManagementServiceSpec.mockUUIDSupplier
+import it.pagopa.interop.catalogmanagement.provider.CatalogManagementServiceSpec.{
+  mockOffsetDateTimeSupplier,
+  mockUUIDSupplier
+}
 import it.pagopa.interop.commons.utils.{BEARER, USER_ROLES}
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.matchers.should.Matchers._
@@ -19,6 +22,7 @@ import org.scalatest.wordspec.AnyWordSpecLike
 import spray.json._
 
 import java.net.InetAddress
+import java.time.OffsetDateTime
 import java.util.UUID
 import scala.concurrent.Await
 import scala.concurrent.duration.Duration
@@ -36,7 +40,7 @@ trait SpecHelper extends SpecConfiguration with AnyWordSpecLike with MockFactory
     actorSystem: ActorSystem[_]
   ): EServiceDescriptor = {
     (() => mockUUIDSupplier.get()).expects().returning(descriptorId).once()
-
+    (() => mockOffsetDateTimeSupplier.get()).expects().returning(OffsetDateTime.now()).once()
     val seed = EServiceDescriptorSeed(
       audience = Seq("audience"),
       voucherLifespan = 1984,
@@ -57,7 +61,7 @@ trait SpecHelper extends SpecConfiguration with AnyWordSpecLike with MockFactory
 
   def createEService(uuid: String)(implicit actorSystem: ActorSystem[_]): EService = {
     (() => mockUUIDSupplier.get()).expects().returning(UUID.fromString(uuid)).once()
-
+    (() => mockOffsetDateTimeSupplier.get()).expects().returning(OffsetDateTime.now()).once()
     val seed = EServiceSeed(
       producerId = UUID.randomUUID(),
       name = "string",

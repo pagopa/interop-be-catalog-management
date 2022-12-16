@@ -1,5 +1,6 @@
 package it.pagopa.interop.catalogmanagement.model
 
+import java.time.OffsetDateTime
 import java.util.UUID
 
 final case class CatalogDescriptor(
@@ -13,5 +14,7 @@ final case class CatalogDescriptor(
   voucherLifespan: Int,
   dailyCallsPerConsumer: Int,
   dailyCallsTotal: Int,
-  agreementApprovalPolicy: Option[PersistentAgreementApprovalPolicy]
+  agreementApprovalPolicy: Option[PersistentAgreementApprovalPolicy],
+  createdAt: OffsetDateTime,
+  activatedAt: Option[OffsetDateTime]
 )
