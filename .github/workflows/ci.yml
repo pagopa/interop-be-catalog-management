@@ -61,7 +61,7 @@ jobs:
         run: sbt ++${{ matrix.scala }} test
 
       - name: Compress target directories
-        run: tar cf targets.tar target generated/target client/target models/target project/target
+        run: tar cf targets.tar target generated/target models/target client/target project/target
 
       - name: Upload target directories
         uses: actions/upload-artifact@v2
@@ -142,15 +142,15 @@ jobs:
       - name: Regenerating code
         run: sbt ++${{ matrix.scala }} generateCode
 
-      - name: Compile project
-        run: sbt ++${{ matrix.scala }} compile
+      - name: Publish project
+        run: sbt ++${{ matrix.scala }} publish
 
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v1
         with:
           aws-region: eu-central-1
           role-to-assume: 'arn:aws:iam::505630707203:role/interop-github-ecr-dev'
-          role-session-name: interop-be-api-gateway-${{ github.job }}
+          role-session-name: interop-be-catalog-management-${{ github.job }}
 
       - name: Login to Amazon ECR
         id: login-ecr
