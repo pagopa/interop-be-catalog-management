@@ -59,5 +59,4 @@ message CatalogItemDescriptorAddedV1 {
 message CatalogItemDescriptorUpdatedV1 {
   required string eServiceId = 1;
   required CatalogDescriptorV1 catalogDescriptor = 2;
-  repeated string serverUrls = 3;
 }

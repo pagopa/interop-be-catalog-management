@@ -374,11 +374,7 @@ package object v1 {
     event => {
       for {
         descriptor <- convertDescriptorToV1(event.catalogDescriptor)
-      } yield CatalogItemDescriptorUpdatedV1(
-        eServiceId = event.eServiceId,
-        catalogDescriptor = descriptor,
-        serverUrls = event.catalogDescriptor.serverUrls
-      )
+      } yield CatalogItemDescriptorUpdatedV1(eServiceId = event.eServiceId, catalogDescriptor = descriptor)
     }
 
   implicit def catalogItemDescriptorUpdatedV1PersistEventDeserializer

@@ -294,8 +294,7 @@ object PersistentSerializationSpec {
   val catalogItemDescriptorUpdatedGen: Gen[(CatalogItemDescriptorUpdated, CatalogItemDescriptorUpdatedV1)] = for {
     eServiceId <- stringGen
     (a, b)     <- catalogDescriptorGen
-    serverUrls <- listOf(stringGen)
-  } yield (CatalogItemDescriptorUpdated(eServiceId, a), CatalogItemDescriptorUpdatedV1(eServiceId, b, serverUrls))
+  } yield (CatalogItemDescriptorUpdated(eServiceId, a), CatalogItemDescriptorUpdatedV1(eServiceId, b))
 
   val catalogItemDocumentAddedGen: Gen[(CatalogItemDocumentAdded, CatalogItemDocumentAddedV1)] = for {
     eServiceId   <- stringGen
