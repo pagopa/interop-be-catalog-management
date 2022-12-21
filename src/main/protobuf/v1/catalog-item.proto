@@ -48,6 +48,7 @@ message CatalogDescriptorV1 {
   optional AgreementApprovalPolicyV1 agreementApprovalPolicy = 11;
   optional int64 createdAt = 12;
   optional int64 activatedAt = 13;
+  repeated string serverUrls = 14;
 }
 
 message CatalogDocumentV1 {
@@ -58,6 +59,7 @@ message CatalogDocumentV1 {
   required string checksum = 5;
   required string uploadDate = 6;
   required string prettyName = 7;
+  repeated string serverUrls = 8;
 }
 
 enum CatalogDescriptorStateV1 {

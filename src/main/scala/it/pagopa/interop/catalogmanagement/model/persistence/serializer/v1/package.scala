@@ -274,8 +274,10 @@ package object v1 {
           prettyName = event.updatedDocument.prettyName,
           path = event.updatedDocument.path,
           checksum = event.updatedDocument.checksum,
-          uploadDate = uploadDate
-        )
+          uploadDate = uploadDate,
+          serverUrls = event.updatedDocument.serverUrls.toList
+        ),
+        serverUrls = event.updatedDocument.serverUrls.toList
       )
     }
 
@@ -295,7 +297,8 @@ package object v1 {
           prettyName = event.updatedDocument.prettyName,
           path = event.updatedDocument.path,
           checksum = event.updatedDocument.checksum,
-          uploadDate = uploadDate
+          uploadDate = uploadDate,
+          serverUrls = event.serverUrls
         )
       )
     }
@@ -315,7 +318,8 @@ package object v1 {
           prettyName = event.document.prettyName,
           path = event.document.path,
           checksum = event.document.checksum,
-          uploadDate = uploadDate
+          uploadDate = uploadDate,
+          serverUrls = event.serverUrls
         ),
         isInterface = event.isInterface
       )
@@ -337,9 +341,11 @@ package object v1 {
           prettyName = event.document.prettyName,
           path = event.document.path,
           checksum = event.document.checksum,
-          uploadDate = uploadDate
+          uploadDate = uploadDate,
+          serverUrls = event.document.serverUrls.toList
         ),
-        isInterface = event.isInterface
+        isInterface = event.isInterface,
+        serverUrls = event.document.serverUrls.toList
       )
     }
 

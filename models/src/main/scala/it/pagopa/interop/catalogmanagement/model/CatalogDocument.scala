@@ -10,5 +10,6 @@ final case class CatalogDocument(
   prettyName: String,
   path: String,
   checksum: String,
-  uploadDate: OffsetDateTime
+  uploadDate: OffsetDateTime,
+  serverUrls: List[String]
 )

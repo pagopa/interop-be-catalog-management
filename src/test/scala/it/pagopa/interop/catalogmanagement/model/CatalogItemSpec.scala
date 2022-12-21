@@ -40,7 +40,8 @@ class CatalogItemSpec extends AnyWordSpecLike with Matchers {
       dailyCallsPerConsumer = 10,
       agreementApprovalPolicy = Some(Automatic),
       createdAt = OffsetDateTime.now(),
-      activatedAt = None
+      activatedAt = None,
+      serverUrls = List("a", "b")
     )
 
   private[this] def descriptorDocumentGen(id: UUID = UUID.randomUUID()) =
@@ -51,7 +52,8 @@ class CatalogItemSpec extends AnyWordSpecLike with Matchers {
       path = "",
       checksum = "",
       uploadDate = OffsetDateTime.now(),
-      prettyName = "fake"
+      prettyName = "fake",
+      serverUrls = List("a", "b")
     )
 
   "a CatalogItem" should {

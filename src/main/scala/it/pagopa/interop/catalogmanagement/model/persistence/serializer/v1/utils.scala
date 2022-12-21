@@ -76,7 +76,8 @@ object utils {
             prettyName = doc.prettyName,
             path = doc.path,
             checksum = doc.checksum,
-            uploadDate = doc.uploadDate.format(DateTimeFormatter.ISO_DATE_TIME)
+            uploadDate = doc.uploadDate.format(DateTimeFormatter.ISO_DATE_TIME),
+            serverUrls = descriptor.serverUrls
           )
         },
         interface = descriptor.interface.map { doc =>
@@ -87,7 +88,8 @@ object utils {
             prettyName = doc.prettyName,
             path = doc.path,
             checksum = doc.checksum,
-            uploadDate = doc.uploadDate.format(DateTimeFormatter.ISO_DATE_TIME)
+            uploadDate = doc.uploadDate.format(DateTimeFormatter.ISO_DATE_TIME),
+            serverUrls = descriptor.serverUrls
           )
         },
         state = convertDescriptorStateToV1(descriptor.state),
@@ -97,7 +99,8 @@ object utils {
         dailyCallsTotal = descriptor.dailyCallsTotal,
         agreementApprovalPolicy = descriptor.agreementApprovalPolicy.map(convertAgreementApprovalPolicyToV1),
         createdAt = descriptor.createdAt.toMillis.some,
-        activatedAt = descriptor.activatedAt.map(_.toMillis)
+        activatedAt = descriptor.activatedAt.map(_.toMillis),
+        serverUrls = descriptor.serverUrls
       )
     )
   }
@@ -123,7 +126,8 @@ object utils {
           prettyName = doc.prettyName,
           path = doc.path,
           checksum = doc.checksum,
-          uploadDate = OffsetDateTime.parse(doc.uploadDate, DateTimeFormatter.ISO_DATE_TIME)
+          uploadDate = OffsetDateTime.parse(doc.uploadDate, DateTimeFormatter.ISO_DATE_TIME),
+          serverUrls = doc.serverUrls.toList
         )
       },
       docs = ver1.docs.map { doc =>
@@ -134,7 +138,8 @@ object utils {
           prettyName = doc.prettyName,
           path = doc.path,
           checksum = doc.checksum,
-          uploadDate = OffsetDateTime.parse(doc.uploadDate, DateTimeFormatter.ISO_DATE_TIME)
+          uploadDate = OffsetDateTime.parse(doc.uploadDate, DateTimeFormatter.ISO_DATE_TIME),
+          serverUrls = doc.serverUrls.toList
         )
       },
       state = state,
@@ -144,7 +149,8 @@ object utils {
       dailyCallsTotal = ver1.dailyCallsTotal,
       agreementApprovalPolicy = agreementApprovalPolicy,
       createdAt = createdAt.getOrElse(defaultCreatedAt),
-      activatedAt = if (state == Draft) None else activatedAt orElse defaultActivatedAt.some
+      activatedAt = if (state == Draft) None else activatedAt orElse defaultActivatedAt.some,
+      serverUrls = ver1.serverUrls.toList
     )
 
   def convertDescriptorsFromV1(descriptors: Seq[CatalogDescriptorV1]): Either[Throwable, Seq[CatalogDescriptor]] = {

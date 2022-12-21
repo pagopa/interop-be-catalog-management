@@ -6,7 +6,7 @@ import it.pagopa.interop.catalogmanagement.model.persistence._
 import it.pagopa.interop.commons.cqrs.model._
 import it.pagopa.interop.commons.cqrs.service.CqrsProjection
 import it.pagopa.interop.commons.cqrs.service.DocumentConversions._
-import org.mongodb.scala.model._
+import org.mongodb.scala.model.{Updates, _}
 import org.mongodb.scala.{MongoCollection, _}
 import slick.basic.DatabaseConfig
 import slick.jdbc.JdbcProfile
@@ -24,16 +24,16 @@ object EServiceCqrsProjection {
     CqrsProjection[Event](offsetDbConfig, mongoDbConfig, projectionId, eventHandler)
 
   private def eventHandler(collection: MongoCollection[Document], event: Event): PartialMongoAction = event match {
-    case CatalogItemAdded(c)                                   =>
+    case CatalogItemAdded(c)                                               =>
       ActionWithDocument(collection.insertOne, Document(s"{ data: ${c.toJson.compactPrint} }"))
-    case CatalogItemDescriptorAdded(esId, descriptor)          =>
+    case CatalogItemDescriptorAdded(esId, descriptor)                      =>
       ActionWithBson(
         collection.updateOne(Filters.eq("data.id", esId), _),
         Updates.push(s"data.descriptors", descriptor.toDocument)
       )
-    case CatalogItemUpdated(c)                                 =>
+    case CatalogItemUpdated(c)                                             =>
       ActionWithBson(collection.updateOne(Filters.eq("data.id", c.id.toString), _), Updates.set("data", c.toDocument))
-    case CatalogItemDescriptorUpdated(cId, d)                  =>
+    case CatalogItemDescriptorUpdated(cId, d)                              =>
       ActionWithBson(
         collection.updateMany(
           Filters.eq("data.id", cId),
@@ -42,15 +42,15 @@ object EServiceCqrsProjection {
         ),
         Updates.set("data.descriptors.$[elem]", d.toDocument)
       )
-    case CatalogItemDeleted(cId)                               =>
+    case CatalogItemDeleted(cId)                                           =>
       Action(collection.deleteOne(Filters.eq("data.id", cId)))
-    case CatalogItemWithDescriptorsDeleted(c, dId)             =>
+    case CatalogItemWithDescriptorsDeleted(c, dId)                         =>
       ActionWithBson(
         collection.updateOne(Filters.eq("data.id", c.id.toString), _),
         Updates.pull("data.descriptors", Document(s"{ id : \"$dId\" }"))
       )
-    case CatalogItemDocumentAdded(esId, dId, doc, isInterface) =>
-      if (isInterface)
+    case CatalogItemDocumentAdded(esId, dId, doc, isInterface, serverUrls) =>
+      if (isInterface) {
         ActionWithBson(
           collection.updateMany(
             Filters.eq("data.id", esId),
@@ -59,7 +59,8 @@ object EServiceCqrsProjection {
           ),
           Updates.set("data.descriptors.$[elem].interface", doc.toDocument)
         )
-      else
+        ActionWithBson(collection.updateOne(Filters.eq("data.id", esId), _), Updates.set("data.serverUrls", serverUrls))
+      } else {
         ActionWithBson(
           collection.updateMany(
             Filters.eq("data.id", esId),
@@ -68,7 +69,8 @@ object EServiceCqrsProjection {
           ),
           Updates.push("data.descriptors.$[elem].docs", doc.toDocument)
         )
-    case CatalogItemDocumentDeleted(esId, dId, docId)          =>
+      }
+    case CatalogItemDocumentDeleted(esId, dId, docId)                      =>
       MultiAction(
         Seq(
           // Generic Doc
@@ -93,7 +95,7 @@ object EServiceCqrsProjection {
           )
         )
       )
-    case CatalogItemDocumentUpdated(esId, dId, docId, doc)     =>
+    case CatalogItemDocumentUpdated(esId, dId, docId, doc, serverUrls)     =>
       MultiAction(
         Seq(
           // Generic Doc
@@ -116,10 +118,14 @@ object EServiceCqrsProjection {
               )
             ),
             Updates.set("data.descriptors.$[elem].interface", doc.toDocument)
+          ),
+          ActionWithBson(
+            collection.updateOne(Filters.eq("data.id", esId), _),
+            Updates.set("data.serverUrls", serverUrls)
           )
         )
       )
-    case ClonedCatalogItemAdded(c)                             =>
+    case ClonedCatalogItemAdded(c)                                         =>
       ActionWithDocument(collection.insertOne, Document(s"{ data: ${c.toJson.compactPrint} }"))
   }
 

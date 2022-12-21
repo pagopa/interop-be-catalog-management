@@ -55,7 +55,7 @@ object JsonFormats {
       }
     }
 
-  implicit val cdocFormat: RootJsonFormat[CatalogDocument] = jsonFormat7(CatalogDocument.apply)
+  implicit val cdocFormat: RootJsonFormat[CatalogDocument] = jsonFormat8(CatalogDocument.apply)
 
   implicit val cavFormat: RootJsonFormat[CatalogAttributeValue] = jsonFormat2(CatalogAttributeValue.apply)
   implicit val saFormat: RootJsonFormat[SingleAttribute]        = jsonFormat1(SingleAttribute.apply)
@@ -75,7 +75,7 @@ object JsonFormats {
       }
     }
 
-  implicit val cdFormat: RootJsonFormat[CatalogDescriptor]  = jsonFormat13(CatalogDescriptor.apply)
+  implicit val cdFormat: RootJsonFormat[CatalogDescriptor]  = jsonFormat14(CatalogDescriptor.apply)
   implicit val casFormat: RootJsonFormat[CatalogAttributes] = jsonFormat3(CatalogAttributes.apply)
   implicit val ciFormat: RootJsonFormat[CatalogItem]        = jsonFormat8(CatalogItem.apply)
 
@@ -85,9 +85,9 @@ object JsonFormats {
   implicit val ciwddFormat: RootJsonFormat[CatalogItemWithDescriptorsDeleted] = jsonFormat2(
     CatalogItemWithDescriptorsDeleted.apply
   )
-  implicit val ciduFormat: RootJsonFormat[CatalogItemDocumentUpdated]    = jsonFormat4(CatalogItemDocumentUpdated.apply)
+  implicit val ciduFormat: RootJsonFormat[CatalogItemDocumentUpdated]    = jsonFormat5(CatalogItemDocumentUpdated.apply)
   implicit val cidFormat: RootJsonFormat[CatalogItemDeleted]             = jsonFormat1(CatalogItemDeleted.apply)
-  implicit val cidaFormat: RootJsonFormat[CatalogItemDocumentAdded]      = jsonFormat4(CatalogItemDocumentAdded.apply)
+  implicit val cidaFormat: RootJsonFormat[CatalogItemDocumentAdded]      = jsonFormat5(CatalogItemDocumentAdded.apply)
   implicit val ciddFormat: RootJsonFormat[CatalogItemDocumentDeleted]    = jsonFormat3(CatalogItemDocumentDeleted.apply)
   implicit val cideaFormat: RootJsonFormat[CatalogItemDescriptorAdded]   = jsonFormat2(CatalogItemDescriptorAdded.apply)
   implicit val cideuFormat: RootJsonFormat[CatalogItemDescriptorUpdated] = jsonFormat2(
