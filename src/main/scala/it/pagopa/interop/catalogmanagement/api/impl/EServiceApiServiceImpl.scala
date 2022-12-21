@@ -184,7 +184,7 @@ class EServiceApiServiceImpl(
     }
 
     getDescriptor(catalogItem, descriptorId)
-      .flatMap(lookupDocument(_).toRight(DocumentNotFoundError(catalogItem.id.toString, descriptorId, documentId)))
+      .flatMap(lookupDocument(_).toRight(DocumentNotFound(catalogItem.id.toString, descriptorId, documentId)))
   }
 
   override def deleteDraft(eServiceId: String, descriptorId: String)(implicit
@@ -279,7 +279,7 @@ class EServiceApiServiceImpl(
   private def retrieveCatalogItem(eServiceId: String): Future[CatalogItem] =
     for {
       retrieved <- commander(eServiceId).askWithStatus(ref => GetCatalogItem(eServiceId, ref))
-      current   <- retrieved.toFuture(EServiceNotFoundError(eServiceId))
+      current   <- retrieved.toFuture(EServiceNotFound(eServiceId))
     } yield current
 
   override def createDescriptor(eServiceId: String, eServiceDescriptorSeed: EServiceDescriptorSeed)(implicit
@@ -543,10 +543,10 @@ class EServiceApiServiceImpl(
   private def getDescriptor(
     eService: CatalogItem,
     descriptorId: String
-  ): Either[EServiceDescriptorNotFoundError, CatalogDescriptor] =
+  ): Either[EServiceDescriptorNotFound, CatalogDescriptor] =
     eService.descriptors
       .find(_.id.toString == descriptorId)
-      .toRight(EServiceDescriptorNotFoundError(eService.id.toString, descriptorId))
+      .toRight(EServiceDescriptorNotFound(eService.id.toString, descriptorId))
 
   private def canBeDeleted(catalogItem: CatalogItem): Future[Boolean] = {
     catalogItem.descriptors match {

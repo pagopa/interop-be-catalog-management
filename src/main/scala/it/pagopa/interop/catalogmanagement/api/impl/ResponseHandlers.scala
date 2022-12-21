@@ -24,21 +24,21 @@ object ResponseHandlers extends AkkaResponses {
     success: T => Route
   )(result: Try[T])(implicit contexts: Seq[(String, String)], logger: LoggerTakingImplicit[ContextFieldsToLog]): Route =
     result match {
-      case Success(s)                                   => success(s)
-      case Failure(ex: InvalidInterfaceFileDetected)    => badRequest(ex, logMessage)
-      case Failure(ex: EServiceNotFoundError)           => notFound(ex, logMessage)
-      case Failure(ex: EServiceDescriptorNotFoundError) => notFound(ex, logMessage)
-      case Failure(ex: DocumentAlreadyUploaded)         => conflict(ex, logMessage)
-      case Failure(ex)                                  => internalServerError(ex, logMessage)
+      case Success(s)                                => success(s)
+      case Failure(ex: InvalidInterfaceFileDetected) => badRequest(ex, logMessage)
+      case Failure(ex: EServiceNotFound)             => notFound(ex, logMessage)
+      case Failure(ex: EServiceDescriptorNotFound)   => notFound(ex, logMessage)
+      case Failure(ex: DocumentAlreadyUploaded)      => conflict(ex, logMessage)
+      case Failure(ex)                               => internalServerError(ex, logMessage)
     }
 
   def getEServiceResponse[T](logMessage: String)(
     success: T => Route
   )(result: Try[T])(implicit contexts: Seq[(String, String)], logger: LoggerTakingImplicit[ContextFieldsToLog]): Route =
     result match {
-      case Success(s)                         => success(s)
-      case Failure(ex: EServiceNotFoundError) => notFound(ex, logMessage)
-      case Failure(ex)                        => internalServerError(ex, logMessage)
+      case Success(s)                    => success(s)
+      case Failure(ex: EServiceNotFound) => notFound(ex, logMessage)
+      case Failure(ex)                   => internalServerError(ex, logMessage)
     }
 
   def getEServicesResponse[T](logMessage: String)(
@@ -53,132 +53,132 @@ object ResponseHandlers extends AkkaResponses {
     success: T => Route
   )(result: Try[T])(implicit contexts: Seq[(String, String)], logger: LoggerTakingImplicit[ContextFieldsToLog]): Route =
     result match {
-      case Success(s)                                   => success(s)
-      case Failure(ex: EServiceNotFoundError)           => notFound(ex, logMessage)
-      case Failure(ex: EServiceDescriptorNotFoundError) => notFound(ex, logMessage)
-      case Failure(ex: DocumentNotFoundError)           => notFound(ex, logMessage)
-      case Failure(ex)                                  => internalServerError(ex, logMessage)
+      case Success(s)                              => success(s)
+      case Failure(ex: EServiceNotFound)           => notFound(ex, logMessage)
+      case Failure(ex: EServiceDescriptorNotFound) => notFound(ex, logMessage)
+      case Failure(ex: DocumentNotFound)           => notFound(ex, logMessage)
+      case Failure(ex)                             => internalServerError(ex, logMessage)
     }
 
   def deleteDraftResponse[T](logMessage: String)(
     success: T => Route
   )(result: Try[T])(implicit contexts: Seq[(String, String)], logger: LoggerTakingImplicit[ContextFieldsToLog]): Route =
     result match {
-      case Success(s)                                   => success(s)
-      case Failure(ex: EServiceNotFoundError)           => notFound(ex, logMessage)
-      case Failure(ex: EServiceDescriptorNotFoundError) => notFound(ex, logMessage)
-      case Failure(ex: DescriptorNotInDraft)            => conflict(ex, logMessage)
-      case Failure(ex)                                  => internalServerError(ex, logMessage)
+      case Success(s)                              => success(s)
+      case Failure(ex: EServiceNotFound)           => notFound(ex, logMessage)
+      case Failure(ex: EServiceDescriptorNotFound) => notFound(ex, logMessage)
+      case Failure(ex: DescriptorNotInDraft)       => conflict(ex, logMessage)
+      case Failure(ex)                             => internalServerError(ex, logMessage)
     }
 
   def updateDescriptorResponse[T](logMessage: String)(
     success: T => Route
   )(result: Try[T])(implicit contexts: Seq[(String, String)], logger: LoggerTakingImplicit[ContextFieldsToLog]): Route =
     result match {
-      case Success(s)                                   => success(s)
-      case Failure(ex: EServiceNotFoundError)           => notFound(ex, logMessage)
-      case Failure(ex: EServiceDescriptorNotFoundError) => notFound(ex, logMessage)
-      case Failure(ex)                                  => internalServerError(ex, logMessage)
+      case Success(s)                              => success(s)
+      case Failure(ex: EServiceNotFound)           => notFound(ex, logMessage)
+      case Failure(ex: EServiceDescriptorNotFound) => notFound(ex, logMessage)
+      case Failure(ex)                             => internalServerError(ex, logMessage)
     }
 
   def updateEServiceByIdResponse[T](logMessage: String)(
     success: T => Route
   )(result: Try[T])(implicit contexts: Seq[(String, String)], logger: LoggerTakingImplicit[ContextFieldsToLog]): Route =
     result match {
-      case Success(s)                         => success(s)
-      case Failure(ex: EServiceNotFoundError) => notFound(ex, logMessage)
-      case Failure(ex)                        => internalServerError(ex, logMessage)
+      case Success(s)                    => success(s)
+      case Failure(ex: EServiceNotFound) => notFound(ex, logMessage)
+      case Failure(ex)                   => internalServerError(ex, logMessage)
     }
 
   def createDescriptorResponse[T](logMessage: String)(
     success: T => Route
   )(result: Try[T])(implicit contexts: Seq[(String, String)], logger: LoggerTakingImplicit[ContextFieldsToLog]): Route =
     result match {
-      case Success(s)                         => success(s)
-      case Failure(ex: EServiceNotFoundError) => notFound(ex, logMessage)
-      case Failure(ex)                        => internalServerError(ex, logMessage)
+      case Success(s)                    => success(s)
+      case Failure(ex: EServiceNotFound) => notFound(ex, logMessage)
+      case Failure(ex)                   => internalServerError(ex, logMessage)
     }
 
   def deleteEServiceDocumentResponse[T](logMessage: String)(
     success: T => Route
   )(result: Try[T])(implicit contexts: Seq[(String, String)], logger: LoggerTakingImplicit[ContextFieldsToLog]): Route =
     result match {
-      case Success(s)                                   => success(s)
-      case Failure(ex: EServiceNotFoundError)           => notFound(ex, logMessage)
-      case Failure(ex: EServiceDescriptorNotFoundError) => notFound(ex, logMessage)
-      case Failure(ex: DocumentNotFoundError)           => notFound(ex, logMessage)
-      case Failure(ex)                                  => internalServerError(ex, logMessage)
+      case Success(s)                              => success(s)
+      case Failure(ex: EServiceNotFound)           => notFound(ex, logMessage)
+      case Failure(ex: EServiceDescriptorNotFound) => notFound(ex, logMessage)
+      case Failure(ex: DocumentNotFound)           => notFound(ex, logMessage)
+      case Failure(ex)                             => internalServerError(ex, logMessage)
     }
 
   def archiveDescriptorResponse[T](logMessage: String)(
     success: T => Route
   )(result: Try[T])(implicit contexts: Seq[(String, String)], logger: LoggerTakingImplicit[ContextFieldsToLog]): Route =
     result match {
-      case Success(s)                                   => success(s)
-      case Failure(ex: EServiceNotFoundError)           => notFound(ex, logMessage)
-      case Failure(ex: EServiceDescriptorNotFoundError) => notFound(ex, logMessage)
-      case Failure(ex)                                  => internalServerError(ex, logMessage)
+      case Success(s)                              => success(s)
+      case Failure(ex: EServiceNotFound)           => notFound(ex, logMessage)
+      case Failure(ex: EServiceDescriptorNotFound) => notFound(ex, logMessage)
+      case Failure(ex)                             => internalServerError(ex, logMessage)
     }
 
   def deprecateDescriptorResponse[T](logMessage: String)(
     success: T => Route
   )(result: Try[T])(implicit contexts: Seq[(String, String)], logger: LoggerTakingImplicit[ContextFieldsToLog]): Route =
     result match {
-      case Success(s)                                   => success(s)
-      case Failure(ex: EServiceNotFoundError)           => notFound(ex, logMessage)
-      case Failure(ex: EServiceDescriptorNotFoundError) => notFound(ex, logMessage)
-      case Failure(ex)                                  => internalServerError(ex, logMessage)
+      case Success(s)                              => success(s)
+      case Failure(ex: EServiceNotFound)           => notFound(ex, logMessage)
+      case Failure(ex: EServiceDescriptorNotFound) => notFound(ex, logMessage)
+      case Failure(ex)                             => internalServerError(ex, logMessage)
     }
 
   def suspendDescriptorResponse[T](logMessage: String)(
     success: T => Route
   )(result: Try[T])(implicit contexts: Seq[(String, String)], logger: LoggerTakingImplicit[ContextFieldsToLog]): Route =
     result match {
-      case Success(s)                                   => success(s)
-      case Failure(ex: EServiceNotFoundError)           => notFound(ex, logMessage)
-      case Failure(ex: EServiceDescriptorNotFoundError) => notFound(ex, logMessage)
-      case Failure(ex)                                  => internalServerError(ex, logMessage)
+      case Success(s)                              => success(s)
+      case Failure(ex: EServiceNotFound)           => notFound(ex, logMessage)
+      case Failure(ex: EServiceDescriptorNotFound) => notFound(ex, logMessage)
+      case Failure(ex)                             => internalServerError(ex, logMessage)
     }
 
   def draftDescriptorResponse[T](logMessage: String)(
     success: T => Route
   )(result: Try[T])(implicit contexts: Seq[(String, String)], logger: LoggerTakingImplicit[ContextFieldsToLog]): Route =
     result match {
-      case Success(s)                                   => success(s)
-      case Failure(ex: EServiceNotFoundError)           => notFound(ex, logMessage)
-      case Failure(ex: EServiceDescriptorNotFoundError) => notFound(ex, logMessage)
-      case Failure(ex)                                  => internalServerError(ex, logMessage)
+      case Success(s)                              => success(s)
+      case Failure(ex: EServiceNotFound)           => notFound(ex, logMessage)
+      case Failure(ex: EServiceDescriptorNotFound) => notFound(ex, logMessage)
+      case Failure(ex)                             => internalServerError(ex, logMessage)
     }
 
   def publishDescriptorResponse[T](logMessage: String)(
     success: T => Route
   )(result: Try[T])(implicit contexts: Seq[(String, String)], logger: LoggerTakingImplicit[ContextFieldsToLog]): Route =
     result match {
-      case Success(s)                                   => success(s)
-      case Failure(ex: EServiceNotFoundError)           => notFound(ex, logMessage)
-      case Failure(ex: EServiceDescriptorNotFoundError) => notFound(ex, logMessage)
-      case Failure(ex)                                  => internalServerError(ex, logMessage)
+      case Success(s)                              => success(s)
+      case Failure(ex: EServiceNotFound)           => notFound(ex, logMessage)
+      case Failure(ex: EServiceDescriptorNotFound) => notFound(ex, logMessage)
+      case Failure(ex)                             => internalServerError(ex, logMessage)
     }
 
   def updateEServiceDocumentResponse[T](logMessage: String)(
     success: T => Route
   )(result: Try[T])(implicit contexts: Seq[(String, String)], logger: LoggerTakingImplicit[ContextFieldsToLog]): Route =
     result match {
-      case Success(s)                                   => success(s)
-      case Failure(ex: EServiceNotFoundError)           => notFound(ex, logMessage)
-      case Failure(ex: EServiceDescriptorNotFoundError) => notFound(ex, logMessage)
-      case Failure(ex: DocumentNotFoundError)           => notFound(ex, logMessage)
-      case Failure(ex)                                  => internalServerError(ex, logMessage)
+      case Success(s)                              => success(s)
+      case Failure(ex: EServiceNotFound)           => notFound(ex, logMessage)
+      case Failure(ex: EServiceDescriptorNotFound) => notFound(ex, logMessage)
+      case Failure(ex: DocumentNotFound)           => notFound(ex, logMessage)
+      case Failure(ex)                             => internalServerError(ex, logMessage)
     }
 
   def cloneEServiceByDescriptorResponse[T](logMessage: String)(
     success: T => Route
   )(result: Try[T])(implicit contexts: Seq[(String, String)], logger: LoggerTakingImplicit[ContextFieldsToLog]): Route =
     result match {
-      case Success(s)                                   => success(s)
-      case Failure(ex: EServiceNotFoundError)           => notFound(ex, logMessage)
-      case Failure(ex: EServiceDescriptorNotFoundError) => notFound(ex, logMessage)
-      case Failure(ex)                                  => internalServerError(ex, logMessage)
+      case Success(s)                              => success(s)
+      case Failure(ex: EServiceNotFound)           => notFound(ex, logMessage)
+      case Failure(ex: EServiceDescriptorNotFound) => notFound(ex, logMessage)
+      case Failure(ex)                             => internalServerError(ex, logMessage)
     }
 
   def deleteEServiceResponse[T](logMessage: String)(
@@ -186,7 +186,7 @@ object ResponseHandlers extends AkkaResponses {
   )(result: Try[T])(implicit contexts: Seq[(String, String)], logger: LoggerTakingImplicit[ContextFieldsToLog]): Route =
     result match {
       case Success(s)                                       => success(s)
-      case Failure(ex: EServiceNotFoundError)               => notFound(ex, logMessage)
+      case Failure(ex: EServiceNotFound)                    => notFound(ex, logMessage)
       case Failure(ex: EServiceWithDescriptorsNotDeletable) => conflict(ex, logMessage)
       case Failure(ex)                                      => internalServerError(ex, logMessage)
     }
