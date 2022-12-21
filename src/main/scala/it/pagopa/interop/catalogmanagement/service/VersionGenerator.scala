@@ -4,10 +4,6 @@ import it.pagopa.interop.catalogmanagement.error.CatalogManagementErrors.Version
 
 trait VersionGenerator {
 
-  /** Either returns the next version of the version seed or a version error
-    * @param optVersionSeed
-    * @return
-    */
   def next(optVersionSeed: Option[String]): Either[VersionError, String] = {
     val currentVersion = optVersionSeed.getOrElse("0")
     currentVersion.toLongOption match {
@@ -17,6 +13,4 @@ trait VersionGenerator {
   }
 }
 
-/** Selfless trait implementation
-  */
 object VersionGenerator extends VersionGenerator

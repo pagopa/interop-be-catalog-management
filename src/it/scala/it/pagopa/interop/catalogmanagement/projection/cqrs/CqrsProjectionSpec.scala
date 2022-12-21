@@ -4,7 +4,7 @@ import akka.actor.testkit.typed.scaladsl.ScalaTestWithActorTestKit
 import it.pagopa.interop.catalogmanagement.model._
 import it.pagopa.interop.catalogmanagement.model.persistence.JsonFormats._
 import it.pagopa.interop.catalogmanagement.utils.PersistentAdapters._
-import it.pagopa.interop.catalogmanagement.{ItSpecConfiguration, ItSpecHelper}
+import it.pagopa.interop.catalogmanagement.{ItSpecConfiguration, ItSpecData, ItSpecHelper}
 
 import java.util.UUID
 
@@ -127,9 +127,23 @@ class CqrsProjectionSpec extends ScalaTestWithActorTestKit(ItSpecConfiguration.c
 
       publishDescriptor(eServiceId, updatingDescriptorId)
 
-      val expectedData = eService
-        .copy(descriptors = Seq(descriptor, updatingDescriptor.copy(state = EServiceDescriptorState.PUBLISHED)))
-        .toPersistent
+      // TODO This is the right test. Remove the workaround when createdAt will be added to API
+//      val expectedData = eService
+//        .copy(descriptors = Seq(descriptor, updatingDescriptor.copy(state = EServiceDescriptorState.PUBLISHED)))
+//        .toPersistent
+
+      val expectedData = eService.toPersistent
+        .copy(descriptors =
+          Seq(
+            descriptor.toPersistent,
+            updatingDescriptor
+              .copy(state = EServiceDescriptorState.PUBLISHED)
+              .toPersistent
+              .copy(activatedAt = Some(ItSpecData.timestamp))
+          )
+        )
+
+      // End workaround
 
       val persisted = findOne[CatalogItem](eServiceId.toString).futureValue
 

@@ -32,7 +32,7 @@ final class CatalogFileManagerImpl(val fileManager: FileManager) extends Catalog
           contentType = fileParts._1.getContentType.toString(),
           prettyName = prettyName,
           path = filePath,
-          checksum = Digester.createMD5Hash(fileParts._2),
+          checksum = Digester.toMD5(fileParts._2),
           uploadDate = OffsetDateTime.now()
         )
       )

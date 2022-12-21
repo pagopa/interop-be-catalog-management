@@ -1,6 +1,7 @@
 package it.pagopa.interop.catalogmanagement.service
 
 import akka.http.scaladsl.server.directives.FileInfo
+import cats.syntax.all._
 import com.typesafe.scalalogging.{Logger, LoggerTakingImplicit}
 import it.pagopa.interop.catalogmanagement.error.CatalogManagementErrors.{
   DocumentAlreadyUploaded,
@@ -16,6 +17,7 @@ import java.io.File
 import java.nio.file.Files
 import java.util.UUID
 import scala.concurrent.{ExecutionContext, Future}
+import scala.util.Try
 
 trait CatalogFileManager {
   val fileManager: FileManager
@@ -41,20 +43,18 @@ object CatalogFileManager {
   private final val tika: Tika = new Tika()
 
   def verify(fileParts: (FileInfo, File), catalogItem: CatalogItem, descriptorId: String, isInterface: Boolean)(implicit
-    ec: ExecutionContext,
     contexts: Seq[(String, String)]
-  ): Future[CatalogItem] = for {
-    checksumVerified   <- verifyChecksum(fileParts, catalogItem, descriptorId)
-    technologyVerified <-
-      if (isInterface) verifyTechnology(fileParts, checksumVerified) else Future.successful(checksumVerified)
-  } yield technologyVerified
+  ): Either[Throwable, CatalogItem] = for {
+    _ <- verifyChecksum(fileParts, catalogItem, descriptorId)
+    _ <- verifyTechnology(fileParts, catalogItem).whenA(isInterface)
+  } yield catalogItem
 
   private def verifyChecksum(
     fileParts: (FileInfo, File),
     catalogItem: CatalogItem,
     descriptorId: String
-  ): Future[CatalogItem] = {
-    val checksum: String         = Digester.createMD5Hash(fileParts._2)
+  ): Either[Throwable, Unit] = {
+    val checksum: String         = Digester.toMD5(fileParts._2)
     val alreadyUploaded: Boolean = catalogItem.descriptors
       .exists(descriptor =>
         descriptor.id == UUID
@@ -62,31 +62,29 @@ object CatalogFileManager {
           .exists(_.checksum == checksum))
       )
 
-    if (alreadyUploaded)
-      Future.failed[CatalogItem](DocumentAlreadyUploaded(catalogItem.id.toString, fileParts._1.fileName))
-    else Future.successful(catalogItem)
+    Left(DocumentAlreadyUploaded(catalogItem.id.toString, fileParts._1.fileName))
+      .withRight[Unit]
+      .whenA(alreadyUploaded)
   }
 
   private def verifyTechnology(fileParts: (FileInfo, File), catalogItem: CatalogItem)(implicit
     contexts: Seq[(String, String)]
-  ): Future[CatalogItem] = {
+  ): Either[Throwable, Unit] = {
     val restContentTypes: Set[String] = Set("text/x-yaml", "application/x-yaml", "application/json")
     val soapContentTypes: Set[String] = Set("application/xml", "application/soap+xml", "application/wsdl+xml")
 
-    val detectedContentTypes: String = tika.detect(Files.readAllBytes(fileParts._2.toPath), fileParts._1.fileName)
-
-    logger.debug(s"Detected $detectedContentTypes interface content type for eservice: ${catalogItem.id}")
-
-    val isValidTechnology = catalogItem.technology match {
-      case Rest => restContentTypes.contains(detectedContentTypes)
-      case Soap => soapContentTypes.contains(detectedContentTypes)
-    }
-
-    if (isValidTechnology)
-      Future.successful(catalogItem)
-    else
-      Future.failed[CatalogItem](
+    for {
+      detectedContentTypes <- Try(tika.detect(Files.readAllBytes(fileParts._2.toPath), fileParts._1.fileName)).toEither
+      _ = logger.debug(s"Detected $detectedContentTypes interface content type for eservice: ${catalogItem.id}")
+      isValidTechnology = catalogItem.technology match {
+        case Rest => restContentTypes.contains(detectedContentTypes)
+        case Soap => soapContentTypes.contains(detectedContentTypes)
+      }
+      _ <- Left(
         InvalidInterfaceFileDetected(catalogItem.id.toString, detectedContentTypes, catalogItem.technology.toString)
       )
+        .withRight[Unit]
+        .unlessA(isValidTechnology)
+    } yield ()
   }
 }

@@ -5,16 +5,10 @@ import akka.actor.typed.scaladsl.{ActorContext, Behaviors}
 import akka.actor.typed.{ActorRef, Behavior, SupervisorStrategy}
 import akka.cluster.sharding.typed.scaladsl.{ClusterSharding, EntityTypeKey}
 import akka.pattern.StatusReply
+import akka.pattern.StatusReply.success
 import akka.persistence.typed.PersistenceId
 import akka.persistence.typed.scaladsl.{Effect, EventSourcedBehavior, RetentionCriteria}
-import it.pagopa.interop.catalogmanagement.model.{
-  CatalogAttribute,
-  CatalogDescriptor,
-  CatalogDocument,
-  CatalogItem,
-  GroupAttribute,
-  SingleAttribute
-}
+import it.pagopa.interop.catalogmanagement.model._
 
 import java.time.temporal.ChronoUnit
 import scala.concurrent.duration.{DurationInt, DurationLong}
@@ -64,10 +58,10 @@ object CatalogPersistentBehavior {
           .map { _ =>
             Effect
               .persist(CatalogItemUpdated(modifiedCatalogItem))
-              .thenRun((_: State) => replyTo ! Some(modifiedCatalogItem))
+              .thenRun((_: State) => replyTo ! success(Some(modifiedCatalogItem)))
           }
           .getOrElse {
-            replyTo ! None
+            replyTo ! success(None)
             Effect.none[CatalogItemUpdated, State]
           }
 
@@ -119,10 +113,10 @@ object CatalogPersistentBehavior {
           .map { _ =>
             Effect
               .persist(CatalogItemDescriptorAdded(eServiceId, catalogDescriptor))
-              .thenRun((_: State) => replyTo ! Some(catalogDescriptor))
+              .thenRun((_: State) => replyTo ! success(Some(catalogDescriptor)))
           }
           .getOrElse {
-            replyTo ! None
+            replyTo ! success(None)
             Effect.none[CatalogItemDescriptorAdded, State]
           }
 
@@ -134,10 +128,10 @@ object CatalogPersistentBehavior {
           .map { _ =>
             Effect
               .persist(CatalogItemDescriptorUpdated(eServiceId, catalogDescriptor))
-              .thenRun((_: State) => replyTo ! Some(catalogDescriptor))
+              .thenRun((_: State) => replyTo ! success(Some(catalogDescriptor)))
           }
           .getOrElse {
-            replyTo ! None
+            replyTo ! success(None)
             Effect.none[CatalogItemDescriptorUpdated, State]
           }
 
@@ -154,13 +148,12 @@ object CatalogPersistentBehavior {
           .map { _ =>
             Effect
               .persist(CatalogItemDocumentUpdated(eServiceId, descriptorId, documentId, modifiedDocument))
-              .thenRun((_: State) => replyTo ! Some(modifiedDocument))
+              .thenRun((_: State) => replyTo ! success(Some(modifiedDocument)))
           }
           .getOrElse {
-            replyTo ! None
+            replyTo ! success(None)
             Effect.none[CatalogItemDocumentUpdated, State]
           }
-      //
 
       case DeleteCatalogItemDescriptor(deletedCatalogItem, descriptorId, replyTo) =>
         val descriptorToDelete: Option[CatalogDescriptor] =
@@ -194,7 +187,7 @@ object CatalogPersistentBehavior {
 
       case GetCatalogItem(itemId, replyTo) =>
         val catalogItem: Option[CatalogItem] = state.items.get(itemId)
-        replyTo ! catalogItem
+        replyTo ! success(catalogItem)
         Effect.none[Event, State]
 
       case ListCatalogItem(from, to, producerId, attributeId, status, replyTo) =>

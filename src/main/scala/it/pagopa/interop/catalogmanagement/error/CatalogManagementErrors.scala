@@ -23,7 +23,7 @@ object CatalogManagementErrors {
       extends ComponentError("0003", s"Descriptor with id $descriptorId of E-Service $eServiceId not found")
 
   final case class EServiceNotFoundError(eServiceId: String)
-      extends ComponentError("0004", s"EService with id $eServiceId not found")
+      extends ComponentError("0004", s"EService $eServiceId not found")
 
   final case class ValidationError(messages: List[String])
       extends ComponentError("0005", s"Validation errors: ${messages.mkString(",")}")
@@ -32,9 +32,8 @@ object CatalogManagementErrors {
       extends ComponentError("0006", s"$version is not a valid descriptor version")
 
   final case class EServiceAlreadyExistingError(eServiceName: String)
-      extends ComponentError("0007", s"Error while creating e-service $eServiceName because it already exist.")
-  final case object EServiceError         extends ComponentError("0008", s"Error while creating e-service.")
-  final case object EServiceNotFoundError extends ComponentError("0009", s"E-Service not found.")
+      extends ComponentError("0007", s"Error while creating e-service $eServiceName because it already exist")
+  final case object EServiceError extends ComponentError("0008", s"Error while creating e-service")
 
   final case class DocumentCreationNotFound(kind: String, eServiceId: String, descriptor: String)
       extends ComponentError(
@@ -69,7 +68,7 @@ object CatalogManagementErrors {
       extends ComponentError("0017", s"Failure while creation descriptor of e-service $eServiceId - bad request")
 
   final case class EServiceUpdateError(eServiceId: String)
-      extends ComponentError("0016", s"Error while updating e-service $eServiceId.")
+      extends ComponentError("0016", s"Error while updating e-service $eServiceId")
 
   final case class DeleteEServiceDocumentErrorBadRequest(documentId: String, descriptorId: String, eServiceId: String)
       extends ComponentError(
@@ -168,7 +167,9 @@ object CatalogManagementErrors {
         s"Can't delete descriptor eservice=$eserviceId/descriptor=$descriptorId - Descriptor status is not Draft"
       )
 
-  final case class EserviceWithDescriptorsNotDeletable(eserviceId: String)
+  final case class EServiceWithDescriptorsNotDeletable(eserviceId: String)
       extends ComponentError("0038", s"E-Service $eserviceId cannot be deleted because it contains descriptors")
+
+  case object ElementNotFoundAfterUpdate extends ComponentError("0039", s"Element cannot be found after update")
 
 }
