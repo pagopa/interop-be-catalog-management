@@ -274,10 +274,9 @@ package object v1 {
           prettyName = event.updatedDocument.prettyName,
           path = event.updatedDocument.path,
           checksum = event.updatedDocument.checksum,
-          uploadDate = uploadDate,
-          serverUrls = event.updatedDocument.serverUrls.toList
+          uploadDate = uploadDate
         ),
-        serverUrls = event.updatedDocument.serverUrls.toList
+        serverUrls = event.serverUrls.toList
       )
     }
 
@@ -297,9 +296,9 @@ package object v1 {
           prettyName = event.updatedDocument.prettyName,
           path = event.updatedDocument.path,
           checksum = event.updatedDocument.checksum,
-          uploadDate = uploadDate,
-          serverUrls = event.serverUrls
-        )
+          uploadDate = uploadDate
+        ),
+        serverUrls = event.serverUrls
       )
     }
 
@@ -318,10 +317,10 @@ package object v1 {
           prettyName = event.document.prettyName,
           path = event.document.path,
           checksum = event.document.checksum,
-          uploadDate = uploadDate,
-          serverUrls = event.serverUrls
+          uploadDate = uploadDate
         ),
-        isInterface = event.isInterface
+        isInterface = event.isInterface,
+        serverUrls = event.serverUrls
       )
     }
 
@@ -341,11 +340,10 @@ package object v1 {
           prettyName = event.document.prettyName,
           path = event.document.path,
           checksum = event.document.checksum,
-          uploadDate = uploadDate,
-          serverUrls = event.document.serverUrls.toList
+          uploadDate = uploadDate
         ),
         isInterface = event.isInterface,
-        serverUrls = event.document.serverUrls.toList
+        serverUrls = event.serverUrls.toList
       )
     }
 
@@ -376,7 +374,11 @@ package object v1 {
     event => {
       for {
         descriptor <- convertDescriptorToV1(event.catalogDescriptor)
-      } yield CatalogItemDescriptorUpdatedV1(eServiceId = event.eServiceId, catalogDescriptor = descriptor)
+      } yield CatalogItemDescriptorUpdatedV1(
+        eServiceId = event.eServiceId,
+        catalogDescriptor = descriptor,
+        serverUrls = event.catalogDescriptor.serverUrls
+      )
     }
 
   implicit def catalogItemDescriptorUpdatedV1PersistEventDeserializer

@@ -55,7 +55,7 @@ object JsonFormats {
       }
     }
 
-  implicit val cdocFormat: RootJsonFormat[CatalogDocument] = jsonFormat8(CatalogDocument.apply)
+  implicit val cdocFormat: RootJsonFormat[CatalogDocument] = jsonFormat7(CatalogDocument.apply)
 
   implicit val cavFormat: RootJsonFormat[CatalogAttributeValue] = jsonFormat2(CatalogAttributeValue.apply)
   implicit val saFormat: RootJsonFormat[SingleAttribute]        = jsonFormat1(SingleAttribute.apply)

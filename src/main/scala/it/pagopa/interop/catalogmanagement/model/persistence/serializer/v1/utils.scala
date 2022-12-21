@@ -76,8 +76,7 @@ object utils {
             prettyName = doc.prettyName,
             path = doc.path,
             checksum = doc.checksum,
-            uploadDate = doc.uploadDate.format(DateTimeFormatter.ISO_DATE_TIME),
-            serverUrls = descriptor.serverUrls
+            uploadDate = doc.uploadDate.format(DateTimeFormatter.ISO_DATE_TIME)
           )
         },
         interface = descriptor.interface.map { doc =>
@@ -88,8 +87,7 @@ object utils {
             prettyName = doc.prettyName,
             path = doc.path,
             checksum = doc.checksum,
-            uploadDate = doc.uploadDate.format(DateTimeFormatter.ISO_DATE_TIME),
-            serverUrls = descriptor.serverUrls
+            uploadDate = doc.uploadDate.format(DateTimeFormatter.ISO_DATE_TIME)
           )
         },
         state = convertDescriptorStateToV1(descriptor.state),
@@ -126,8 +124,7 @@ object utils {
           prettyName = doc.prettyName,
           path = doc.path,
           checksum = doc.checksum,
-          uploadDate = OffsetDateTime.parse(doc.uploadDate, DateTimeFormatter.ISO_DATE_TIME),
-          serverUrls = doc.serverUrls.toList
+          uploadDate = OffsetDateTime.parse(doc.uploadDate, DateTimeFormatter.ISO_DATE_TIME)
         )
       },
       docs = ver1.docs.map { doc =>
@@ -138,8 +135,7 @@ object utils {
           prettyName = doc.prettyName,
           path = doc.path,
           checksum = doc.checksum,
-          uploadDate = OffsetDateTime.parse(doc.uploadDate, DateTimeFormatter.ISO_DATE_TIME),
-          serverUrls = doc.serverUrls.toList
+          uploadDate = OffsetDateTime.parse(doc.uploadDate, DateTimeFormatter.ISO_DATE_TIME)
         )
       },
       state = state,

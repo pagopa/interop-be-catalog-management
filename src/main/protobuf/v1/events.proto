@@ -30,6 +30,7 @@ message CatalogItemDocumentUpdatedV1 {
   required string descriptorId = 2;
   required string documentId = 3;
   required CatalogDocumentV1 updatedDocument = 4;
+  repeated string serverUrls = 5;
 }
 
 message CatalogItemDeletedV1 {
@@ -41,6 +42,7 @@ message CatalogItemDocumentAddedV1 {
   required string descriptorId = 2;
   required CatalogDocumentV1 document = 3;
   required bool isInterface = 4;
+  repeated string serverUrls = 5;
 }
 
 message CatalogItemDocumentDeletedV1 {
@@ -57,4 +59,5 @@ message CatalogItemDescriptorAddedV1 {
 message CatalogItemDescriptorUpdatedV1 {
   required string eServiceId = 1;
   required CatalogDescriptorV1 catalogDescriptor = 2;
+  repeated string serverUrls = 3;
 }

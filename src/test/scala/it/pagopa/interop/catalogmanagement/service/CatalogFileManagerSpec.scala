@@ -39,7 +39,7 @@ class CatalogFileManagerSpec() extends AnyWordSpec with Matchers with ScalaFutur
         agreementApprovalPolicy = Some(Automatic),
         createdAt = OffsetDateTime.now(),
         activatedAt = None,
-        serverUrls = List("a", "b")
+        serverUrls = List("a","b")
       )
     ),
     createdAt = OffsetDateTime.now()

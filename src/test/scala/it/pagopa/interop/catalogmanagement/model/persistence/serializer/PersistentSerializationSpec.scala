@@ -144,7 +144,6 @@ object PersistentSerializationSpec {
     path                      <- stringGen
     checksum                  <- stringGen
     (uploadDate, uploadDateS) <- offsetDatetimeStringGen
-    serverUrls                <- listOf(stringGen)
   } yield (
     CatalogDocument(
       id = id,
@@ -153,8 +152,7 @@ object PersistentSerializationSpec {
       prettyName = prettyName,
       path = path,
       checksum = checksum,
-      uploadDate = uploadDate,
-      serverUrls = serverUrls
+      uploadDate = uploadDate
     ),
     CatalogDocumentV1(
       id = id.toString,
@@ -163,8 +161,7 @@ object PersistentSerializationSpec {
       path = path,
       checksum = checksum,
       uploadDate = uploadDateS,
-      prettyName = prettyName,
-      serverUrls = serverUrls
+      prettyName = prettyName
     )
   )
 
@@ -297,7 +294,8 @@ object PersistentSerializationSpec {
   val catalogItemDescriptorUpdatedGen: Gen[(CatalogItemDescriptorUpdated, CatalogItemDescriptorUpdatedV1)] = for {
     eServiceId <- stringGen
     (a, b)     <- catalogDescriptorGen
-  } yield (CatalogItemDescriptorUpdated(eServiceId, a), CatalogItemDescriptorUpdatedV1(eServiceId, b))
+    serverUrls <- listOf(stringGen)
+  } yield (CatalogItemDescriptorUpdated(eServiceId, a), CatalogItemDescriptorUpdatedV1(eServiceId, b, serverUrls))
 
   val catalogItemDocumentAddedGen: Gen[(CatalogItemDocumentAdded, CatalogItemDocumentAddedV1)] = for {
     eServiceId   <- stringGen
@@ -307,7 +305,7 @@ object PersistentSerializationSpec {
     serverUrls   <- listOf(stringGen)
   } yield (
     CatalogItemDocumentAdded(eServiceId, descriptorId, doc, isInterface, serverUrls),
-    CatalogItemDocumentAddedV1(eServiceId, descriptorId, docV1, isInterface)
+    CatalogItemDocumentAddedV1(eServiceId, descriptorId, docV1, isInterface, serverUrls)
   )
 
   val catalogItemDocumentUpdatedGen: Gen[(CatalogItemDocumentUpdated, CatalogItemDocumentUpdatedV1)] = for {
@@ -318,7 +316,7 @@ object PersistentSerializationSpec {
     serverUrls   <- listOf(stringGen)
   } yield (
     CatalogItemDocumentUpdated(eServiceId, descriptorId, documentId, doc, serverUrls),
-    CatalogItemDocumentUpdatedV1(eServiceId, descriptorId, documentId, docV1)
+    CatalogItemDocumentUpdatedV1(eServiceId, descriptorId, documentId, docV1, serverUrls)
   )
 
 }

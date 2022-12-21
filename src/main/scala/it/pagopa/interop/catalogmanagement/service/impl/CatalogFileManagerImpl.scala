@@ -17,7 +17,7 @@ import scala.concurrent.{ExecutionContext, Future}
   */
 final class CatalogFileManagerImpl(val fileManager: FileManager) extends CatalogFileManager {
 
-  override def store(id: UUID, prettyName: String, serverUrls: List[String], fileParts: (FileInfo, File))(implicit
+  override def store(id: UUID, prettyName: String, fileParts: (FileInfo, File))(implicit
     ec: ExecutionContext
   ): Future[CatalogDocument] = {
     fileManager
@@ -33,20 +33,16 @@ final class CatalogFileManagerImpl(val fileManager: FileManager) extends Catalog
           prettyName = prettyName,
           path = filePath,
           checksum = Digester.toMD5(fileParts._2),
-          uploadDate = OffsetDateTime.now(),
-          serverUrls = serverUrls
+          uploadDate = OffsetDateTime.now()
         )
       )
   }
 
-  override def copy(filePathToCopy: String)(
-    documentId: UUID,
-    prettyName: String,
-    serverUrls: List[String],
-    checksum: String,
-    contentType: String,
-    fileName: String
-  )(implicit ec: ExecutionContext): Future[CatalogDocument] = {
+  override def copy(
+    filePathToCopy: String
+  )(documentId: UUID, prettyName: String, checksum: String, contentType: String, fileName: String)(implicit
+    ec: ExecutionContext
+  ): Future[CatalogDocument] = {
     fileManager
       .copy(ApplicationConfiguration.storageContainer, ApplicationConfiguration.eserviceDocsPath)(
         filePathToCopy,
@@ -61,8 +57,7 @@ final class CatalogFileManagerImpl(val fileManager: FileManager) extends Catalog
           prettyName = prettyName,
           path = copiedPath,
           checksum = checksum,
-          uploadDate = OffsetDateTime.now(),
-          serverUrls = serverUrls
+          uploadDate = OffsetDateTime.now()
         )
       )
   }

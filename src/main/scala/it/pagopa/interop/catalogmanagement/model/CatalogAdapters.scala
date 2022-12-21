@@ -132,8 +132,7 @@ object CatalogAdapters {
       prettyName = p.prettyName,
       checksum = p.checksum,
       contentType = p.contentType,
-      fileName = p.name,
-      serverUrls = p.serverUrls
+      fileName = p.name
     )
   }
 

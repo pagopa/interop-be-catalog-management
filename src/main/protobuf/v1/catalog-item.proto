@@ -59,7 +59,6 @@ message CatalogDocumentV1 {
   required string checksum = 5;
   required string uploadDate = 6;
   required string prettyName = 7;
-  repeated string serverUrls = 8;
 }
 
 enum CatalogDescriptorStateV1 {

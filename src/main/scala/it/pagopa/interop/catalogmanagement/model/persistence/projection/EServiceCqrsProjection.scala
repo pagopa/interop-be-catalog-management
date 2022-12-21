@@ -6,6 +6,7 @@ import it.pagopa.interop.catalogmanagement.model.persistence._
 import it.pagopa.interop.commons.cqrs.model._
 import it.pagopa.interop.commons.cqrs.service.CqrsProjection
 import it.pagopa.interop.commons.cqrs.service.DocumentConversions._
+import org.mongodb.scala.bson.{BsonArray, BsonString}
 import org.mongodb.scala.model.{Updates, _}
 import org.mongodb.scala.{MongoCollection, _}
 import slick.basic.DatabaseConfig
@@ -57,9 +58,11 @@ object EServiceCqrsProjection {
             _,
             UpdateOptions().arrayFilters(List(Filters.eq("elem.id", dId)).asJava)
           ),
-          Updates.set("data.descriptors.$[elem].interface", doc.toDocument)
+          Updates.combine(
+            Updates.set("data.descriptors.$[elem].interface", doc.toDocument),
+            Updates.set("data.descriptors.$[elem].serverUrls", BsonArray.fromIterable(serverUrls.map(BsonString(_))))
+          )
         )
-        ActionWithBson(collection.updateOne(Filters.eq("data.id", esId), _), Updates.set("data.serverUrls", serverUrls))
       } else {
         ActionWithBson(
           collection.updateMany(
@@ -117,11 +120,10 @@ object EServiceCqrsProjection {
                 List(Filters.and(Filters.eq("elem.id", dId), Filters.eq("elem.interface.id", docId))).asJava
               )
             ),
-            Updates.set("data.descriptors.$[elem].interface", doc.toDocument)
-          ),
-          ActionWithBson(
-            collection.updateOne(Filters.eq("data.id", esId), _),
-            Updates.set("data.serverUrls", serverUrls)
+            Updates.combine(
+              Updates.set("data.descriptors.$[elem].interface", doc.toDocument),
+              Updates.set("data.descriptors.$[elem].serverUrls", BsonArray.fromIterable(serverUrls.map(BsonString(_))))
+            )
           )
         )
       )

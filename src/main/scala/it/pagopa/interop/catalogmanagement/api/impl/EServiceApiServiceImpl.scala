@@ -141,12 +141,7 @@ class EServiceApiServiceImpl(
       current    <- retrieveCatalogItem(commander, eServiceId)
       verified   <- CatalogFileManager.verify(doc, current, descriptorId, isInterface)
       serverUrls <- extractServerUrls(Files.readAllBytes(doc._2.toPath), isInterface).toFuture
-      document   <- catalogFileManager.store(
-        id = uuidSupplier.get(),
-        prettyName = prettyName,
-        serverUrls,
-        fileParts = doc
-      )
+      document   <- catalogFileManager.store(id = uuidSupplier.get(), prettyName = prettyName, fileParts = doc)
       _          <- commander.ask(ref =>
         AddCatalogItemDocument(verified.id.toString, descriptorId, document, isInterface, serverUrls, ref)
       )
@@ -751,6 +746,9 @@ class EServiceApiServiceImpl(
     val result: Future[Option[CatalogDocument]] = for {
       found       <- commander.ask(ref => GetCatalogItem(eServiceId, ref))
       catalogItem <- found.toFuture(EServiceNotFoundError(eServiceId))
+      descriptor  <- catalogItem.descriptors
+        .find(_.id.toString == descriptorId)
+        .toFuture(EServiceDescriptorNotFoundError(eServiceId, descriptorId))
       document    <- extractDocument(catalogItem, descriptorId, documentId)
       updatedDocument = document.copy(prettyName = updateEServiceDescriptorDocumentSeed.prettyName)
       updated <- commander.ask(ref =>
@@ -759,7 +757,7 @@ class EServiceApiServiceImpl(
           descriptorId = descriptorId,
           documentId = documentId,
           updatedDocument,
-          document.serverUrls,
+          descriptor.serverUrls,
           ref
         )
       )
