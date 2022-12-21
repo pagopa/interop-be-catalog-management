@@ -20,6 +20,7 @@ import it.pagopa.interop.commons.logging.renderBuildInfo
 
 import scala.concurrent.{ExecutionContext, ExecutionContextExecutor}
 import scala.util.{Failure, Success}
+import it.pagopa.interop.commons.logging.{CanLogContextFields, ContextFieldsToLog}
 
 object Main extends App with Dependencies {
 
@@ -71,7 +72,9 @@ object Main extends App with Dependencies {
             catalogFileManager
           ),
           EServiceApiMarshallerImpl,
-          jwtReader.OAuth2JWTValidatorAsContexts
+          jwtReader.OAuth2JWTValidatorAsContexts(
+            Logger.takingImplicit[ContextFieldsToLog]("OAuth2JWTValidatorAsContexts")
+          )
         )
         controller  = new Controller(eServiceApi, validationExceptionToRoute.some)(actorSystem.classicSystem)
         binding <- Http().newServerAt("0.0.0.0", ApplicationConfiguration.serverPort).bind(controller.routes)
