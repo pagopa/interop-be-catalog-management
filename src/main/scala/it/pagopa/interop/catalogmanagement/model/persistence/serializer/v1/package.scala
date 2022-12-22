@@ -275,7 +275,8 @@ package object v1 {
           path = event.updatedDocument.path,
           checksum = event.updatedDocument.checksum,
           uploadDate = uploadDate
-        )
+        ),
+        serverUrls = event.serverUrls.toList
       )
     }
 
@@ -296,7 +297,8 @@ package object v1 {
           path = event.updatedDocument.path,
           checksum = event.updatedDocument.checksum,
           uploadDate = uploadDate
-        )
+        ),
+        serverUrls = event.serverUrls
       )
     }
 
@@ -317,7 +319,8 @@ package object v1 {
           checksum = event.document.checksum,
           uploadDate = uploadDate
         ),
-        isInterface = event.isInterface
+        isInterface = event.isInterface,
+        serverUrls = event.serverUrls
       )
     }
 
@@ -339,7 +342,8 @@ package object v1 {
           checksum = event.document.checksum,
           uploadDate = uploadDate
         ),
-        isInterface = event.isInterface
+        isInterface = event.isInterface,
+        serverUrls = event.serverUrls.toList
       )
     }
 

@@ -97,7 +97,8 @@ object utils {
         dailyCallsTotal = descriptor.dailyCallsTotal,
         agreementApprovalPolicy = descriptor.agreementApprovalPolicy.map(convertAgreementApprovalPolicyToV1),
         createdAt = descriptor.createdAt.toMillis.some,
-        activatedAt = descriptor.activatedAt.map(_.toMillis)
+        activatedAt = descriptor.activatedAt.map(_.toMillis),
+        serverUrls = descriptor.serverUrls
       )
     )
   }
@@ -144,7 +145,8 @@ object utils {
       dailyCallsTotal = ver1.dailyCallsTotal,
       agreementApprovalPolicy = agreementApprovalPolicy,
       createdAt = createdAt.getOrElse(defaultCreatedAt),
-      activatedAt = if (state == Draft) None else activatedAt orElse defaultActivatedAt.some
+      activatedAt = if (state == Draft) None else activatedAt orElse defaultActivatedAt.some,
+      serverUrls = ver1.serverUrls.toList
     )
 
   def convertDescriptorsFromV1(descriptors: Seq[CatalogDescriptorV1]): Either[Throwable, Seq[CatalogDescriptor]] = {

@@ -16,5 +16,6 @@ final case class CatalogDescriptor(
   dailyCallsTotal: Int,
   agreementApprovalPolicy: Option[PersistentAgreementApprovalPolicy],
   createdAt: OffsetDateTime,
-  activatedAt: Option[OffsetDateTime]
+  activatedAt: Option[OffsetDateTime],
+  serverUrls: List[String]
 )

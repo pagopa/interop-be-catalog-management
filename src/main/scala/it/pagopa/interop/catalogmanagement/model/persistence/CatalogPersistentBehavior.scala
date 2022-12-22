@@ -71,14 +71,14 @@ object CatalogPersistentBehavior {
             Effect.none[CatalogItemUpdated, State]
           }
 
-      case AddCatalogItemDocument(eServiceId, descriptorId, document, isInterface, replyTo) =>
+      case AddCatalogItemDocument(eServiceId, descriptorId, document, isInterface, serverUrls, replyTo) =>
         val catalogItemDescriptor: Option[CatalogDescriptor] =
           state.items.get(eServiceId).flatMap(_.descriptors.find(_.id.toString == descriptorId))
 
         catalogItemDescriptor
           .map { _ =>
             Effect
-              .persist(CatalogItemDocumentAdded(eServiceId, descriptorId, document, isInterface))
+              .persist(CatalogItemDocumentAdded(eServiceId, descriptorId, document, isInterface, serverUrls))
               .thenRun((_: State) => replyTo ! Some(document))
           }
           .getOrElse {
@@ -141,7 +141,7 @@ object CatalogPersistentBehavior {
             Effect.none[CatalogItemDescriptorUpdated, State]
           }
 
-      case UpdateCatalogItemDocument(eServiceId, descriptorId, documentId, modifiedDocument, replyTo) =>
+      case UpdateCatalogItemDocument(eServiceId, descriptorId, documentId, modifiedDocument, serverUrls, replyTo) =>
         val catalogDocument: Option[CatalogDocument] =
           for {
             service    <- state.items.get(eServiceId)
@@ -153,7 +153,7 @@ object CatalogPersistentBehavior {
         catalogDocument
           .map { _ =>
             Effect
-              .persist(CatalogItemDocumentUpdated(eServiceId, descriptorId, documentId, modifiedDocument))
+              .persist(CatalogItemDocumentUpdated(eServiceId, descriptorId, documentId, modifiedDocument, serverUrls))
               .thenRun((_: State) => replyTo ! Some(modifiedDocument))
           }
           .getOrElse {
@@ -235,15 +235,15 @@ object CatalogPersistentBehavior {
       case CatalogItemWithDescriptorsDeleted(catalogItem, descriptorId) =>
         state.deleteDescriptor(catalogItem, descriptorId)
       case CatalogItemDeleted(catalogItemId)                            => state.deleteEService(catalogItemId)
-      case CatalogItemDocumentUpdated(eServiceId, descriptorId, documentId, modifiedDocument) =>
-        state.updateDocument(eServiceId, descriptorId, documentId, modifiedDocument)
-      case CatalogItemDocumentAdded(eServiceId, descriptorId, openapiDoc, isInterface)        =>
-        state.addItemDocument(eServiceId, descriptorId, openapiDoc, isInterface)
-      case CatalogItemDocumentDeleted(eServiceId, descriptorId, documentId)                   =>
+      case CatalogItemDocumentUpdated(eServiceId, descriptorId, documentId, modifiedDocument, serverUrls) =>
+        state.updateDocument(eServiceId, descriptorId, documentId, modifiedDocument, serverUrls)
+      case CatalogItemDocumentAdded(eServiceId, descriptorId, openapiDoc, isInterface, serverUrls)        =>
+        state.addItemDocument(eServiceId, descriptorId, openapiDoc, isInterface, serverUrls)
+      case CatalogItemDocumentDeleted(eServiceId, descriptorId, documentId)                               =>
         state.deleteDocument(eServiceId, descriptorId, documentId)
-      case CatalogItemDescriptorAdded(eServiceId, catalogDescriptor)                          =>
+      case CatalogItemDescriptorAdded(eServiceId, catalogDescriptor)                                      =>
         state.addDescriptor(eServiceId, catalogDescriptor)
-      case CatalogItemDescriptorUpdated(eServiceId, catalogDescriptor)                        =>
+      case CatalogItemDescriptorUpdated(eServiceId, catalogDescriptor)                                    =>
         state.updateDescriptor(eServiceId, catalogDescriptor)
     }
 

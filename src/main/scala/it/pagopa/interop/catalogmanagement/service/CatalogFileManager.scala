@@ -54,7 +54,7 @@ object CatalogFileManager {
     catalogItem: CatalogItem,
     descriptorId: String
   ): Future[CatalogItem] = {
-    val checksum: String         = Digester.createMD5Hash(fileParts._2)
+    val checksum: String         = Digester.toMD5(fileParts._2)
     val alreadyUploaded: Boolean = catalogItem.descriptors
       .exists(descriptor =>
         descriptor.id == UUID

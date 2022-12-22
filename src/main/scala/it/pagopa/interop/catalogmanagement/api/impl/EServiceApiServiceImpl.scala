@@ -25,14 +25,18 @@ import it.pagopa.interop.commons.utils.AkkaUtils
 import it.pagopa.interop.commons.utils.TypeConversions.{EitherOps, OptionOps}
 import it.pagopa.interop.commons.utils.errors.GenericComponentErrors.OperationForbidden
 import it.pagopa.interop.commons.utils.service.{OffsetDateTimeSupplier, UUIDSupplier}
+import it.pagopa.interop.commons.parser.InterfaceParser
+import it.pagopa.interop.commons.parser.InterfaceParserUtils
 import cats.implicits._
+import io.circe.Json
 
 import java.io.File
-import java.nio.file.Paths
+import java.nio.file.{Files, Paths}
 import java.time.OffsetDateTime
 import scala.concurrent.duration.Duration
 import scala.concurrent.{Await, ExecutionContext, Future}
 import scala.util.{Failure, Success}
+import scala.xml.Elem
 
 class EServiceApiServiceImpl(
   system: ActorSystem[_],
@@ -128,12 +132,20 @@ class EServiceApiServiceImpl(
       case _         => false
     }
 
+    def extractServerUrls(bytes: Array[Byte], isInterface: Boolean): Either[Throwable, List[String]] = if (isInterface)
+      InterfaceParser.parseOpenApi(bytes).flatMap(InterfaceParserUtils.getUrls[Json]) orElse
+        InterfaceParser.parseWSDL(bytes).flatMap(InterfaceParserUtils.getUrls[Elem])
+    else Right(List.empty)
+
     val result: Future[Option[CatalogItem]] = for {
-      current  <- retrieveCatalogItem(commander, eServiceId)
-      verified <- CatalogFileManager.verify(doc, current, descriptorId, isInterface)
-      document <- catalogFileManager.store(id = uuidSupplier.get(), prettyName = prettyName, fileParts = doc)
-      _ <- commander.ask(ref => AddCatalogItemDocument(verified.id.toString, descriptorId, document, isInterface, ref))
-      updated <- commander.ask(ref => GetCatalogItem(eServiceId, ref))
+      current    <- retrieveCatalogItem(commander, eServiceId)
+      verified   <- CatalogFileManager.verify(doc, current, descriptorId, isInterface)
+      serverUrls <- extractServerUrls(Files.readAllBytes(doc._2.toPath), isInterface).toFuture
+      document   <- catalogFileManager.store(id = uuidSupplier.get(), prettyName = prettyName, fileParts = doc)
+      _          <- commander.ask(ref =>
+        AddCatalogItemDocument(verified.id.toString, descriptorId, document, isInterface, serverUrls, ref)
+      )
+      updated    <- commander.ask(ref => GetCatalogItem(eServiceId, ref))
     } yield updated
 
     onComplete(result) {
@@ -489,7 +501,8 @@ class EServiceApiServiceImpl(
         agreementApprovalPolicy =
           PersistentAgreementApprovalPolicy.fromApi(eServiceDescriptorSeed.agreementApprovalPolicy).some,
         createdAt = offsetDateTimeSupplier.get(),
-        activatedAt = None
+        activatedAt = None,
+        serverUrls = List.empty
       )
       _ <- commander.ask(ref => AddCatalogItemDescriptor(current.id.toString, createdCatalogDescriptor, ref))
     } yield createdCatalogDescriptor
@@ -733,6 +746,9 @@ class EServiceApiServiceImpl(
     val result: Future[Option[CatalogDocument]] = for {
       found       <- commander.ask(ref => GetCatalogItem(eServiceId, ref))
       catalogItem <- found.toFuture(EServiceNotFoundError(eServiceId))
+      descriptor  <- catalogItem.descriptors
+        .find(_.id.toString == descriptorId)
+        .toFuture(EServiceDescriptorNotFoundError(eServiceId, descriptorId))
       document    <- extractDocument(catalogItem, descriptorId, documentId)
       updatedDocument = document.copy(prettyName = updateEServiceDescriptorDocumentSeed.prettyName)
       updated <- commander.ask(ref =>
@@ -741,6 +757,7 @@ class EServiceApiServiceImpl(
           descriptorId = descriptorId,
           documentId = documentId,
           updatedDocument,
+          descriptor.serverUrls,
           ref
         )
       )
@@ -858,7 +875,8 @@ class EServiceApiServiceImpl(
         dailyCallsTotal = descriptorToClone.dailyCallsTotal,
         agreementApprovalPolicy = descriptorToClone.agreementApprovalPolicy,
         createdAt = offsetDateTimeSupplier.get(),
-        activatedAt = None
+        activatedAt = None,
+        serverUrls = descriptorToClone.serverUrls
       )
     } yield CatalogItem(
       id = uuidSupplier.get(),

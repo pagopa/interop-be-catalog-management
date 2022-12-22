@@ -48,6 +48,7 @@ message CatalogDescriptorV1 {
   optional AgreementApprovalPolicyV1 agreementApprovalPolicy = 11;
   optional int64 createdAt = 12;
   optional int64 activatedAt = 13;
+  repeated string serverUrls = 14;
 }
 
 message CatalogDocumentV1 {

@@ -14,7 +14,8 @@ final case class CatalogItemDocumentUpdated(
   eServiceId: String,
   descriptorId: String,
   documentId: String,
-  updatedDocument: CatalogDocument
+  updatedDocument: CatalogDocument,
+  serverUrls: List[String]
 ) extends Event
 final case class CatalogItemDeleted(catalogItemId: String)                                         extends Event
 
@@ -22,7 +23,8 @@ final case class CatalogItemDocumentAdded(
   eServiceId: String,
   descriptorId: String,
   document: CatalogDocument,
-  isInterface: Boolean
+  isInterface: Boolean,
+  serverUrls: List[String]
 ) extends Event
 
 final case class CatalogItemDocumentDeleted(eServiceId: String, descriptorId: String, documentId: String) extends Event
