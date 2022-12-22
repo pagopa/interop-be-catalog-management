@@ -12,7 +12,6 @@ import java.io.File
 import java.nio.file.Paths
 import java.time.OffsetDateTime
 import java.util.UUID
-import scala.concurrent.ExecutionContext.Implicits.global
 
 class CatalogFileManagerSpec() extends AnyWordSpec with Matchers with ScalaFutures {
 
@@ -59,8 +58,7 @@ class CatalogFileManagerSpec() extends AnyWordSpec with Matchers with ScalaFutur
           catalogItem = catalogItem,
           descriptorId = descriptorId.toString,
           isInterface = true
-        )(global, Seq.empty)
-        .futureValue shouldBe catalogItem
+        )(Seq.empty) shouldBe Right(catalogItem)
     }
 
     "succeed with a YAML file" in {
@@ -84,8 +82,7 @@ class CatalogFileManagerSpec() extends AnyWordSpec with Matchers with ScalaFutur
           catalogItem = catalogItem,
           descriptorId = descriptorId.toString,
           isInterface = true
-        )(global, Seq.empty)
-        .futureValue shouldBe catalogItem
+        )(Seq.empty) shouldBe Right(catalogItem)
     }
 
     "succeed with a WSDL file" in {
@@ -111,8 +108,7 @@ class CatalogFileManagerSpec() extends AnyWordSpec with Matchers with ScalaFutur
           catalogItem = soapCatalogItem,
           descriptorId = descriptorId.toString,
           isInterface = true
-        )(global, Seq.empty)
-        .futureValue shouldBe soapCatalogItem
+        )(Seq.empty) shouldBe Right(soapCatalogItem)
     }
 
     "succeed with a XML file" in {
@@ -137,8 +133,7 @@ class CatalogFileManagerSpec() extends AnyWordSpec with Matchers with ScalaFutur
           catalogItem = soapCatalogItem,
           descriptorId = descriptorId.toString,
           isInterface = true
-        )(global, Seq.empty)
-        .futureValue shouldBe soapCatalogItem
+        )(Seq.empty) shouldBe Right(soapCatalogItem)
     }
 
     "fail for unexpected file format" in {
@@ -161,9 +156,9 @@ class CatalogFileManagerSpec() extends AnyWordSpec with Matchers with ScalaFutur
           catalogItem = catalogItem,
           descriptorId = descriptorId.toString,
           isInterface = true
-        )(global, Seq.empty)
-        .failed
-        .futureValue shouldBe a[InvalidInterfaceFileDetected]
+        )(Seq.empty) shouldBe Left(
+        InvalidInterfaceFileDetected(catalogItem.id.toString, "text/x-config", catalogItem.technology.toString)
+      )
     }
 
   }

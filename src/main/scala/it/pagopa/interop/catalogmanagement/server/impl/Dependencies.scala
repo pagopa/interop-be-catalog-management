@@ -11,13 +11,13 @@ import akka.projection.ProjectionBehavior
 import com.atlassian.oai.validator.report.ValidationReport
 import com.nimbusds.jose.proc.SecurityContext
 import com.nimbusds.jwt.proc.DefaultJWTClaimsVerifier
+import it.pagopa.interop.catalogmanagement.api.impl.ResponseHandlers.serviceCode
 import it.pagopa.interop.catalogmanagement.api.impl._
 import it.pagopa.interop.catalogmanagement.common.system.ApplicationConfiguration
 import it.pagopa.interop.catalogmanagement.common.system.ApplicationConfiguration.{
   numberOfProjectionTags,
   projectionTag
 }
-import it.pagopa.interop.catalogmanagement.model.Problem
 import it.pagopa.interop.catalogmanagement.model.persistence.projection.{
   CatalogNotificationProjection,
   EServiceCqrsProjection
@@ -30,6 +30,7 @@ import it.pagopa.interop.commons.jwt.{JWTConfiguration, PublicKeysHolder}
 import it.pagopa.interop.commons.queue.QueueWriter
 import it.pagopa.interop.commons.utils.OpenapiUtils
 import it.pagopa.interop.commons.utils.TypeConversions._
+import it.pagopa.interop.commons.utils.errors.{Problem => CommonProblem}
 import it.pagopa.interop.commons.utils.service.{OffsetDateTimeSupplier, UUIDSupplier}
 import slick.basic.DatabaseConfig
 import slick.jdbc.JdbcProfile
@@ -117,8 +118,9 @@ trait Dependencies {
   }
 
   val validationExceptionToRoute: ValidationReport => Route = report => {
-    val error: Problem = problemOf(StatusCodes.BadRequest, OpenapiUtils.errorFromRequestValidationReport(report))
-    complete(error.status, error)(entityMarshallerProblem)
+    val error =
+      CommonProblem(StatusCodes.BadRequest, OpenapiUtils.errorFromRequestValidationReport(report), serviceCode)
+    complete(error.status, error)
   }
 
 }

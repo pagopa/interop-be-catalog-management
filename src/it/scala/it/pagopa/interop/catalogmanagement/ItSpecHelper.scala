@@ -22,7 +22,7 @@ import it.pagopa.interop.catalogmanagement.model.persistence.{CatalogPersistentB
 import it.pagopa.interop.catalogmanagement.server.Controller
 import it.pagopa.interop.catalogmanagement.server.impl.Dependencies
 import it.pagopa.interop.catalogmanagement.service.CatalogFileManager
-import it.pagopa.interop.commons.utils.service.UUIDSupplier
+import it.pagopa.interop.commons.utils.service.{OffsetDateTimeSupplier, UUIDSupplier}
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.Assertion
 import spray.json._
@@ -51,8 +51,9 @@ trait ItSpecHelper
       headers.`X-Forwarded-For`(RemoteAddress(InetAddress.getByName("127.0.0.1")))
     )
 
-  val mockUUIDSupplier: UUIDSupplier      = mock[UUIDSupplier]
-  val mockFileManager: CatalogFileManager = mock[CatalogFileManager]
+  val mockUUIDSupplier: UUIDSupplier               = mock[UUIDSupplier]
+  val mockDateTimeSupplier: OffsetDateTimeSupplier = () => ItSpecData.timestamp
+  val mockFileManager: CatalogFileManager          = mock[CatalogFileManager]
 
   val eServiceApiMarshaller: EServiceApiMarshaller = EServiceApiMarshallerImpl
 
@@ -78,12 +79,19 @@ trait ItSpecHelper
 
     val eServiceApi =
       new EServiceApi(
-        new EServiceApiServiceImpl(system, sharding, persistentEntity, mockUUIDSupplier, mockFileManager),
+        new EServiceApiServiceImpl(
+          system,
+          sharding,
+          persistentEntity,
+          mockUUIDSupplier,
+          mockDateTimeSupplier,
+          mockFileManager
+        ),
         eServiceApiMarshaller,
         wrappingDirective
       )
 
-    if (ApplicationConfiguration.projectionsEnabled) initProjections()
+    if (ApplicationConfiguration.projectionsEnabled) initProjections(system.executionContext)
 
     controller = Some(new Controller(eServiceApi)(classicSystem))
 

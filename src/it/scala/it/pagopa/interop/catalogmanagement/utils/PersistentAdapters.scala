@@ -1,5 +1,6 @@
 package it.pagopa.interop.catalogmanagement.utils
 
+import it.pagopa.interop.catalogmanagement.ItSpecData
 import it.pagopa.interop.catalogmanagement.model.{
   Automatic,
   CatalogAttributes,
@@ -13,6 +14,8 @@ import it.pagopa.interop.catalogmanagement.model.{
   EServiceDoc
 }
 import it.pagopa.interop.catalogmanagement.model.CatalogAdapters._
+import it.pagopa.interop.catalogmanagement.model.EServiceDescriptorState.DRAFT
+import it.pagopa.interop.catalogmanagement.model.persistence.serializer.v1.defaultActivatedAt
 
 object PersistentAdapters {
 
@@ -25,7 +28,8 @@ object PersistentAdapters {
         description = p.description,
         technology = CatalogItemTechnology.fromApi(p.technology),
         attributes = CatalogAttributes.fromApi(p.attributes).toOption.get,
-        descriptors = p.descriptors.map(_.toPersistent)
+        descriptors = p.descriptors.map(_.toPersistent),
+        createdAt = ItSpecData.timestamp // TODO Replace this when createdAt will be added to API
       )
   }
 
@@ -42,7 +46,10 @@ object PersistentAdapters {
         voucherLifespan = p.voucherLifespan,
         dailyCallsPerConsumer = p.dailyCallsPerConsumer,
         dailyCallsTotal = p.dailyCallsTotal,
-        agreementApprovalPolicy = Some(Automatic)
+        agreementApprovalPolicy = Some(Automatic),
+        serverUrls = p.serverUrls.toList,
+        createdAt = ItSpecData.timestamp, // TODO Replace this when createdAt will be added to API
+        activatedAt = if (p.state == DRAFT) None else Some(defaultActivatedAt)
       )
   }
 

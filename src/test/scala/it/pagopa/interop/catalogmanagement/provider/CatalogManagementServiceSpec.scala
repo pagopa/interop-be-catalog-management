@@ -396,7 +396,7 @@ class CatalogManagementServiceSpec
       )
 
       // then
-      response.status shouldBe StatusCodes.BadRequest
+      response.status shouldBe StatusCodes.Conflict
     }
   }
 

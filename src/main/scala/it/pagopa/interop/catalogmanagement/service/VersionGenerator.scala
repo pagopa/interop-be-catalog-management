@@ -1,22 +1,16 @@
 package it.pagopa.interop.catalogmanagement.service
 
-import it.pagopa.interop.catalogmanagement.error.CatalogManagementErrors.VersionError
+import it.pagopa.interop.catalogmanagement.error.CatalogManagementErrors.InvalidDescriptorVersion
 
 trait VersionGenerator {
 
-  /** Either returns the next version of the version seed or a version error
-    * @param optVersionSeed
-    * @return
-    */
-  def next(optVersionSeed: Option[String]): Either[VersionError, String] = {
+  def next(optVersionSeed: Option[String]): Either[InvalidDescriptorVersion, String] = {
     val currentVersion = optVersionSeed.getOrElse("0")
     currentVersion.toLongOption match {
-      case Some(version) => Right[VersionError, String]((version + 1).toString)
-      case None          => Left[VersionError, String](VersionError(currentVersion))
+      case Some(version) => Right[InvalidDescriptorVersion, String]((version + 1).toString)
+      case None          => Left[InvalidDescriptorVersion, String](InvalidDescriptorVersion(currentVersion))
     }
   }
 }
 
-/** Selfless trait implementation
-  */
 object VersionGenerator extends VersionGenerator

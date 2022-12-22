@@ -18,8 +18,9 @@ final case class AddCatalogItem(catalogItem: CatalogItem, replyTo: ActorRef[Stat
 final case class AddClonedCatalogItem(catalogItem: CatalogItem, replyTo: ActorRef[StatusReply[CatalogItem]])
     extends Command
 
-final case class UpdateCatalogItem(catalogItem: CatalogItem, replyTo: ActorRef[Option[CatalogItem]]) extends Command
-final case class DeleteCatalogItem(eServiceId: String, replyTo: ActorRef[StatusReply[Done]])         extends Command
+final case class UpdateCatalogItem(catalogItem: CatalogItem, replyTo: ActorRef[StatusReply[Option[CatalogItem]]])
+    extends Command
+final case class DeleteCatalogItem(eServiceId: String, replyTo: ActorRef[StatusReply[Done]]) extends Command
 
 final case class DeleteCatalogItemDescriptor(
   catalogItem: CatalogItem,
@@ -27,7 +28,8 @@ final case class DeleteCatalogItemDescriptor(
   replyTo: ActorRef[StatusReply[Done]]
 ) extends Command
 
-final case class GetCatalogItem(catalogItemId: String, replyTo: ActorRef[Option[CatalogItem]]) extends Command
+final case class GetCatalogItem(catalogItemId: String, replyTo: ActorRef[StatusReply[Option[CatalogItem]]])
+    extends Command
 
 final case class ListCatalogItem(
   from: Int,
@@ -44,7 +46,7 @@ final case class UpdateCatalogItemDocument(
   documentId: String,
   updateEServiceDescriptorDocumentSeed: CatalogDocument,
   serverUrls: List[String],
-  replyTo: ActorRef[Option[CatalogDocument]]
+  replyTo: ActorRef[StatusReply[Option[CatalogDocument]]]
 ) extends Command
 
 final case class AddCatalogItemDocument(
@@ -66,11 +68,11 @@ final case class DeleteCatalogItemDocument(
 final case class AddCatalogItemDescriptor(
   eServiceId: String,
   catalogDescriptor: CatalogDescriptor,
-  replyTo: ActorRef[Option[CatalogDescriptor]]
+  replyTo: ActorRef[StatusReply[Option[CatalogDescriptor]]]
 ) extends Command
 
 final case class UpdateCatalogItemDescriptor(
   eServiceId: String,
   catalogDescriptor: CatalogDescriptor,
-  replyTo: ActorRef[Option[CatalogDescriptor]]
+  replyTo: ActorRef[StatusReply[Option[CatalogDescriptor]]]
 ) extends Command
