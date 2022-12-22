@@ -51,7 +51,7 @@ object EServiceCqrsProjection {
         Updates.pull("data.descriptors", Document(s"{ id : \"$dId\" }"))
       )
     case CatalogItemDocumentAdded(esId, dId, doc, isInterface, serverUrls) =>
-      if (isInterface) {
+      if (isInterface)
         ActionWithBson(
           collection.updateMany(
             Filters.eq("data.id", esId),
@@ -63,7 +63,7 @@ object EServiceCqrsProjection {
             Updates.set("data.descriptors.$[elem].serverUrls", BsonArray.fromIterable(serverUrls.map(BsonString(_))))
           )
         )
-      } else {
+      else
         ActionWithBson(
           collection.updateMany(
             Filters.eq("data.id", esId),
@@ -72,7 +72,6 @@ object EServiceCqrsProjection {
           ),
           Updates.push("data.descriptors.$[elem].docs", doc.toDocument)
         )
-      }
     case CatalogItemDocumentDeleted(esId, dId, docId)                      =>
       MultiAction(
         Seq(
@@ -94,7 +93,10 @@ object EServiceCqrsProjection {
                 List(Filters.and(Filters.eq("elem.id", dId), Filters.eq("elem.interface.id", docId))).asJava
               )
             ),
-            Updates.unset("data.descriptors.$[elem].interface")
+            Updates.combine(
+              Updates.unset("data.descriptors.$[elem].interface"),
+              Updates.set("data.descriptors.$[elem].serverUrls", BsonArray.fromIterable(List.empty))
+            )
           )
         )
       )
