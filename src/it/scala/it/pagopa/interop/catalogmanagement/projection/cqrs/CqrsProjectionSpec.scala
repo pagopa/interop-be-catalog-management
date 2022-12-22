@@ -270,7 +270,8 @@ class CqrsProjectionSpec extends ScalaTestWithActorTestKit(ItSpecConfiguration.c
 
       deleteDescriptorDocument(eServiceId, descriptorId, documentId)
 
-      val descriptorWithDocs  = eService.descriptors.find(_.id == descriptorId).get.copy(interface = None)
+      val descriptorWithDocs  =
+        eService.descriptors.find(_.id == descriptorId).get.copy(interface = None, serverUrls = Nil)
       val descriptor2WithDocs = eService.descriptors.find(_.id == descriptorId2).get
 
       val expectedData = eService.copy(descriptors = Seq(descriptorWithDocs, descriptor2WithDocs)).toPersistent

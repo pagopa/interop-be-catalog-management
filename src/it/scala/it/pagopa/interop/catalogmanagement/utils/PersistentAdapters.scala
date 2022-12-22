@@ -47,6 +47,7 @@ object PersistentAdapters {
         dailyCallsPerConsumer = p.dailyCallsPerConsumer,
         dailyCallsTotal = p.dailyCallsTotal,
         agreementApprovalPolicy = Some(Automatic),
+        serverUrls = p.serverUrls.toList,
         createdAt = ItSpecData.timestamp, // TODO Replace this when createdAt will be added to API
         activatedAt = if (p.state == DRAFT) None else Some(defaultActivatedAt)
       )
