@@ -22,5 +22,5 @@ object Versions {
 }
 
 object PagopaVersions {
-  lazy val commonsVersion = "1.0.10"
+  lazy val commonsVersion = "1.0.11"
 }
