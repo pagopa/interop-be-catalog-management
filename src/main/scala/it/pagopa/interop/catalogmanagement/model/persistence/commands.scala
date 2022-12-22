@@ -45,6 +45,7 @@ final case class UpdateCatalogItemDocument(
   descriptorId: String,
   documentId: String,
   updateEServiceDescriptorDocumentSeed: CatalogDocument,
+  serverUrls: List[String],
   replyTo: ActorRef[StatusReply[Option[CatalogDocument]]]
 ) extends Command
 
@@ -53,6 +54,7 @@ final case class AddCatalogItemDocument(
   descriptorId: String,
   document: CatalogDocument,
   isInterface: Boolean,
+  serverUrls: List[String],
   replyTo: ActorRef[Option[CatalogDocument]]
 ) extends Command
 

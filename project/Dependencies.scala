@@ -72,6 +72,7 @@ object Dependencies {
     lazy val commonsJWT   = namespace %% "interop-commons-jwt"           % commonsVersion
     lazy val commonsQueue = namespace %% "interop-commons-queue-manager" % commonsVersion
     lazy val commonsCqrs  = namespace %% "interop-commons-cqrs"          % commonsVersion
+    lazy val parser       = namespace %% "interop-commons-parser"        % commonsVersion
   }
 
   private[this] object postgres {
@@ -142,6 +143,7 @@ object Dependencies {
       pagopa.commonsJWT            % Compile,
       pagopa.commonsCqrs           % "compile,it",
       pagopa.commonsQueue          % Compile,
+      pagopa.parser                % Compile,
       postgres.jdbc                % "compile,it",
       tika.core                    % Compile,
       akka.testkit                 % "test,it",

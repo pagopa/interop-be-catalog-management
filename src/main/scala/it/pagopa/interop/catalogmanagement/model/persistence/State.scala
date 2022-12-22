@@ -34,21 +34,23 @@ final case class State(items: Map[String, CatalogItem]) extends Persistable {
     eServiceId: String,
     descriptorId: String,
     documentId: String,
-    modifiedDocument: CatalogDocument
+    modifiedDocument: CatalogDocument,
+    serverUrls: List[String]
   ): State = {
 
     def updateDocument(docId: String)(descriptor: CatalogDescriptor): CatalogDescriptor = {
       val interface: Option[CatalogDocument] = descriptor.interface.filter(_.id.toString == docId)
       val document: Option[CatalogDocument]  = descriptor.docs.find(_.id.toString == docId)
       (interface, document) match {
-        case (Some(_), None)    => descriptor.copy(interface = Some(modifiedDocument))
+        case (Some(_), None)    => descriptor.copy(interface = Some(modifiedDocument), serverUrls = serverUrls)
         case (None, Some(_))    =>
           descriptor.copy(docs = modifiedDocument +: descriptor.docs.filterNot(_.id.toString == docId))
         case (None, None)       => descriptor
         case (Some(_), Some(_)) =>
           descriptor.copy(
             interface = Some(modifiedDocument),
-            docs = modifiedDocument +: descriptor.docs.filterNot(_.id.toString == docId)
+            docs = modifiedDocument +: descriptor.docs.filterNot(_.id.toString == docId),
+            serverUrls = serverUrls
           )
       }
     }
@@ -60,11 +62,12 @@ final case class State(items: Map[String, CatalogItem]) extends Persistable {
     eServiceId: String,
     descriptorId: String,
     openapiDoc: CatalogDocument,
-    isInterface: Boolean
+    isInterface: Boolean,
+    serverUrls: List[String]
   ): State = {
     def addDocument(doc: CatalogDocument, isInterface: Boolean)(descriptor: CatalogDescriptor) = {
       if (isInterface) {
-        descriptor.copy(interface = Some(doc))
+        descriptor.copy(interface = Some(doc), serverUrls = serverUrls)
       } else {
         descriptor.copy(docs = doc +: descriptor.docs)
       }
@@ -78,11 +81,15 @@ final case class State(items: Map[String, CatalogItem]) extends Persistable {
       val interface: Option[CatalogDocument] = descriptor.interface.filter(_.id.toString == docId)
       val document: Option[CatalogDocument]  = descriptor.docs.find(_.id.toString == docId)
       (interface, document) match {
-        case (Some(_), None)    => descriptor.copy(interface = None)
+        case (Some(_), None)    => descriptor.copy(interface = None, serverUrls = List.empty)
         case (None, Some(_))    => descriptor.copy(docs = descriptor.docs.filterNot(_.id.toString == docId))
         case (None, None)       => descriptor
         case (Some(_), Some(_)) =>
-          descriptor.copy(interface = None, docs = descriptor.docs.filterNot(_.id.toString == docId))
+          descriptor.copy(
+            interface = None,
+            docs = descriptor.docs.filterNot(_.id.toString == docId),
+            serverUrls = List.empty
+          )
       }
     }
 

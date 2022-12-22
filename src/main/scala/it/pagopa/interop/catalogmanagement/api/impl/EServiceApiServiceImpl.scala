@@ -10,6 +10,7 @@ import akka.http.scaladsl.server.directives.FileInfo
 import akka.pattern.StatusReply
 import cats.implicits._
 import com.typesafe.scalalogging.{Logger, LoggerTakingImplicit}
+import io.circe.Json
 import it.pagopa.interop.catalogmanagement.api.EServiceApiService
 import it.pagopa.interop.catalogmanagement.api.impl.ResponseHandlers._
 import it.pagopa.interop.catalogmanagement.common.system._
@@ -20,15 +21,18 @@ import it.pagopa.interop.catalogmanagement.model.persistence._
 import it.pagopa.interop.catalogmanagement.service.{CatalogFileManager, VersionGenerator}
 import it.pagopa.interop.commons.jwt._
 import it.pagopa.interop.commons.logging.{CanLogContextFields, ContextFieldsToLog}
+import it.pagopa.interop.commons.parser.{InterfaceParser, InterfaceParserUtils}
 import it.pagopa.interop.commons.utils.AkkaUtils.getShard
 import it.pagopa.interop.commons.utils.TypeConversions.{EitherOps, OptionOps}
 import it.pagopa.interop.commons.utils.errors.ComponentError
 import it.pagopa.interop.commons.utils.service.{OffsetDateTimeSupplier, UUIDSupplier}
 
 import java.io.File
+import java.nio.file.Files
 import java.time.OffsetDateTime
 import scala.concurrent.duration.Duration
 import scala.concurrent.{Await, ExecutionContext, Future}
+import scala.xml.Elem
 
 class EServiceApiServiceImpl(
   system: ActorSystem[_],
@@ -84,15 +88,21 @@ class EServiceApiServiceImpl(
       case _         => false
     }
 
+    def extractServerUrls(bytes: Array[Byte], isInterface: Boolean): Either[Throwable, List[String]] = if (isInterface)
+      InterfaceParser.parseOpenApi(bytes).flatMap(InterfaceParserUtils.getUrls[Json]) orElse
+        InterfaceParser.parseWSDL(bytes).flatMap(InterfaceParserUtils.getUrls[Elem])
+    else Right(List.empty)
+
     val result: Future[EService] = for {
-      eService <- retrieveCatalogItem(eServiceId)
-      _        <- getDescriptor(eService, descriptorId).toFuture
-      _        <- CatalogFileManager.verify(doc, eService, descriptorId, isInterface).toFuture
-      document <- catalogFileManager.store(id = uuidSupplier.get(), prettyName = prettyName, fileParts = doc)
-      _        <- commander(eServiceId).ask(ref =>
-        AddCatalogItemDocument(eService.id.toString, descriptorId, document, isInterface, ref)
+      eService   <- retrieveCatalogItem(eServiceId)
+      _          <- getDescriptor(eService, descriptorId).toFuture
+      _          <- CatalogFileManager.verify(doc, eService, descriptorId, isInterface).toFuture
+      serverUrls <- extractServerUrls(Files.readAllBytes(doc._2.toPath), isInterface).toFuture
+      document   <- catalogFileManager.store(id = uuidSupplier.get(), prettyName = prettyName, fileParts = doc)
+      _          <- commander(eServiceId).ask(ref =>
+        AddCatalogItemDocument(eService.id.toString, descriptorId, document, isInterface, serverUrls, ref)
       )
-      updated  <- askWithResult(eServiceId, ref => GetCatalogItem(eServiceId, ref))
+      updated    <- askWithResult(eServiceId, ref => GetCatalogItem(eServiceId, ref))
     } yield updated.toApi
 
     onComplete(result) { createEServiceDocumentResponse[EService](operationLabel)(createEServiceDocument200) }
@@ -307,7 +317,8 @@ class EServiceApiServiceImpl(
         agreementApprovalPolicy =
           PersistentAgreementApprovalPolicy.fromApi(eServiceDescriptorSeed.agreementApprovalPolicy).some,
         createdAt = offsetDateTimeSupplier.get(),
-        activatedAt = None
+        activatedAt = None,
+        serverUrls = List.empty
       )
       _ <- commander(eServiceId).askWithStatus(ref =>
         AddCatalogItemDescriptor(current.id.toString, createdCatalogDescriptor, ref)
@@ -437,8 +448,9 @@ class EServiceApiServiceImpl(
     logger.info(operationLabel)
 
     val result: Future[EServiceDoc] = for {
-      eService <- retrieveCatalogItem(eServiceId)
-      document <- extractDocument(eService, descriptorId, documentId).toFuture
+      eService   <- retrieveCatalogItem(eServiceId)
+      descriptor <- getDescriptor(eService, descriptorId).toFuture
+      document   <- extractDocument(eService, descriptorId, documentId).toFuture
       updatedDocument = document.copy(prettyName = updateEServiceDescriptorDocumentSeed.prettyName)
       result <- askWithResult(
         eServiceId,
@@ -448,6 +460,7 @@ class EServiceApiServiceImpl(
             descriptorId = descriptorId,
             documentId = documentId,
             updatedDocument,
+            descriptor.serverUrls,
             ref
           )
       )
@@ -504,7 +517,8 @@ class EServiceApiServiceImpl(
         dailyCallsTotal = descriptorToClone.dailyCallsTotal,
         agreementApprovalPolicy = descriptorToClone.agreementApprovalPolicy,
         createdAt = offsetDateTimeSupplier.get(),
-        activatedAt = None
+        activatedAt = None,
+        serverUrls = descriptorToClone.serverUrls
       )
     } yield CatalogItem(
       id = uuidSupplier.get(),
