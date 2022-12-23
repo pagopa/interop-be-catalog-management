@@ -10,7 +10,7 @@ import akka.management.cluster.bootstrap.ClusterBootstrap
 import akka.management.scaladsl.AkkaManagement
 import buildinfo.BuildInfo
 import cats.syntax.all._
-import com.typesafe.scalalogging.Logger
+import com.typesafe.scalalogging.{Logger, LoggerTakingImplicit}
 import it.pagopa.interop.catalogmanagement.api.EServiceApi
 import it.pagopa.interop.catalogmanagement.api.impl._
 import it.pagopa.interop.catalogmanagement.common.system.ApplicationConfiguration
@@ -21,6 +21,7 @@ import it.pagopa.interop.commons.logging.renderBuildInfo
 import scala.concurrent.{ExecutionContext, ExecutionContextExecutor}
 import scala.util.{Failure, Success}
 import it.pagopa.interop.commons.logging.{CanLogContextFields, ContextFieldsToLog}
+
 
 object Main extends App with Dependencies {
 
