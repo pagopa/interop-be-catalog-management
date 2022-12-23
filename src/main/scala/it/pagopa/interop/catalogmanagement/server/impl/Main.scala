@@ -24,6 +24,9 @@ import it.pagopa.interop.commons.logging.{CanLogContextFields, ContextFieldsToLo
 
 object Main extends App with Dependencies {
 
+  implicit val loggerTI: LoggerTakingImplicit[ContextFieldsToLog] =
+    Logger.takingImplicit[ContextFieldsToLog]("OAuth2JWTValidatorAsContexts")
+    
   val logger: Logger = Logger(this.getClass)
 
   ActorSystem[Nothing](
@@ -72,9 +75,7 @@ object Main extends App with Dependencies {
             catalogFileManager
           ),
           EServiceApiMarshallerImpl,
-          jwtReader.OAuth2JWTValidatorAsContexts(
-            Logger.takingImplicit[ContextFieldsToLog]("OAuth2JWTValidatorAsContexts")
-          )
+          jwtReader.OAuth2JWTValidatorAsContexts
         )
         controller  = new Controller(eServiceApi, validationExceptionToRoute.some)(actorSystem.classicSystem)
         binding <- Http().newServerAt("0.0.0.0", ApplicationConfiguration.serverPort).bind(controller.routes)
