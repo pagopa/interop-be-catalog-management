@@ -22,12 +22,11 @@ import scala.concurrent.{ExecutionContext, ExecutionContextExecutor}
 import scala.util.{Failure, Success}
 import it.pagopa.interop.commons.logging.{CanLogContextFields, ContextFieldsToLog}
 
-
 object Main extends App with Dependencies {
 
   implicit val loggerTI: LoggerTakingImplicit[ContextFieldsToLog] =
     Logger.takingImplicit[ContextFieldsToLog]("OAuth2JWTValidatorAsContexts")
-    
+
   val logger: Logger = Logger(this.getClass)
 
   ActorSystem[Nothing](
