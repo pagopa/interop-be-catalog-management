@@ -17,7 +17,6 @@ object Versions {
   lazy val scalaMockVersion            = "5.2.0"
   lazy val scalatestVersion            = "3.2.14"
   lazy val slickProjectionVersion      = "1.2.5"
-  lazy val tikaVersion                 = "2.5.0"
   lazy val testcontainersScalaVersion  = "0.40.10"
 }
 

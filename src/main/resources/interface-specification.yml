@@ -567,7 +567,7 @@ paths:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/Problem'
-  /eservices/{eServiceId}/descriptors/{descriptorId}/documents:
+  /eservices/{eServiceId}/descriptors/{descriptorId}/documents/{documentId}/create:
     parameters:
       - $ref: '#/components/parameters/CorrelationIdHeader'
       - $ref: '#/components/parameters/IpAddress'
@@ -591,29 +591,19 @@ paths:
           required: true
           schema:
             type: string
+        - name: documentId
+          in: path
+          description: the document Id
+          required: true
+          schema:
+            type: string     
       requestBody:
         description: E-Service document
-        content:
-          multipart/form-data:
-            schema:
-              type: object
-              required:
-                - kind
-                - prettyName
-                - doc
-              properties:
-                kind:
-                  type: string
-                  description: Document Type
-                  enum:
-                    - INTERFACE
-                    - DOCUMENT
-                prettyName:
-                  type: string
-                doc:
-                  type: string
-                  format: binary
         required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateEServiceDescriptorDocumentSeed'
       responses:
         "200":
           description: EService Document created
@@ -992,6 +982,32 @@ components:
       properties:
         prettyName:
           type: string
+    CreateEServiceDescriptorDocumentSeed:
+      required:
+        - kind 
+        - prettyName
+        - filePath
+        - fileName
+        - contentType
+        - checksum
+      type: object
+      properties:
+        kind:
+          $ref: '#/components/schemas/EServiceDocumentKind'
+        prettyName:
+          type: string   
+        filePath:
+          type: string
+        fileName:
+          type: string
+        contentType:
+          type: string
+        checksum:
+          type: string  
+        serverUrls:
+          type: array
+          items:
+            type: string     
     AttributeValue:
       type: object
       properties:
@@ -1065,6 +1081,12 @@ components:
         - DEPRECATED
         - SUSPENDED
         - ARCHIVED
+    EServiceDocumentKind:
+      type: string
+      description: EService Document Kind
+      enum:
+        - INTERFACE
+        - DOCUMENT  
     AgreementApprovalPolicy:
       type: string
       description: | 

@@ -28,7 +28,7 @@ object ResponseHandlers extends AkkaResponses {
       case Failure(ex: InvalidInterfaceFileDetected) => badRequest(ex, logMessage)
       case Failure(ex: EServiceNotFound)             => notFound(ex, logMessage)
       case Failure(ex: EServiceDescriptorNotFound)   => notFound(ex, logMessage)
-      case Failure(ex: DocumentAlreadyUploaded)      => conflict(ex, logMessage)
+      case Failure(ex: DocumentNotFound)             => notFound(ex, logMessage)
       case Failure(ex)                               => internalServerError(ex, logMessage)
     }
 
@@ -56,7 +56,6 @@ object ResponseHandlers extends AkkaResponses {
       case Success(s)                              => success(s)
       case Failure(ex: EServiceNotFound)           => notFound(ex, logMessage)
       case Failure(ex: EServiceDescriptorNotFound) => notFound(ex, logMessage)
-      case Failure(ex: DocumentNotFound)           => notFound(ex, logMessage)
       case Failure(ex)                             => internalServerError(ex, logMessage)
     }
 
