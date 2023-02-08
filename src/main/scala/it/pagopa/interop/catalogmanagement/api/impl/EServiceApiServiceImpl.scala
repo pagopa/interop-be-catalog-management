@@ -96,7 +96,7 @@ class EServiceApiServiceImpl(
             uploadDate = OffsetDateTime.now()
           ),
           isInterface,
-          documentSeed.serverUrls.getOrElse(List()).toList,
+          documentSeed.serverUrls.toList,
           ref
         )
       )

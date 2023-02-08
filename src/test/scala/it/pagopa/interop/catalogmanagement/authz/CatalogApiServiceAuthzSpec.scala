@@ -69,7 +69,7 @@ class CatalogApiServiceAuthzSpec extends AnyWordSpecLike with BeforeAndAfterAll 
               fileName = "fake",
               contentType = "fake",
               checksum = "fake",
-              serverUrls = None
+              serverUrls = List()
             )
           )
         }

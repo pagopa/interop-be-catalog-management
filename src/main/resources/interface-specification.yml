@@ -567,7 +567,7 @@ paths:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/Problem'
-  /eservices/{eServiceId}/descriptors/{descriptorId}/documents/{documentId}/create:
+  /eservices/{eServiceId}/descriptors/{descriptorId}/documents/{documentId}/:
     parameters:
       - $ref: '#/components/parameters/CorrelationIdHeader'
       - $ref: '#/components/parameters/IpAddress'
@@ -990,6 +990,7 @@ components:
         - fileName
         - contentType
         - checksum
+        - serverUrls
       type: object
       properties:
         kind:
