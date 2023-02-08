@@ -585,35 +585,21 @@ paths:
           required: true
           schema:
             type: string
+            format: uuid
         - name: descriptorId
           in: path
           description: the descriptor Id
           required: true
           schema:
-            type: string
+            type: string 
+            format: uuid
       requestBody:
         description: E-Service document
-        content:
-          multipart/form-data:
-            schema:
-              type: object
-              required:
-                - kind
-                - prettyName
-                - doc
-              properties:
-                kind:
-                  type: string
-                  description: Document Type
-                  enum:
-                    - INTERFACE
-                    - DOCUMENT
-                prettyName:
-                  type: string
-                doc:
-                  type: string
-                  format: binary
         required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateEServiceDescriptorDocumentSeed'
       responses:
         "200":
           description: EService Document created
@@ -992,6 +978,37 @@ components:
       properties:
         prettyName:
           type: string
+    CreateEServiceDescriptorDocumentSeed:
+      required:
+        - documentId
+        - kind 
+        - prettyName
+        - filePath
+        - fileName
+        - contentType
+        - checksum
+        - serverUrls
+      type: object
+      properties:
+        documentId:
+          type: string
+          format: uuid    
+        kind:
+          $ref: '#/components/schemas/EServiceDocumentKind'
+        prettyName:
+          type: string   
+        filePath:
+          type: string
+        fileName:
+          type: string
+        contentType:
+          type: string
+        checksum:
+          type: string  
+        serverUrls:
+          type: array
+          items:
+            type: string     
     AttributeValue:
       type: object
       properties:
@@ -1065,6 +1082,12 @@ components:
         - DEPRECATED
         - SUSPENDED
         - ARCHIVED
+    EServiceDocumentKind:
+      type: string
+      description: EService Document Kind
+      enum:
+        - INTERFACE
+        - DOCUMENT  
     AgreementApprovalPolicy:
       type: string
       description: | 

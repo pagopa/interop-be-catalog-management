@@ -24,6 +24,8 @@ package object impl extends SprayJsonSupport with DefaultJsonProtocol {
   implicit val problemFormat: RootJsonFormat[Problem]                       = jsonFormat6(Problem)
   implicit val updateEserviceDescriptorDocumentSeed: RootJsonFormat[UpdateEServiceDescriptorDocumentSeed] =
     jsonFormat1(UpdateEServiceDescriptorDocumentSeed)
+  implicit val createEserviceDescriptorDocumentSeed: RootJsonFormat[CreateEServiceDescriptorDocumentSeed] =
+    jsonFormat8(CreateEServiceDescriptorDocumentSeed)
 
   final val entityMarshallerProblem: ToEntityMarshaller[Problem] = sprayJsonMarshaller[Problem]
 

@@ -2,8 +2,6 @@ package it.pagopa.interop.catalogmanagement.authz
 
 import akka.cluster.sharding.typed.ShardingEnvelope
 import akka.cluster.sharding.typed.scaladsl.Entity
-import akka.http.scaladsl.model.ContentTypes
-import akka.http.scaladsl.server.directives.FileInfo
 import it.pagopa.interop.catalogmanagement.api.impl.EServiceApiMarshallerImpl._
 import it.pagopa.interop.catalogmanagement.api.impl.EServiceApiServiceImpl
 import it.pagopa.interop.catalogmanagement.model.AgreementApprovalPolicy.AUTOMATIC
@@ -16,7 +14,6 @@ import it.pagopa.interop.commons.files.service.FileManager
 import org.scalatest.BeforeAndAfterAll
 import org.scalatest.wordspec.AnyWordSpecLike
 
-import java.io.File
 import java.time.OffsetDateTime
 import java.util.UUID
 import java.util.concurrent.{ExecutorService, Executors}
@@ -62,11 +59,18 @@ class CatalogApiServiceAuthzSpec extends AnyWordSpecLike with BeforeAndAfterAll 
         endpoint,
         { implicit c: Seq[(String, String)] =>
           service.createEServiceDocument(
-            kind = "fake",
-            prettyName = "fake",
-            doc = (FileInfo("test", "test", ContentTypes.NoContentType), File.createTempFile("fake", "fake")),
-            eServiceId = "fake",
-            descriptorId = "fake"
+            eServiceId = UUID.randomUUID().toString,
+            descriptorId = UUID.randomUUID().toString,
+            CreateEServiceDescriptorDocumentSeed(
+              documentId = UUID.randomUUID(),
+              kind = EServiceDocumentKind.INTERFACE,
+              prettyName = "fake",
+              filePath = "fake",
+              fileName = "fake",
+              contentType = "fake",
+              checksum = "fake",
+              serverUrls = List()
+            )
           )
         }
       )

@@ -97,11 +97,6 @@ object Dependencies {
     lazy val core      = namespace %% "scalamock" % scalaMockVersion
   }
 
-  private[this] object tika {
-    lazy val namespace = "org.apache.tika"
-    lazy val core      = namespace % "tika-core" % tikaVersion
-  }
-
   private[this] object commonsFileUpload {
     lazy val fileUpload = "commons-fileupload" % "commons-fileupload" % commonsFileUploadVersion
   }
@@ -145,7 +140,6 @@ object Dependencies {
       pagopa.commonsQueue          % Compile,
       pagopa.parser                % Compile,
       postgres.jdbc                % "compile,it",
-      tika.core                    % Compile,
       akka.testkit                 % "test,it",
       akka.httpTestkit             % "test,it",
       scalamock.core               % "test,it",

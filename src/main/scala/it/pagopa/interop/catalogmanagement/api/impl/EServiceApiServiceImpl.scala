@@ -6,11 +6,9 @@ import akka.cluster.sharding.typed.{ClusterShardingSettings, ShardingEnvelope}
 import akka.http.scaladsl.marshalling.ToEntityMarshaller
 import akka.http.scaladsl.server.Directives.onComplete
 import akka.http.scaladsl.server.Route
-import akka.http.scaladsl.server.directives.FileInfo
 import akka.pattern.StatusReply
 import cats.implicits._
 import com.typesafe.scalalogging.{Logger, LoggerTakingImplicit}
-import io.circe.Json
 import it.pagopa.interop.catalogmanagement.api.EServiceApiService
 import it.pagopa.interop.catalogmanagement.api.impl.ResponseHandlers._
 import it.pagopa.interop.catalogmanagement.common.system._
@@ -21,18 +19,14 @@ import it.pagopa.interop.catalogmanagement.model.persistence._
 import it.pagopa.interop.catalogmanagement.service.{CatalogFileManager, VersionGenerator}
 import it.pagopa.interop.commons.jwt._
 import it.pagopa.interop.commons.logging.{CanLogContextFields, ContextFieldsToLog}
-import it.pagopa.interop.commons.parser.{InterfaceParser, InterfaceParserUtils}
 import it.pagopa.interop.commons.utils.AkkaUtils.getShard
 import it.pagopa.interop.commons.utils.TypeConversions.{EitherOps, OptionOps}
 import it.pagopa.interop.commons.utils.errors.ComponentError
 import it.pagopa.interop.commons.utils.service.{OffsetDateTimeSupplier, UUIDSupplier}
 
-import java.io.File
-import java.nio.file.Files
 import java.time.OffsetDateTime
 import scala.concurrent.duration.Duration
 import scala.concurrent.{Await, ExecutionContext, Future}
-import scala.xml.Elem
 
 class EServiceApiServiceImpl(
   system: ActorSystem[_],
@@ -46,9 +40,6 @@ class EServiceApiServiceImpl(
 
   implicit val logger: LoggerTakingImplicit[ContextFieldsToLog] =
     Logger.takingImplicit[ContextFieldsToLog](this.getClass)
-
-  private lazy val INTERFACE = "INTERFACE"
-  private lazy val DOCUMENT  = "DOCUMENT"
 
   private val settings: ClusterShardingSettings = entity.settings.getOrElse(ClusterShardingSettings(system))
 
@@ -69,40 +60,45 @@ class EServiceApiServiceImpl(
   }
 
   override def createEServiceDocument(
-    kind: String,
-    prettyName: String,
-    doc: (FileInfo, File),
     eServiceId: String,
-    descriptorId: String
+    descriptorId: String,
+    documentSeed: CreateEServiceDescriptorDocumentSeed
   )(implicit
     toEntityMarshallerProblem: ToEntityMarshaller[Problem],
     toEntityMarshallerEService: ToEntityMarshaller[EService],
     contexts: Seq[(String, String)]
   ): Route = authorize(ADMIN_ROLE, API_ROLE) {
-    val operationLabel = s"Creating Document of kind $kind for EService $eServiceId and Descriptor $descriptorId"
+    val operationLabel =
+      s"Creating Document ${documentSeed.documentId.toString} of kind ${documentSeed.kind} ,name ${documentSeed.fileName}, path ${documentSeed.filePath} for EService $eServiceId and Descriptor $descriptorId"
     logger.info(operationLabel)
 
-    val isInterface: Boolean = kind match {
-      case INTERFACE => true
-      case DOCUMENT  => false
-      case _         => false
+    val isInterface: Boolean = documentSeed.kind match {
+      case EServiceDocumentKind.INTERFACE => true
+      case _                              => false
     }
 
-    def extractServerUrls(bytes: Array[Byte], isInterface: Boolean): Either[Throwable, List[String]] = if (isInterface)
-      InterfaceParser.parseOpenApi(bytes).flatMap(InterfaceParserUtils.getUrls[Json]) orElse
-        InterfaceParser.parseWSDL(bytes).flatMap(InterfaceParserUtils.getUrls[Elem])
-    else Right(List.empty)
-
     val result: Future[EService] = for {
-      eService   <- retrieveCatalogItem(eServiceId)
-      _          <- getDescriptor(eService, descriptorId).toFuture
-      _          <- CatalogFileManager.verify(doc, eService, descriptorId, isInterface).toFuture
-      serverUrls <- extractServerUrls(Files.readAllBytes(doc._2.toPath), isInterface).toFuture
-      document   <- catalogFileManager.store(id = uuidSupplier.get(), prettyName = prettyName, fileParts = doc)
-      _          <- commander(eServiceId).ask(ref =>
-        AddCatalogItemDocument(eService.id.toString, descriptorId, document, isInterface, serverUrls, ref)
+      eService <- retrieveCatalogItem(eServiceId)
+      _        <- getDescriptor(eService, descriptorId).toFuture
+      _        <- commander(eServiceId).ask(ref =>
+        AddCatalogItemDocument(
+          eService.id.toString,
+          descriptorId,
+          CatalogDocument(
+            id = documentSeed.documentId,
+            name = documentSeed.fileName,
+            contentType = documentSeed.contentType,
+            prettyName = documentSeed.prettyName,
+            path = documentSeed.filePath,
+            checksum = documentSeed.checksum,
+            uploadDate = offsetDateTimeSupplier.get()
+          ),
+          isInterface,
+          documentSeed.serverUrls.toList,
+          ref
+        )
       )
-      updated    <- askWithResult(eServiceId, ref => GetCatalogItem(eServiceId, ref))
+      updated  <- askWithResult(eServiceId, ref => GetCatalogItem(eServiceId, ref))
     } yield updated.toApi
 
     onComplete(result) { createEServiceDocumentResponse[EService](operationLabel)(createEServiceDocument200) }
