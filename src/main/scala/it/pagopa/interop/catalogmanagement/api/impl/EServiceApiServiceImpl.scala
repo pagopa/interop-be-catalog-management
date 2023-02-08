@@ -20,7 +20,7 @@ import it.pagopa.interop.catalogmanagement.service.{CatalogFileManager, VersionG
 import it.pagopa.interop.commons.jwt._
 import it.pagopa.interop.commons.logging.{CanLogContextFields, ContextFieldsToLog}
 import it.pagopa.interop.commons.utils.AkkaUtils.getShard
-import it.pagopa.interop.commons.utils.TypeConversions.{EitherOps, OptionOps, StringOps}
+import it.pagopa.interop.commons.utils.TypeConversions.{EitherOps, OptionOps}
 import it.pagopa.interop.commons.utils.errors.ComponentError
 import it.pagopa.interop.commons.utils.service.{OffsetDateTimeSupplier, UUIDSupplier}
 
@@ -62,7 +62,6 @@ class EServiceApiServiceImpl(
   override def createEServiceDocument(
     eServiceId: String,
     descriptorId: String,
-    documentId: String,
     documentSeed: CreateEServiceDescriptorDocumentSeed
   )(implicit
     toEntityMarshallerProblem: ToEntityMarshaller[Problem],
@@ -70,7 +69,7 @@ class EServiceApiServiceImpl(
     contexts: Seq[(String, String)]
   ): Route = authorize(ADMIN_ROLE, API_ROLE) {
     val operationLabel =
-      s"Creating Document ${documentId} of kind ${documentSeed.kind} ,name ${documentSeed.fileName}, path ${documentSeed.filePath} for EService $eServiceId and Descriptor $descriptorId"
+      s"Creating Document ${documentSeed.documentId.toString} of kind ${documentSeed.kind} ,name ${documentSeed.fileName}, path ${documentSeed.filePath} for EService $eServiceId and Descriptor $descriptorId"
     logger.info(operationLabel)
 
     val isInterface: Boolean = documentSeed.kind match {
@@ -79,15 +78,14 @@ class EServiceApiServiceImpl(
     }
 
     val result: Future[EService] = for {
-      eService       <- retrieveCatalogItem(eServiceId)
-      _              <- getDescriptor(eService, descriptorId).toFuture
-      documentIdUuid <- documentId.toFutureUUID
-      _              <- commander(eServiceId).ask(ref =>
+      eService <- retrieveCatalogItem(eServiceId)
+      _        <- getDescriptor(eService, descriptorId).toFuture
+      _        <- commander(eServiceId).ask(ref =>
         AddCatalogItemDocument(
           eService.id.toString,
           descriptorId,
           CatalogDocument(
-            id = documentIdUuid,
+            id = documentSeed.documentId,
             name = documentSeed.fileName,
             contentType = documentSeed.contentType,
             prettyName = documentSeed.prettyName,
@@ -100,7 +98,7 @@ class EServiceApiServiceImpl(
           ref
         )
       )
-      updated        <- askWithResult(eServiceId, ref => GetCatalogItem(eServiceId, ref))
+      updated  <- askWithResult(eServiceId, ref => GetCatalogItem(eServiceId, ref))
     } yield updated.toApi
 
     onComplete(result) { createEServiceDocumentResponse[EService](operationLabel)(createEServiceDocument200) }

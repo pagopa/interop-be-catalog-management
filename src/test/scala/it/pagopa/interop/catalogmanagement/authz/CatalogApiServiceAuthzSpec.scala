@@ -59,10 +59,10 @@ class CatalogApiServiceAuthzSpec extends AnyWordSpecLike with BeforeAndAfterAll 
         endpoint,
         { implicit c: Seq[(String, String)] =>
           service.createEServiceDocument(
-            eServiceId = "fake",
-            descriptorId = "fake",
-            documentId = "fake",
+            eServiceId = UUID.randomUUID().toString,
+            descriptorId = UUID.randomUUID().toString,
             CreateEServiceDescriptorDocumentSeed(
+              documentId = UUID.randomUUID(),
               kind = EServiceDocumentKind.INTERFACE,
               prettyName = "fake",
               filePath = "fake",
