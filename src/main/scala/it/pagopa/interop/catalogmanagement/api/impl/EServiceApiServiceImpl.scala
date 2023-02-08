@@ -91,7 +91,7 @@ class EServiceApiServiceImpl(
             prettyName = documentSeed.prettyName,
             path = documentSeed.filePath,
             checksum = documentSeed.checksum,
-            uploadDate = OffsetDateTime.now()
+            uploadDate = offsetDateTimeSupplier.get()
           ),
           isInterface,
           documentSeed.serverUrls.toList,
