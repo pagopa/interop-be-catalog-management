@@ -16,8 +16,12 @@ import java.time.{OffsetDateTime, ZoneOffset}
 
 package object v1 {
 
-  final val defaultCreatedAt: OffsetDateTime   = OffsetDateTime.of(2022, 10, 21, 12, 0, 0, 0, ZoneOffset.UTC)
-  final val defaultActivatedAt: OffsetDateTime = OffsetDateTime.of(2022, 12, 15, 12, 0, 0, 0, ZoneOffset.UTC)
+  final val defaultCreatedAt: OffsetDateTime    = OffsetDateTime.of(2022, 10, 21, 12, 0, 0, 0, ZoneOffset.UTC)
+  final val defaultActivatedAt: OffsetDateTime  = OffsetDateTime.of(2022, 12, 15, 12, 0, 0, 0, ZoneOffset.UTC)
+  final val defaultPublishedAt: OffsetDateTime  = OffsetDateTime.of(2022, 12, 15, 12, 0, 0, 0, ZoneOffset.UTC)
+  final val defaultSuspendedAt: OffsetDateTime  = OffsetDateTime.of(2022, 12, 15, 12, 0, 0, 0, ZoneOffset.UTC)
+  final val defaultDeprecatedAt: OffsetDateTime = OffsetDateTime.of(2022, 12, 15, 12, 0, 0, 0, ZoneOffset.UTC)
+  final val defaultArchivedAt: OffsetDateTime   = OffsetDateTime.of(2022, 12, 15, 12, 0, 0, 0, ZoneOffset.UTC)
 
   implicit def stateV1PersistEventDeserializer: PersistEventDeserializer[StateV1, State] =
     state => {

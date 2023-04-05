@@ -24,7 +24,6 @@ import it.pagopa.interop.commons.utils.TypeConversions.{EitherOps, OptionOps}
 import it.pagopa.interop.commons.utils.errors.ComponentError
 import it.pagopa.interop.commons.utils.service.{OffsetDateTimeSupplier, UUIDSupplier}
 
-import java.time.OffsetDateTime
 import scala.concurrent.duration.Duration
 import scala.concurrent.{Await, ExecutionContext, Future}
 
@@ -314,7 +313,11 @@ class EServiceApiServiceImpl(
           PersistentAgreementApprovalPolicy.fromApi(eServiceDescriptorSeed.agreementApprovalPolicy).some,
         createdAt = offsetDateTimeSupplier.get(),
         activatedAt = None,
-        serverUrls = List.empty
+        serverUrls = List.empty,
+        publishedAt = None,
+        suspendedAt = None,
+        deprecatedAt = None,
+        archivedAt = None
       )
       _ <- commander(eServiceId).askWithStatus(ref =>
         AddCatalogItemDescriptor(current.id.toString, createdCatalogDescriptor, ref)
@@ -413,10 +416,35 @@ class EServiceApiServiceImpl(
       descriptor: CatalogDescriptor,
       updateEServiceDescriptorState: CatalogDescriptorState
     ): CatalogDescriptor = {
-      val activatedAt: Option[OffsetDateTime] =
-        if (descriptor.state == Draft && updateEServiceDescriptorState == Published) offsetDateTimeSupplier.get().some
-        else descriptor.activatedAt
-      descriptor.copy(state = updateEServiceDescriptorState, activatedAt = activatedAt)
+      (descriptor.state, updateEServiceDescriptorState) match {
+        case (Draft, Published)      =>
+          if (descriptor.activatedAt.isEmpty) {
+            // First creation of this e-service
+            descriptor.copy(state = updateEServiceDescriptorState, publishedAt = offsetDateTimeSupplier.get().some)
+          } else {
+            // Published e-service state has been converted to draft and now it need to be changed to published
+            descriptor.copy(state = updateEServiceDescriptorState, activatedAt = offsetDateTimeSupplier.get().some)
+          }
+        case (Published, Draft)      =>
+          descriptor.copy(state = updateEServiceDescriptorState, archivedAt = offsetDateTimeSupplier.get().some)
+        case (Published, Suspended)  =>
+          descriptor.copy(
+            state = updateEServiceDescriptorState,
+            suspendedAt = offsetDateTimeSupplier.get().some,
+            activatedAt = None
+          )
+        case (Suspended, Published)  =>
+          descriptor.copy(
+            state = updateEServiceDescriptorState,
+            activatedAt = offsetDateTimeSupplier.get().some,
+            suspendedAt = None
+          )
+        case (Suspended, Draft)      =>
+          descriptor.copy(state = updateEServiceDescriptorState, archivedAt = offsetDateTimeSupplier.get().some)
+        case (Published, Deprecated) =>
+          descriptor.copy(state = updateEServiceDescriptorState, deprecatedAt = offsetDateTimeSupplier.get().some)
+        case _                       => ???
+      }
     }
 
     for {
@@ -514,7 +542,11 @@ class EServiceApiServiceImpl(
         agreementApprovalPolicy = descriptorToClone.agreementApprovalPolicy,
         createdAt = offsetDateTimeSupplier.get(),
         activatedAt = None,
-        serverUrls = descriptorToClone.serverUrls
+        serverUrls = descriptorToClone.serverUrls,
+        publishedAt = None,
+        suspendedAt = None,
+        deprecatedAt = None,
+        archivedAt = None
       )
     } yield CatalogItem(
       id = uuidSupplier.get(),

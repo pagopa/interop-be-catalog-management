@@ -49,6 +49,10 @@ message CatalogDescriptorV1 {
   optional int64 createdAt = 12;
   optional int64 activatedAt = 13;
   repeated string serverUrls = 14;
+  optional int64 publishedAt = 15;
+  optional int64 suspendedAt = 16;
+  optional int64 deprecatedAt = 17;
+  optional int64 archivedAt = 18;
 }
 
 message CatalogDocumentV1 {
