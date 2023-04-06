@@ -211,9 +211,9 @@ object PersistentSerializationSpec {
       createdAt = createdAt,
       serverUrls = serverUrls,
       publishedAt = if (state == Draft) None else publishedAt.some,
-      suspendedAt = if (state == Draft) None else suspendedAt.some,
-      deprecatedAt = if (state == Draft) None else deprecatedAt.some,
-      archivedAt = if (state == Draft) None else archivedAt.some
+      suspendedAt = suspendedAt.some,
+      deprecatedAt = deprecatedAt.some,
+      archivedAt = archivedAt.some
     ),
     CatalogDescriptorV1(
       id = id.toString,
@@ -230,9 +230,9 @@ object PersistentSerializationSpec {
       createdAt = createdAtV1.some,
       serverUrls = serverUrls,
       publishedAt = if (stateV1.isDraft) None else publishedAtV1.some,
-      suspendedAt = if (stateV1.isDraft) None else suspendedAtV1.some,
-      deprecatedAt = if (stateV1.isDraft) None else deprecatedAtV1.some,
-      archivedAt = if (stateV1.isDraft) None else archivedAtV1.some
+      suspendedAt = suspendedAtV1.some,
+      deprecatedAt = deprecatedAtV1.some,
+      archivedAt = archivedAtV1.some
     )
   )
 

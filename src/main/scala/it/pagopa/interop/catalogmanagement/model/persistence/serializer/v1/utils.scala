@@ -153,9 +153,9 @@ object utils {
       createdAt = createdAt.getOrElse(defaultCreatedAt),
       serverUrls = ver1.serverUrls.toList,
       publishedAt = if (state == Draft) None else publishedAt orElse defaultPublishedAt.some,
-      suspendedAt = if (state == Draft) None else suspendedAt,
-      deprecatedAt = if (state == Draft) None else deprecatedAt,
-      archivedAt = if (state == Draft) None else archivedAt
+      suspendedAt = suspendedAt,
+      deprecatedAt = deprecatedAt,
+      archivedAt = archivedAt
     )
 
   def convertDescriptorsFromV1(descriptors: Seq[CatalogDescriptorV1]): Either[Throwable, Seq[CatalogDescriptor]] = {

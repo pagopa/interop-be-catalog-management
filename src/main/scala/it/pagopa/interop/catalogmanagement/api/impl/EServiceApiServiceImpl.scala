@@ -428,10 +428,17 @@ class EServiceApiServiceImpl(
             suspendedAt = None,
             deprecatedAt = offsetDateTimeSupplier.get().some
           )
-        // case (Published, Archived) => Archived logic not yet implemented
+        case (Suspended, Archived)   =>
+          descriptor.copy(
+            state = updateEServiceDescriptorState,
+            suspendedAt = None,
+            archivedAt = offsetDateTimeSupplier.get().some
+          )
+        case (Published, Archived)   =>
+          descriptor.copy(state = updateEServiceDescriptorState, archivedAt = offsetDateTimeSupplier.get().some)
         case (Published, Deprecated) =>
           descriptor.copy(state = updateEServiceDescriptorState, deprecatedAt = offsetDateTimeSupplier.get().some)
-        case _                       => descriptor.copy(state = updateEServiceDescriptorState) // Solve this case in PR
+        case _                       => descriptor.copy(state = updateEServiceDescriptorState)
       }
     }
 

@@ -47,8 +47,8 @@ message CatalogDescriptorV1 {
   required int32 dailyCallsTotal = 10;
   optional AgreementApprovalPolicyV1 agreementApprovalPolicy = 11;
   optional int64 createdAt = 12;
-  repeated string serverUrls = 13;
-  optional int64 publishedAt = 14;
+  optional int64 publishedAt = 13;
+  repeated string serverUrls = 14;
   optional int64 suspendedAt = 15;
   optional int64 deprecatedAt = 16;
   optional int64 archivedAt = 17;
