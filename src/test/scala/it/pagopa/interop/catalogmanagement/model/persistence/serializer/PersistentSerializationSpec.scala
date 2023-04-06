@@ -178,20 +178,23 @@ object PersistentSerializationSpec {
     Gen.oneOf((Automatic, AUTOMATIC), (Manual, MANUAL))
 
   val catalogDescriptorGen: Gen[(CatalogDescriptor, CatalogDescriptorV1)] = for {
-    id                           <- Gen.uuid
-    version                      <- stringGen
-    description                  <- Gen.alphaNumStr.map(Option(_).filter(_.nonEmpty))
-    (interface, interfaceV1)     <- catalogDocumentGen.map { case (a, b) => (Option(a), Option(b)) }
-    (docs, docsV1)               <- listOf(catalogDocumentGen).map(_.separate)
-    (state, stateV1)             <- catalogDescriptorStateGen
-    audience                     <- listOf(stringGen)
-    voucherLifespan              <- Gen.posNum[Int]
-    dailyCallsPerConsumer        <- Gen.posNum[Int]
-    dailyCallsTotal              <- Gen.posNum[Int]
-    (policy, policyV1)           <- agreementApprovalPolicyGen
-    (createdAt, createdAtV1)     <- offsetDatetimeLongGen
-    (activatedAt, activatedAtV1) <- offsetDatetimeLongGen
-    serverUrls                   <- listOf(stringGen)
+    id                             <- Gen.uuid
+    version                        <- stringGen
+    description                    <- Gen.alphaNumStr.map(Option(_).filter(_.nonEmpty))
+    (interface, interfaceV1)       <- catalogDocumentGen.map { case (a, b) => (Option(a), Option(b)) }
+    (docs, docsV1)                 <- listOf(catalogDocumentGen).map(_.separate)
+    (state, stateV1)               <- catalogDescriptorStateGen
+    audience                       <- listOf(stringGen)
+    voucherLifespan                <- Gen.posNum[Int]
+    dailyCallsPerConsumer          <- Gen.posNum[Int]
+    dailyCallsTotal                <- Gen.posNum[Int]
+    (policy, policyV1)             <- agreementApprovalPolicyGen
+    (createdAt, createdAtV1)       <- offsetDatetimeLongGen
+    serverUrls                     <- listOf(stringGen)
+    (publishedAt, publishedAtV1)   <- offsetDatetimeLongGen
+    (suspendedAt, suspendedAtV1)   <- offsetDatetimeLongGen
+    (deprecatedAt, deprecatedAtV1) <- offsetDatetimeLongGen
+    (archivedAt, archivedAtV1)     <- offsetDatetimeLongGen
   } yield (
     CatalogDescriptor(
       id = id,
@@ -206,8 +209,11 @@ object PersistentSerializationSpec {
       dailyCallsTotal = dailyCallsTotal,
       agreementApprovalPolicy = policy.some,
       createdAt = createdAt,
-      activatedAt = if (state == Draft) None else activatedAt.some,
-      serverUrls = serverUrls
+      serverUrls = serverUrls,
+      publishedAt = if (state == Draft) None else publishedAt.some,
+      suspendedAt = if (state == Draft) None else suspendedAt.some,
+      deprecatedAt = if (state == Draft) None else deprecatedAt.some,
+      archivedAt = if (state == Draft) None else archivedAt.some
     ),
     CatalogDescriptorV1(
       id = id.toString,
@@ -222,8 +228,11 @@ object PersistentSerializationSpec {
       dailyCallsTotal = dailyCallsTotal,
       agreementApprovalPolicy = policyV1.some,
       createdAt = createdAtV1.some,
-      activatedAt = if (stateV1.isDraft) None else activatedAtV1.some,
-      serverUrls = serverUrls
+      serverUrls = serverUrls,
+      publishedAt = if (stateV1.isDraft) None else publishedAtV1.some,
+      suspendedAt = if (stateV1.isDraft) None else suspendedAtV1.some,
+      deprecatedAt = if (stateV1.isDraft) None else deprecatedAtV1.some,
+      archivedAt = if (stateV1.isDraft) None else archivedAtV1.some
     )
   )
 

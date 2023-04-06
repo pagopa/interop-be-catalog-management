@@ -97,7 +97,6 @@ object utils {
         dailyCallsTotal = descriptor.dailyCallsTotal,
         agreementApprovalPolicy = descriptor.agreementApprovalPolicy.map(convertAgreementApprovalPolicyToV1),
         createdAt = descriptor.createdAt.toMillis.some,
-        activatedAt = descriptor.activatedAt.map(_.toMillis),
         serverUrls = descriptor.serverUrls,
         publishedAt = descriptor.publishedAt.map(_.toMillis),
         suspendedAt = descriptor.suspendedAt.map(_.toMillis),
@@ -115,7 +114,6 @@ object utils {
       state                   <- convertDescriptorStateFromV1(ver1.state)
       agreementApprovalPolicy <- ver1.agreementApprovalPolicy.traverse(convertAgreementApprovalPolicyFromV1)
       createdAt               <- ver1.createdAt.traverse(_.toOffsetDateTime.toEither)
-      activatedAt             <- ver1.activatedAt.traverse(_.toOffsetDateTime.toEither)
       publishedAt             <- ver1.publishedAt.traverse(_.toOffsetDateTime.toEither)
       suspendedAt             <- ver1.suspendedAt.traverse(_.toOffsetDateTime.toEither)
       deprecatedAt            <- ver1.deprecatedAt.traverse(_.toOffsetDateTime.toEither)
@@ -153,12 +151,11 @@ object utils {
       dailyCallsTotal = ver1.dailyCallsTotal,
       agreementApprovalPolicy = agreementApprovalPolicy,
       createdAt = createdAt.getOrElse(defaultCreatedAt),
-      activatedAt = if (state == Draft) None else activatedAt orElse defaultActivatedAt.some,
       serverUrls = ver1.serverUrls.toList,
       publishedAt = if (state == Draft) None else publishedAt orElse defaultPublishedAt.some,
-      suspendedAt = if (state == Draft) None else suspendedAt orElse defaultSuspendedAt.some,
-      deprecatedAt = if (state == Draft) None else deprecatedAt orElse defaultDeprecatedAt.some,
-      archivedAt = if (state == Draft) None else archivedAt orElse defaultArchivedAt.some
+      suspendedAt = if (state == Draft) None else suspendedAt,
+      deprecatedAt = if (state == Draft) None else deprecatedAt,
+      archivedAt = if (state == Draft) None else archivedAt
     )
 
   def convertDescriptorsFromV1(descriptors: Seq[CatalogDescriptorV1]): Either[Throwable, Seq[CatalogDescriptor]] = {

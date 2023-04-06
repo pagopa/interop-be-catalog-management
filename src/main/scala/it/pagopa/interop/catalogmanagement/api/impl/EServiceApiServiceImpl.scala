@@ -312,7 +312,6 @@ class EServiceApiServiceImpl(
         agreementApprovalPolicy =
           PersistentAgreementApprovalPolicy.fromApi(eServiceDescriptorSeed.agreementApprovalPolicy).some,
         createdAt = offsetDateTimeSupplier.get(),
-        activatedAt = None,
         serverUrls = List.empty,
         publishedAt = None,
         suspendedAt = None,
@@ -418,32 +417,21 @@ class EServiceApiServiceImpl(
     ): CatalogDescriptor = {
       (descriptor.state, updateEServiceDescriptorState) match {
         case (Draft, Published)      =>
-          if (descriptor.activatedAt.isEmpty) {
-            // First creation of this e-service
-            descriptor.copy(state = updateEServiceDescriptorState, publishedAt = offsetDateTimeSupplier.get().some)
-          } else {
-            // Published e-service state has been converted to draft and now it need to be changed to published
-            descriptor.copy(state = updateEServiceDescriptorState, activatedAt = offsetDateTimeSupplier.get().some)
-          }
-        case (Published, Draft)      =>
-          descriptor.copy(state = updateEServiceDescriptorState, archivedAt = offsetDateTimeSupplier.get().some)
+          descriptor.copy(state = updateEServiceDescriptorState, publishedAt = offsetDateTimeSupplier.get().some)
         case (Published, Suspended)  =>
-          descriptor.copy(
-            state = updateEServiceDescriptorState,
-            suspendedAt = offsetDateTimeSupplier.get().some,
-            activatedAt = None
-          )
+          descriptor.copy(state = updateEServiceDescriptorState, suspendedAt = offsetDateTimeSupplier.get().some)
         case (Suspended, Published)  =>
+          descriptor.copy(state = updateEServiceDescriptorState, suspendedAt = None)
+        case (Suspended, Deprecated) =>
           descriptor.copy(
             state = updateEServiceDescriptorState,
-            activatedAt = offsetDateTimeSupplier.get().some,
-            suspendedAt = None
+            suspendedAt = None,
+            deprecatedAt = offsetDateTimeSupplier.get().some
           )
-        case (Suspended, Draft)      =>
-          descriptor.copy(state = updateEServiceDescriptorState, archivedAt = offsetDateTimeSupplier.get().some)
+        // case (Published, Archived) => Archived logic not yet implemented
         case (Published, Deprecated) =>
           descriptor.copy(state = updateEServiceDescriptorState, deprecatedAt = offsetDateTimeSupplier.get().some)
-        case _                       => ???
+        case _                       => descriptor.copy(state = updateEServiceDescriptorState) // Solve this case in PR
       }
     }
 
@@ -541,7 +529,6 @@ class EServiceApiServiceImpl(
         dailyCallsTotal = descriptorToClone.dailyCallsTotal,
         agreementApprovalPolicy = descriptorToClone.agreementApprovalPolicy,
         createdAt = offsetDateTimeSupplier.get(),
-        activatedAt = None,
         serverUrls = descriptorToClone.serverUrls,
         publishedAt = None,
         suspendedAt = None,
