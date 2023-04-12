@@ -72,7 +72,11 @@ object CatalogAdapters {
       dailyCallsPerConsumer = p.dailyCallsPerConsumer,
       dailyCallsTotal = p.dailyCallsTotal,
       agreementApprovalPolicy = p.agreementApprovalPolicy.getOrElse(PersistentAgreementApprovalPolicy.default).toApi,
-      serverUrls = p.serverUrls
+      serverUrls = p.serverUrls,
+      publishedAt = p.publishedAt,
+      suspendedAt = p.suspendedAt,
+      deprecatedAt = p.deprecatedAt,
+      archivedAt = p.archivedAt
     )
 
     def isDraft: Boolean = p.state == Draft
