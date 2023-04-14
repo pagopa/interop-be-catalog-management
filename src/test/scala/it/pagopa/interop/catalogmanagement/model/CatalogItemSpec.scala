@@ -40,8 +40,11 @@ class CatalogItemSpec extends AnyWordSpecLike with Matchers {
       dailyCallsPerConsumer = 10,
       agreementApprovalPolicy = Some(Automatic),
       createdAt = OffsetDateTime.now(),
-      activatedAt = None,
-      serverUrls = List("a", "b")
+      serverUrls = List("a", "b"),
+      publishedAt = None,
+      suspendedAt = None,
+      deprecatedAt = None,
+      archivedAt = None
     )
 
   private[this] def descriptorDocumentGen(id: UUID = UUID.randomUUID()) =
