@@ -45,7 +45,7 @@ paths:
       tags:
         - pets
       responses:
-        '201':
+        '200':
           description: Null response
         default:
           description: unexpected error
