@@ -16,4 +16,5 @@
 {"route": "publishDescriptor", "roles": ["admin", "api"], "verb": "POST"},
 {"route": "updateEServiceDocument", "roles": ["admin", "api"], "verb": "POST"},
 {"route": "cloneEServiceByDescriptor", "roles": ["admin", "api"], "verb": "POST"},
-{"route": "deleteEService", "roles": ["admin", "api"], "verb": "DELETE"}]}
+{"route": "deleteEService", "roles": ["admin", "api"], "verb": "DELETE"},
+{"route": "moveAttributesToDescriptors", "roles": ["internal"], "verb": "POST"}]}

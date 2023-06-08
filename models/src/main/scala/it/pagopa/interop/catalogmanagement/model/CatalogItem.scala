@@ -9,7 +9,7 @@ final case class CatalogItem(
   name: String,
   description: String,
   technology: CatalogItemTechnology,
-  attributes: CatalogAttributes,
+  attributes: Option[CatalogAttributes],
   descriptors: Seq[CatalogDescriptor],
   createdAt: OffsetDateTime
 )

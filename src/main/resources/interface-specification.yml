@@ -765,6 +765,33 @@ paths:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/Problem'
+  /eservice/{eServiceId}/moveAttributesToDescriptors:
+    parameters:
+      - $ref: '#/components/parameters/CorrelationIdHeader'
+      - $ref: '#/components/parameters/IpAddress'
+    post:
+      security:
+        - bearerAuth: [ ]
+      tags:
+        - e_service
+      summary: Move attributes to descriptors
+      operationId: moveAttributesToDescriptors
+      parameters:
+        - name: eServiceId
+          in: path
+          description: the eService Id
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Attributes moved
+        '404':
+          description: EService not found
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
 components:
   parameters:
     CorrelationIdHeader:
@@ -786,7 +813,6 @@ components:
         - name
         - description
         - technology
-        - attributes
       properties:
         producerId:
           type: string
@@ -797,8 +823,6 @@ components:
           type: string
         technology:
           $ref: '#/components/schemas/EServiceTechnology'
-        attributes:
-          $ref: '#/components/schemas/Attributes'
     EService:
       type: object
       required:
@@ -807,7 +831,6 @@ components:
         - name
         - description
         - technology
-        - attributes
         - descriptors
       properties:
         id:
@@ -822,8 +845,6 @@ components:
           type: string
         technology:
           $ref: '#/components/schemas/EServiceTechnology'
-        attributes:
-          $ref: '#/components/schemas/Attributes'
         descriptors:
           type: array
           items:
@@ -869,6 +890,7 @@ components:
         - dailyCallsTotal
         - agreementApprovalPolicy
         - serverUrls
+        - attributes
       properties:
         id:
           type: string
@@ -920,6 +942,8 @@ components:
         archivedAt:
           type: string
           format: date-time
+        attributes:
+          $ref: '#/components/schemas/Attributes'
     EServiceDescriptorSeed:
       required:
         - audience
@@ -927,6 +951,7 @@ components:
         - dailyCallsPerConsumer
         - dailyCallsTotal
         - agreementApprovalPolicy
+        - attributes
       type: object
       properties:
         description:
@@ -950,6 +975,8 @@ components:
           minimum: 0
         agreementApprovalPolicy:
           $ref: '#/components/schemas/AgreementApprovalPolicy'
+        attributes:
+          $ref: '#/components/schemas/Attributes'
     UpdateEServiceDescriptorSeed:
       required:
         - state
@@ -958,6 +985,7 @@ components:
         - dailyCallsPerConsumer
         - dailyCallsTotal
         - agreementApprovalPolicy
+        - attributes
       type: object
       properties:
         description:
@@ -983,6 +1011,8 @@ components:
           minimum: 0
         agreementApprovalPolicy:
           $ref: '#/components/schemas/AgreementApprovalPolicy'
+        attributes:
+          $ref: '#/components/schemas/Attributes'
     UpdateEServiceDescriptorDocumentSeed:
       required:
         - prettyName
@@ -1069,7 +1099,6 @@ components:
         - name
         - description
         - technology
-        - attributes
       properties:
         name:
           type: string
@@ -1077,8 +1106,6 @@ components:
           type: string
         technology:
           $ref: '#/components/schemas/EServiceTechnology'
-        attributes:
-          $ref: '#/components/schemas/Attributes'
     EServiceTechnology:
       type: string
       description: API Technology

@@ -131,6 +131,9 @@ object EServiceCqrsProjection {
       )
     case ClonedCatalogItemAdded(c)                                         =>
       ActionWithDocument(collection.insertOne, Document(s"{ data: ${c.toJson.compactPrint} }"))
+
+    case MovedAttributesFromEserviceToDescriptors(_) =>
+      NoOpAction // TODO! implement me
   }
 
 }

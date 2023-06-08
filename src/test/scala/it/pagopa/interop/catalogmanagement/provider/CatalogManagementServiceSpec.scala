@@ -34,6 +34,8 @@ object CatalogManagementServiceSpec extends MockFactory {
   val mockFileManager: CatalogFileManager                = mock[CatalogFileManager]
 }
 
+//TODO! Aggiungi asserzioni sui descriptor
+
 /** Local integration test.
   *
   * Starts a local cluster sharding and invokes REST operations on the eventsourcing entity
@@ -118,6 +120,7 @@ class CatalogManagementServiceSpec
           |   , "agreementApprovalPolicy": "MANUAL"
           |   , "audience": ["a", "b", "c"]
           |   , "state": "ARCHIVED"
+          |   , "attributes": {"verified": [], "certified": [], "declared": []}
           |}""".stripMargin
 
       val response = Await.result(
@@ -161,7 +164,8 @@ class CatalogManagementServiceSpec
           |  "dailyCallsPerConsumer": 30000,
           |  "dailyCallsTotal": 30000,
           |  "agreementApprovalPolicy": "MANUAL",
-          |  "state": "DRAFT"
+          |  "state": "DRAFT",
+          |   "attributes": {"verified": [], "certified": [], "declared": []}
           |}""".stripMargin
 
       val response = Await.result(
@@ -189,7 +193,8 @@ class CatalogManagementServiceSpec
           |  "dailyCallsPerConsumer": 30000,
           |  "dailyCallsTotal": 30000,
           |  "agreementApprovalPolicy": "MANUAL",
-          |  "state": "DRAFT"
+          |  "state": "DRAFT",
+          |  "attributes": {"verified": [], "certified": [], "declared": []}
           |}""".stripMargin
 
       val response = Await.result(
@@ -330,7 +335,6 @@ class CatalogManagementServiceSpec
           |     "name": "TestName"
           |   , "description": "howdy!"
           |   , "technology": "SOAP"
-          |   , "attributes": {"verified": [], "certified": [], "declared": []}
           |}""".stripMargin
       val response = Await.result(
         Http().singleRequest(
@@ -351,9 +355,6 @@ class CatalogManagementServiceSpec
       updatedEService.name shouldBe "TestName"
       updatedEService.description shouldBe "howdy!"
       updatedEService.technology shouldBe EServiceTechnology.SOAP
-      updatedEService.attributes.certified.size shouldBe 0
-      updatedEService.attributes.declared.size shouldBe 0
-      updatedEService.attributes.verified.size shouldBe 0
     }
 
     "delete an e-service when it has no descriptors" in {
