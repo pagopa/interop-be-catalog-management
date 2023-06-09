@@ -26,6 +26,8 @@ import java.time.OffsetDateTime
 import java.util.UUID
 import scala.concurrent.duration.{Duration, DurationInt}
 import scala.concurrent.{Await, ExecutionContextExecutor, Future}
+import akka.http.scaladsl.unmarshalling.Unmarshal
+import it.pagopa.interop.catalogmanagement.api.impl._
 
 object CatalogManagementServiceSpec extends MockFactory {
 
@@ -100,6 +102,83 @@ class CatalogManagementServiceSpec
     bindServer.foreach(_.foreach(_.unbind()))
     ActorTestKit.shutdown(httpSystem, 5.seconds)
     super.afterAll()
+  }
+
+  "Create a descriptor with attributes" should {
+    "succeed" in {
+      val eServiceUuid = "24772a3d-e6f2-47f2-96e5-4cbd1e4e8c45"
+      val eService     = createEService(eServiceUuid)
+
+      val attributeUUID = UUID.randomUUID()
+
+      (() => mockUUIDSupplier.get()).expects().returning(UUID.randomUUID()).once()
+      (() => mockOffsetDateTimeSupplier.get()).expects().returning(OffsetDateTime.now()).once()
+
+      val data = s"""{
+                    |     "description": "string"
+                    |   , "audience": ["audience"]
+                    |   , "voucherLifespan": 1984
+                    |   , "dailyCallsPerConsumer": 2022
+                    |   , "dailyCallsTotal": 2099
+                    |   , "agreementApprovalPolicy": "AUTOMATIC"
+                    |   , "attributes": {
+                    |       "certified": [
+                    |         {"single": { "id": "${attributeUUID}", "explicitAttributeVerification": true}}
+                    |       ],
+                    |       "verified": [],
+                    |       "declared": []
+                    |     }
+                    |}""".stripMargin
+
+      val response = Await.result(
+        Http().singleRequest(
+          HttpRequest(
+            uri = s"$serviceURL/eservices/${eService.id.toString}/descriptors",
+            method = HttpMethods.POST,
+            entity = HttpEntity(ContentType(MediaTypes.`application/json`), data),
+            headers = requestHeaders
+          )
+        ),
+        Duration.Inf
+      )
+
+      response.status shouldBe StatusCodes.OK
+      val descriptor = Await.result(Unmarshal(response).to[EServiceDescriptor], Duration.Inf)
+      descriptor.attributes shouldBe Attributes(
+        certified = List(Attribute(single = Some(AttributeValue(attributeUUID, true)))),
+        declared = Nil,
+        verified = Nil
+      )
+    }
+
+    "fail if there are no attributes" in {
+      val eServiceUuid = "24772a2d-e6f2-47f2-96e5-4cbd1e4e8c45"
+      val eService     = createEService(eServiceUuid)
+
+      val data =
+        s"""{
+           |     "description": "string"
+           |   , "audience": ["audience"]
+           |   , "voucherLifespan": 1984
+           |   , "dailyCallsPerConsumer": 2022
+           |   , "dailyCallsTotal": 2099
+           |   , "agreementApprovalPolicy": "AUTOMATIC"
+           |}""".stripMargin
+
+      val response = Await.result(
+        Http().singleRequest(
+          HttpRequest(
+            uri = s"$serviceURL/eservices/${eService.id.toString}/descriptors",
+            method = HttpMethods.POST,
+            entity = HttpEntity(ContentType(MediaTypes.`application/json`), data),
+            headers = requestHeaders
+          )
+        ),
+        Duration.Inf
+      )
+
+      response.status shouldBe StatusCodes.BadRequest
+    }
   }
 
   "Update descriptor" should {
