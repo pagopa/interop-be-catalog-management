@@ -190,7 +190,7 @@ object ResponseHandlers extends AkkaResponses {
       case Failure(ex)                                      => internalServerError(ex, logMessage)
     }
 
-  def castelifyResponse[T](logMessage: String)(
+  def moveAttributesToDescriptorsResponse[T](logMessage: String)(
     success: => Route
   )(result: Try[T])(implicit contexts: Seq[(String, String)], logger: LoggerTakingImplicit[ContextFieldsToLog]): Route =
     result match {

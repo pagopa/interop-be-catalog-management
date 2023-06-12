@@ -28,9 +28,6 @@ import scala.concurrent.duration.Duration
 import scala.concurrent.{Await, ExecutionContext, Future}
 import akka.Done
 
-// Crea l 'endpoint per spostare gli attributi
-// Sistemare la projection
-
 class EServiceApiServiceImpl(
   system: ActorSystem[_],
   sharding: ClusterSharding,
@@ -529,7 +526,7 @@ class EServiceApiServiceImpl(
       val result: Future[Done] =
         commander(eServiceId).askWithStatus(MoveAttributesFromEserviceToDescriptors(eServiceId, _))
 
-      onComplete(result) { castelifyResponse[Done](operationLabel)(moveAttributesToDescriptors204) }
+      onComplete(result) { moveAttributesToDescriptorsResponse[Done](operationLabel)(moveAttributesToDescriptors204) }
     }
 
   private def cloneItemAsNewDraft(
