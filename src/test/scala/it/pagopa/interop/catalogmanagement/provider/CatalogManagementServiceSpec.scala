@@ -36,8 +36,6 @@ object CatalogManagementServiceSpec extends MockFactory {
   val mockFileManager: CatalogFileManager                = mock[CatalogFileManager]
 }
 
-//TODO! Aggiungi asserzioni sui descriptor
-
 /** Local integration test.
   *
   * Starts a local cluster sharding and invokes REST operations on the eventsourcing entity

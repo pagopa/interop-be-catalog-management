@@ -88,17 +88,10 @@ final case class State(items: Map[String, CatalogItem]) extends Persistable {
     updateDescriptorLens(eServiceId, descriptorId, deleteDescriptorDocument(documentId))
   }
 
-  def moveAttributesToDescriptor(eServiceId: String): State = items.get(eServiceId).fold(this) { case item =>
-    def updateSingleDescriptor(d: CatalogDescriptor): CatalogDescriptor =
-      item.attributes.fold(d)(attrs => d.copy(attributes = attrs.combine(d.attributes)))
-
-    update(item.copy(attributes = None, descriptors = item.descriptors.map(updateSingleDescriptor)))
-  }
-
   /*
     Inspect the state data in order to find the corresponding descriptor to update with a custom descriptor operation.
     Even though quick and dirty, it behaves like a lens.
-    //TODO for updates of complex states as this, evaluate the introduction of an optic library (e.g.: Monocle)
+    TODO for updates of complex states as this, evaluate the introduction of an optic library (e.g.: Monocle)
    */
   private def updateDescriptorLens(
     eServiceId: String,

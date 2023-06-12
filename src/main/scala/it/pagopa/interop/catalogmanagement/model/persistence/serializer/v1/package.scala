@@ -1,6 +1,6 @@
 package it.pagopa.interop.catalogmanagement.model.persistence.serializer
 
-import cats.implicits._
+import cats.syntax.all._
 import it.pagopa.interop.commons.utils.TypeConversions.{OffsetDateTimeOps, StringOps, LongOps}
 import it.pagopa.interop.catalogmanagement.model._
 import it.pagopa.interop.catalogmanagement.model.persistence._
@@ -17,48 +17,13 @@ package object v1 {
 
   implicit def stateV1PersistEventDeserializer: PersistEventDeserializer[StateV1, State] = state =>
     state.items
-      .traverse { itemsV1 =>
-        for {
-          attributes  <- itemsV1.value.attributes.traverse(convertAttributesFromV1)
-          descriptors <- convertDescriptorsFromV1(itemsV1.value.descriptors)
-          technology  <- convertItemTechnologyFromV1(itemsV1.value.technology)
-          uuid        <- itemsV1.value.id.toUUID.toEither
-          producerId  <- itemsV1.value.producerId.toUUID.toEither
-          createdAt   <- itemsV1.value.createdAt.traverse(_.toOffsetDateTime.toEither)
-        } yield itemsV1.key -> CatalogItem(
-          id = uuid,
-          producerId = producerId,
-          name = itemsV1.value.name,
-          description = itemsV1.value.description,
-          technology = technology,
-          attributes = attributes,
-          descriptors = descriptors,
-          createdAt = createdAt.getOrElse(defaultCreatedAt)
-        )
-      }
+      .traverse { itemsV1 => convertCatalogItemsFromV1(itemsV1.value).tupleLeft(itemsV1.key) }
       .map(its => State(its.toMap))
 
-  implicit def stateV1PersistEventSerializer: PersistEventSerializer[State, StateV1] = state => {
-    val itemsV1: Either[Throwable, Seq[CatalogItemsV1]] = state.items.toSeq.traverse { case (key, catalogItem) =>
-      for {
-        descriptors <- convertDescriptorsToV1(catalogItem.descriptors)
-      } yield CatalogItemsV1(
-        key,
-        CatalogItemV1(
-          id = catalogItem.id.toString,
-          producerId = catalogItem.producerId.toString,
-          name = catalogItem.name,
-          description = catalogItem.description,
-          technology = convertItemTechnologyToV1(catalogItem.technology),
-          descriptors = descriptors,
-          createdAt = catalogItem.createdAt.toMillis.some,
-          attributes = catalogItem.attributes.map(convertAttributesToV1)
-        )
-      )
-    }
-
-    itemsV1.map(its => StateV1(its))
-  }
+  implicit def stateV1PersistEventSerializer: PersistEventSerializer[State, StateV1] = state =>
+    state.items.toSeq
+      .traverse { case (key, catalogItem) => convertCatalogItemsToV1(catalogItem).map(CatalogItemsV1(key, _)) }
+      .map(StateV1(_))
 
   implicit def catalogItemV1AddedV1PersistEventDeserializer
     : PersistEventDeserializer[CatalogItemV1AddedV1, CatalogItemAdded] = event =>
@@ -358,10 +323,10 @@ package object v1 {
 
   implicit def movedAttributesFromEserviceToDescriptorsV1PersistEventSerializer
     : PersistEventSerializer[MovedAttributesFromEserviceToDescriptors, MovedAttributesFromEserviceToDescriptorsV1] =
-    event => MovedAttributesFromEserviceToDescriptorsV1(event.eServiceId).asRight[Throwable]
+    event => convertCatalogItemsToV1(event.catalogItem).map(MovedAttributesFromEserviceToDescriptorsV1(_))
 
   implicit def movedAttributesFromEserviceToDescriptorsV1PersistEventDeserializer
     : PersistEventDeserializer[MovedAttributesFromEserviceToDescriptorsV1, MovedAttributesFromEserviceToDescriptors] =
-    event => MovedAttributesFromEserviceToDescriptors(event.eServiceId).asRight[Throwable]
+    event => convertCatalogItemsFromV1(event.catalogItem).map(MovedAttributesFromEserviceToDescriptors)
 
 }

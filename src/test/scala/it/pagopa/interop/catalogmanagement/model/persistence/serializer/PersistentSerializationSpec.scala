@@ -331,8 +331,9 @@ object PersistentSerializationSpec {
     CatalogItemDocumentUpdatedV1(eServiceId, descriptorId, documentId, docV1, serverUrls)
   )
 
-  val movedGen: Gen[(MovedAttributesFromEserviceToDescriptors, MovedAttributesFromEserviceToDescriptorsV1)] = for {
-    eServiceId <- stringGen
-  } yield (MovedAttributesFromEserviceToDescriptors(eServiceId), MovedAttributesFromEserviceToDescriptorsV1(eServiceId))
+  val movedGen: Gen[(MovedAttributesFromEserviceToDescriptors, MovedAttributesFromEserviceToDescriptorsV1)] =
+    catalogItemGen.map { case (item, itemV1) =>
+      (MovedAttributesFromEserviceToDescriptors(item), MovedAttributesFromEserviceToDescriptorsV1(itemV1))
+    }
 
 }

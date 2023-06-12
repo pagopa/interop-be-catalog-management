@@ -33,4 +33,4 @@ final case class CatalogItemDescriptorAdded(eServiceId: String, catalogDescripto
 
 final case class CatalogItemDescriptorUpdated(eServiceId: String, catalogDescriptor: CatalogDescriptor) extends Event
 
-final case class MovedAttributesFromEserviceToDescriptors(eServiceId: String) extends Event
+final case class MovedAttributesFromEserviceToDescriptors(catalogItem: CatalogItem) extends Event

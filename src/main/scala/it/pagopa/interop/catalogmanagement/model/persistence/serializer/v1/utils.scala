@@ -162,6 +162,37 @@ object utils {
   def convertDescriptorsFromV1(descriptors: Seq[CatalogDescriptorV1]): Either[Throwable, Seq[CatalogDescriptor]] =
     descriptors.traverse(convertDescriptorFromV1)
 
+  def convertCatalogItemsFromV1(itemV1: CatalogItemV1): Either[Throwable, CatalogItem] = for {
+    attributes  <- itemV1.attributes.traverse(convertAttributesFromV1)
+    descriptors <- convertDescriptorsFromV1(itemV1.descriptors)
+    technology  <- convertItemTechnologyFromV1(itemV1.technology)
+    uuid        <- itemV1.id.toUUID.toEither
+    producerId  <- itemV1.producerId.toUUID.toEither
+    createdAt   <- itemV1.createdAt.traverse(_.toOffsetDateTime.toEither)
+  } yield CatalogItem(
+    id = uuid,
+    producerId = producerId,
+    name = itemV1.name,
+    description = itemV1.description,
+    technology = technology,
+    attributes = attributes,
+    descriptors = descriptors,
+    createdAt = createdAt.getOrElse(defaultCreatedAt)
+  )
+
+  def convertCatalogItemsToV1(item: CatalogItem): Either[Throwable, CatalogItemV1] = for {
+    descriptors <- convertDescriptorsToV1(item.descriptors)
+  } yield CatalogItemV1(
+    id = item.id.toString,
+    producerId = item.producerId.toString,
+    name = item.name,
+    description = item.description,
+    technology = convertItemTechnologyToV1(item.technology),
+    descriptors = descriptors,
+    createdAt = item.createdAt.toMillis.some,
+    attributes = item.attributes.map(convertAttributesToV1)
+  )
+
   def convertDescriptorStateFromV1(state: CatalogDescriptorStateV1): Either[Throwable, CatalogDescriptorState] =
     state match {
       case CatalogDescriptorStateV1.DRAFT               => Right(Draft)

@@ -206,8 +206,9 @@ object CatalogPersistentBehavior {
             replyTo ! StatusReply.error[Done](EServiceNotFound(eServiceId))
             Effect.none[MovedAttributesFromEserviceToDescriptors, State]
           } { eService =>
+            val newEservice: CatalogItem = moveAttributesToDescriptor(eService)
             Effect
-              .persist(MovedAttributesFromEserviceToDescriptors(eService.id.toString))
+              .persist(MovedAttributesFromEserviceToDescriptors(newEservice))
               .thenRun((_: State) => replyTo ! StatusReply.Success(Done))
           }
 
@@ -216,6 +217,13 @@ object CatalogPersistentBehavior {
         context.log.debug(s"Passivate shard: ${shard.path.name}")
         Effect.none[Event, State]
     }
+  }
+
+  def moveAttributesToDescriptor(catalogItem: CatalogItem): CatalogItem = {
+    def updateSingleDescriptor(d: CatalogDescriptor): CatalogDescriptor =
+      catalogItem.attributes.fold(d)(attrs => d.copy(attributes = attrs.combine(d.attributes)))
+
+    catalogItem.copy(attributes = None, descriptors = catalogItem.descriptors.map(updateSingleDescriptor))
   }
 
   def containsAttribute(catalogItem: CatalogItem, attributeId: String): Boolean =
@@ -242,8 +250,7 @@ object CatalogPersistentBehavior {
         state.addDescriptor(eServiceId, catalogDescriptor)
       case CatalogItemDescriptorUpdated(eServiceId, catalogDescriptor)                                    =>
         state.updateDescriptor(eServiceId, catalogDescriptor)
-      case MovedAttributesFromEserviceToDescriptors(eServiceId)                                           =>
-        state.moveAttributesToDescriptor(eServiceId)
+      case MovedAttributesFromEserviceToDescriptors(catalogItem) => state.update(catalogItem)
     }
 
   val TypeKey: EntityTypeKey[Command] = EntityTypeKey[Command]("interop-be-catalog-management-persistence")

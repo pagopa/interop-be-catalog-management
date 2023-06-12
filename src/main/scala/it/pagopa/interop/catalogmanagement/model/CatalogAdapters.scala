@@ -91,7 +91,6 @@ object CatalogAdapters {
             voucherLifespan = updateEServiceDescriptorSeed.voucherLifespan,
             dailyCallsPerConsumer = updateEServiceDescriptorSeed.dailyCallsPerConsumer,
             dailyCallsTotal = updateEServiceDescriptorSeed.dailyCallsTotal,
-            // TODO! Why it's optional in the model?
             agreementApprovalPolicy =
               PersistentAgreementApprovalPolicy.fromApi(updateEServiceDescriptorSeed.agreementApprovalPolicy).some,
             attributes = attributes
