@@ -12,7 +12,7 @@ addSbtPlugin("com.thesamet" % "sbt-protoc" % "1.0.6")
 
 libraryDependencies += "com.thesamet.scalapb" %% "compilerplugin" % "0.11.11"
 
-addSbtPlugin("com.codecommit" % "sbt-github-actions" % "0.14.2")
+addSbtPlugin("com.github.sbt" % "sbt-github-actions" % "0.15.0")
 
 addSbtPlugin("com.codecommit" % "sbt-github-packages" % "0.5.3")
 
