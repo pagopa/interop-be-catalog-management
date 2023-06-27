@@ -13,7 +13,7 @@ message CatalogItemV1 {
   required string name = 3;
   required string description = 4;
   required CatalogItemTechnologyV1 technology = 5;
-  required CatalogAttributesV1  attributes = 6;
+  optional CatalogAttributesV1  attributes = 6;
   repeated CatalogDescriptorV1 descriptors = 7;
   optional int64 createdAt = 8;
 }
@@ -52,6 +52,7 @@ message CatalogDescriptorV1 {
   optional int64 suspendedAt = 15;
   optional int64 deprecatedAt = 16;
   optional int64 archivedAt = 17;
+  optional CatalogAttributesV1 attributes = 18;
 }
 
 message CatalogDocumentV1 {

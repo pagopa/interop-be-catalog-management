@@ -13,6 +13,7 @@ import it.pagopa.interop.catalogmanagement.model._
 import java.time.temporal.ChronoUnit
 import scala.concurrent.duration.{DurationInt, DurationLong}
 import scala.language.postfixOps
+import it.pagopa.interop.catalogmanagement.error.CatalogManagementErrors._
 
 object CatalogPersistentBehavior {
 
@@ -98,7 +99,6 @@ object CatalogPersistentBehavior {
                   .persist(CatalogItemDocumentDeleted(eServiceId, descriptorId, documentId))
                   .thenRun((_: State) => replyTo ! StatusReply.Success(Done))
             }
-
           }
           .getOrElse {
             replyTo ! StatusReply.Error[Done](s"Descriptor not found.")
@@ -106,8 +106,7 @@ object CatalogPersistentBehavior {
           }
 
       case AddCatalogItemDescriptor(eServiceId, catalogDescriptor, replyTo) =>
-        val catalogItem: Option[CatalogItem] =
-          state.items.get(eServiceId)
+        val catalogItem: Option[CatalogItem] = state.items.get(eServiceId)
 
         catalogItem
           .map { _ =>
@@ -191,21 +190,27 @@ object CatalogPersistentBehavior {
         Effect.none[Event, State]
 
       case ListCatalogItem(from, to, producerId, attributeId, status, replyTo) =>
-        val catalogItems: Seq[CatalogItem] = state.items
-          .filter(item => producerId.forall(_ == item._2.producerId.toString))
-          .filter(item =>
-            attributeId.forall(id =>
-              item._2.attributes.verified.exists(containsAttribute(_, id)) ||
-                item._2.attributes.declared.exists(containsAttribute(_, id)) ||
-                item._2.attributes.certified.exists(containsAttribute(_, id))
-            )
-          )
-          .filter(item => status.forall(s => item._2.descriptors.exists(_.state == s)))
-          .values
+        val catalogItems: Seq[CatalogItem] = state.items.values
+          .filter(catalogItem => producerId.forall(_ == catalogItem.producerId.toString))
+          .filter(catalogItem => attributeId.forall(containsAttribute(catalogItem, _)))
+          .filter(catalogItem => status.forall(s => catalogItem.descriptors.exists(_.state == s)))
           .toSeq
           .slice(from, to)
         replyTo ! catalogItems
         Effect.none[Event, State]
+
+      case MoveAttributesFromEserviceToDescriptors(eServiceId, replyTo) =>
+        state.items
+          .get(eServiceId)
+          .fold {
+            replyTo ! StatusReply.error[Done](EServiceNotFound(eServiceId))
+            Effect.none[MovedAttributesFromEserviceToDescriptors, State]
+          } { eService =>
+            val newEservice: CatalogItem = moveAttributesToDescriptor(eService)
+            Effect
+              .persist(MovedAttributesFromEserviceToDescriptors(newEservice))
+              .thenRun((_: State) => replyTo ! StatusReply.Success(Done))
+          }
 
       case Idle =>
         shard ! ClusterSharding.Passivate(context.self)
@@ -214,8 +219,15 @@ object CatalogPersistentBehavior {
     }
   }
 
-  def containsAttribute(attribute: CatalogAttribute, attributeId: String): Boolean =
-    attribute match {
+  def moveAttributesToDescriptor(catalogItem: CatalogItem): CatalogItem = {
+    def updateSingleDescriptor(d: CatalogDescriptor): CatalogDescriptor =
+      catalogItem.attributes.fold(d)(attrs => d.copy(attributes = attrs.combine(d.attributes)))
+
+    catalogItem.copy(attributes = None, descriptors = catalogItem.descriptors.map(updateSingleDescriptor))
+  }
+
+  def containsAttribute(catalogItem: CatalogItem, attributeId: String): Boolean =
+    catalogItem.descriptors.map(_.attributes).toList.flatMap(a => a.certified ++ a.declared ++ a.verified).exists {
       case SingleAttribute(id) => id.id.toString == attributeId
       case GroupAttribute(ids) => ids.exists(_.id.toString == attributeId)
     }
@@ -238,29 +250,26 @@ object CatalogPersistentBehavior {
         state.addDescriptor(eServiceId, catalogDescriptor)
       case CatalogItemDescriptorUpdated(eServiceId, catalogDescriptor)                                    =>
         state.updateDescriptor(eServiceId, catalogDescriptor)
+      case MovedAttributesFromEserviceToDescriptors(catalogItem) => state.update(catalogItem)
     }
 
-  val TypeKey: EntityTypeKey[Command] =
-    EntityTypeKey[Command]("interop-be-catalog-management-persistence")
+  val TypeKey: EntityTypeKey[Command] = EntityTypeKey[Command]("interop-be-catalog-management-persistence")
 
   def apply(
     shard: ActorRef[ClusterSharding.ShardCommand],
     persistenceId: PersistenceId,
     projectionTag: String
-  ): Behavior[Command] = {
-    Behaviors.setup { context =>
-      context.log.debug(s"Starting EService Shard ${persistenceId.id}")
-      val numberOfEvents =
-        context.system.settings.config
-          .getInt("catalog-management.number-of-events-before-snapshot")
-      EventSourcedBehavior[Command, Event, State](
-        persistenceId = persistenceId,
-        emptyState = State.empty,
-        commandHandler = commandHandler(shard, context),
-        eventHandler = eventHandler
-      ).withRetention(RetentionCriteria.snapshotEvery(numberOfEvents = numberOfEvents, keepNSnapshots = 1))
-        .withTagger(_ => Set(projectionTag))
-        .onPersistFailure(SupervisorStrategy.restartWithBackoff(200 millis, 5 seconds, 0.1))
-    }
+  ): Behavior[Command] = Behaviors.setup { context =>
+    context.log.debug(s"Starting EService Shard ${persistenceId.id}")
+    val numberOfEvents = context.system.settings.config.getInt("catalog-management.number-of-events-before-snapshot")
+    EventSourcedBehavior[Command, Event, State](
+      persistenceId = persistenceId,
+      emptyState = State.empty,
+      commandHandler = commandHandler(shard, context),
+      eventHandler = eventHandler
+    ).withRetention(RetentionCriteria.snapshotEvery(numberOfEvents = numberOfEvents, keepNSnapshots = 1))
+      .withTagger(_ => Set(projectionTag))
+      .onPersistFailure(SupervisorStrategy.restartWithBackoff(200 millis, 5 seconds, 0.1))
   }
+
 }

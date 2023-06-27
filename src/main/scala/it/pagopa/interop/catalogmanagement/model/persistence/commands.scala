@@ -76,3 +76,6 @@ final case class UpdateCatalogItemDescriptor(
   catalogDescriptor: CatalogDescriptor,
   replyTo: ActorRef[StatusReply[Option[CatalogDescriptor]]]
 ) extends Command
+
+final case class MoveAttributesFromEserviceToDescriptors(eServiceId: String, replyTo: ActorRef[StatusReply[Done]])
+    extends Command

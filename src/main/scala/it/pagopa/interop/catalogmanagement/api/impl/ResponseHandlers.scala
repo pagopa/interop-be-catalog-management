@@ -190,4 +190,12 @@ object ResponseHandlers extends AkkaResponses {
       case Failure(ex)                                      => internalServerError(ex, logMessage)
     }
 
+  def moveAttributesToDescriptorsResponse[T](logMessage: String)(
+    success: => Route
+  )(result: Try[T])(implicit contexts: Seq[(String, String)], logger: LoggerTakingImplicit[ContextFieldsToLog]): Route =
+    result match {
+      case Success(_)                    => success
+      case Failure(ex: EServiceNotFound) => notFound(ex, logMessage)
+      case Failure(ex)                   => internalServerError(ex, logMessage)
+    }
 }

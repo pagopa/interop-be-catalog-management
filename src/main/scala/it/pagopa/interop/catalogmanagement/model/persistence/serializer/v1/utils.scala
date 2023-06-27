@@ -30,7 +30,6 @@ object utils {
       declared = attributes.declared.map(convertAttributeToV1),
       verified = attributes.verified.map(convertAttributeToV1)
     )
-
   }
 
   def convertAttributeFromV1(catalogAttributeV1: CatalogAttributeV1): Either[Throwable, CatalogAttribute] = {
@@ -62,7 +61,7 @@ object utils {
     verified  <- attributes.verified.traverse(convertAttributeFromV1)
   } yield CatalogAttributes(certified = certified, declared = declared, verified = verified)
 
-  def convertDescriptorToV1(descriptor: CatalogDescriptor): Either[Throwable, CatalogDescriptorV1] = {
+  def convertDescriptorToV1(descriptor: CatalogDescriptor): Either[Throwable, CatalogDescriptorV1] =
     Right(
       CatalogDescriptorV1(
         id = descriptor.id.toString,
@@ -98,13 +97,13 @@ object utils {
         agreementApprovalPolicy = descriptor.agreementApprovalPolicy.map(convertAgreementApprovalPolicyToV1),
         createdAt = descriptor.createdAt.toMillis.some,
         serverUrls = descriptor.serverUrls,
+        attributes = convertAttributesToV1(descriptor.attributes).some,
         publishedAt = descriptor.publishedAt.map(_.toMillis),
         suspendedAt = descriptor.suspendedAt.map(_.toMillis),
         deprecatedAt = descriptor.deprecatedAt.map(_.toMillis),
         archivedAt = descriptor.archivedAt.map(_.toMillis)
       )
     )
-  }
 
   def convertDescriptorsToV1(descriptors: Seq[CatalogDescriptor]): Either[Throwable, Seq[CatalogDescriptorV1]] =
     descriptors.traverse(convertDescriptorToV1)
@@ -118,6 +117,7 @@ object utils {
       suspendedAt             <- ver1.suspendedAt.traverse(_.toOffsetDateTime.toEither)
       deprecatedAt            <- ver1.deprecatedAt.traverse(_.toOffsetDateTime.toEither)
       archivedAt              <- ver1.archivedAt.traverse(_.toOffsetDateTime.toEither)
+      maybeAttributes         <- ver1.attributes.traverse(convertAttributesFromV1)
     } yield CatalogDescriptor(
       id = UUID.fromString(ver1.id),
       version = ver1.version,
@@ -155,12 +155,43 @@ object utils {
       publishedAt = if (state == Draft) None else publishedAt orElse defaultPublishedAt.some,
       suspendedAt = suspendedAt,
       deprecatedAt = deprecatedAt,
-      archivedAt = archivedAt
+      archivedAt = archivedAt,
+      attributes = maybeAttributes.getOrElse(CatalogAttributes.empty)
     )
 
-  def convertDescriptorsFromV1(descriptors: Seq[CatalogDescriptorV1]): Either[Throwable, Seq[CatalogDescriptor]] = {
+  def convertDescriptorsFromV1(descriptors: Seq[CatalogDescriptorV1]): Either[Throwable, Seq[CatalogDescriptor]] =
     descriptors.traverse(convertDescriptorFromV1)
-  }
+
+  def convertCatalogItemsFromV1(itemV1: CatalogItemV1): Either[Throwable, CatalogItem] = for {
+    attributes  <- itemV1.attributes.traverse(convertAttributesFromV1)
+    descriptors <- convertDescriptorsFromV1(itemV1.descriptors)
+    technology  <- convertItemTechnologyFromV1(itemV1.technology)
+    uuid        <- itemV1.id.toUUID.toEither
+    producerId  <- itemV1.producerId.toUUID.toEither
+    createdAt   <- itemV1.createdAt.traverse(_.toOffsetDateTime.toEither)
+  } yield CatalogItem(
+    id = uuid,
+    producerId = producerId,
+    name = itemV1.name,
+    description = itemV1.description,
+    technology = technology,
+    attributes = attributes,
+    descriptors = descriptors,
+    createdAt = createdAt.getOrElse(defaultCreatedAt)
+  )
+
+  def convertCatalogItemsToV1(item: CatalogItem): Either[Throwable, CatalogItemV1] = for {
+    descriptors <- convertDescriptorsToV1(item.descriptors)
+  } yield CatalogItemV1(
+    id = item.id.toString,
+    producerId = item.producerId.toString,
+    name = item.name,
+    description = item.description,
+    technology = convertItemTechnologyToV1(item.technology),
+    descriptors = descriptors,
+    createdAt = item.createdAt.toMillis.some,
+    attributes = item.attributes.map(convertAttributesToV1)
+  )
 
   def convertDescriptorStateFromV1(state: CatalogDescriptorStateV1): Either[Throwable, CatalogDescriptorState] =
     state match {
@@ -173,14 +204,13 @@ object utils {
         Left(new RuntimeException(s"Unable to deserialize catalog descriptor state value $value"))
     }
 
-  def convertDescriptorStateToV1(state: CatalogDescriptorState): CatalogDescriptorStateV1 =
-    state match {
-      case Draft      => CatalogDescriptorStateV1.DRAFT
-      case Published  => CatalogDescriptorStateV1.PUBLISHED
-      case Deprecated => CatalogDescriptorStateV1.DEPRECATED
-      case Suspended  => CatalogDescriptorStateV1.SUSPENDED
-      case Archived   => CatalogDescriptorStateV1.ARCHIVED
-    }
+  def convertDescriptorStateToV1(state: CatalogDescriptorState): CatalogDescriptorStateV1 = state match {
+    case Draft      => CatalogDescriptorStateV1.DRAFT
+    case Published  => CatalogDescriptorStateV1.PUBLISHED
+    case Deprecated => CatalogDescriptorStateV1.DEPRECATED
+    case Suspended  => CatalogDescriptorStateV1.SUSPENDED
+    case Archived   => CatalogDescriptorStateV1.ARCHIVED
+  }
 
   def convertAgreementApprovalPolicyFromV1(
     policyV1: AgreementApprovalPolicyV1

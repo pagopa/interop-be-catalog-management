@@ -76,8 +76,27 @@ object CatalogAdapters {
       publishedAt = p.publishedAt,
       suspendedAt = p.suspendedAt,
       deprecatedAt = p.deprecatedAt,
-      archivedAt = p.archivedAt
+      archivedAt = p.archivedAt,
+      attributes = p.attributes.toApi
     )
+
+    def mergeWithSeed(updateEServiceDescriptorSeed: UpdateEServiceDescriptorSeed): Future[CatalogDescriptor] =
+      CatalogAttributes
+        .fromApi(updateEServiceDescriptorSeed.attributes)
+        .map(attributes =>
+          p.copy(
+            description = updateEServiceDescriptorSeed.description,
+            state = CatalogDescriptorState.fromApi(updateEServiceDescriptorSeed.state),
+            audience = updateEServiceDescriptorSeed.audience,
+            voucherLifespan = updateEServiceDescriptorSeed.voucherLifespan,
+            dailyCallsPerConsumer = updateEServiceDescriptorSeed.dailyCallsPerConsumer,
+            dailyCallsTotal = updateEServiceDescriptorSeed.dailyCallsTotal,
+            agreementApprovalPolicy =
+              PersistentAgreementApprovalPolicy.fromApi(updateEServiceDescriptorSeed.agreementApprovalPolicy).some,
+            attributes = attributes
+          )
+        )
+        .toFuture
 
     def isDraft: Boolean = p.state == Draft
   }
@@ -148,7 +167,6 @@ object CatalogAdapters {
       name = p.name,
       description = p.description,
       technology = p.technology.toApi,
-      attributes = p.attributes.toApi,
       descriptors = p.descriptors.map(_.toApi)
     )
 
@@ -161,18 +179,11 @@ object CatalogAdapters {
       documents <- p.descriptors.find(_.id == UUID.fromString(descriptorId))
     } yield documents.docs.map(_.path)
 
-    def mergeWithSeed(updateEServiceSeed: UpdateEServiceSeed): Future[CatalogItem] =
-      CatalogAttributes
-        .fromApi(updateEServiceSeed.attributes)
-        .map(attributes =>
-          p.copy(
-            name = updateEServiceSeed.name,
-            description = updateEServiceSeed.description,
-            technology = CatalogItemTechnology.fromApi(updateEServiceSeed.technology),
-            attributes = attributes
-          )
-        )
-        .toFuture
+    def update(updateEServiceSeed: UpdateEServiceSeed): CatalogItem = p.copy(
+      name = updateEServiceSeed.name,
+      description = updateEServiceSeed.description,
+      technology = CatalogItemTechnology.fromApi(updateEServiceSeed.technology)
+    )
 
     def currentVersion: Option[String] = p.descriptors.flatMap(_.version.toLongOption).maxOption.map(_.toString)
   }
@@ -182,21 +193,16 @@ object CatalogAdapters {
       seed: EServiceSeed,
       uuidSupplier: UUIDSupplier,
       offsetDateTimeSupplier: OffsetDateTimeSupplier
-    ): Future[CatalogItem] = CatalogAttributes
-      .fromApi(seed.attributes)
-      .map(attributes =>
-        CatalogItem(
-          id = uuidSupplier.get(),
-          producerId = seed.producerId,
-          name = seed.name,
-          description = seed.description,
-          technology = CatalogItemTechnology.fromApi(seed.technology),
-          attributes = attributes,
-          descriptors = Seq.empty[CatalogDescriptor],
-          createdAt = offsetDateTimeSupplier.get()
-        )
-      )
-      .toFuture
+    ): CatalogItem = CatalogItem(
+      id = uuidSupplier.get(),
+      producerId = seed.producerId,
+      name = seed.name,
+      description = seed.description,
+      technology = CatalogItemTechnology.fromApi(seed.technology),
+      descriptors = List.empty[CatalogDescriptor],
+      createdAt = offsetDateTimeSupplier.get(),
+      attributes = None
+    )
   }
 
   implicit class CatalogItemTechnologyWrapper(private val p: CatalogItemTechnology) extends AnyVal {

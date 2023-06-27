@@ -37,6 +37,7 @@ class PersistentSerializationSpec extends ScalaCheckSuite with DiffxAssertions {
   serdeCheck[CatalogItemDescriptorUpdated, CatalogItemDescriptorUpdatedV1](catalogItemDescriptorUpdatedGen)
   serdeCheck[CatalogItemDocumentAdded, CatalogItemDocumentAddedV1](catalogItemDocumentAddedGen)
   serdeCheck[CatalogItemDocumentUpdated, CatalogItemDocumentUpdatedV1](catalogItemDocumentUpdatedGen)
+  serdeCheck[MovedAttributesFromEserviceToDescriptors, MovedAttributesFromEserviceToDescriptorsV1](movedGen)
 
   deserCheck[State, StateV1](stateGen)
   deserCheck[CatalogItemAdded, CatalogItemV1AddedV1](catalogItemAddedGen)
@@ -51,6 +52,7 @@ class PersistentSerializationSpec extends ScalaCheckSuite with DiffxAssertions {
   deserCheck[CatalogItemDescriptorUpdated, CatalogItemDescriptorUpdatedV1](catalogItemDescriptorUpdatedGen)
   deserCheck[CatalogItemDocumentAdded, CatalogItemDocumentAddedV1](catalogItemDocumentAddedGen)
   deserCheck[CatalogItemDocumentUpdated, CatalogItemDocumentUpdatedV1](catalogItemDocumentUpdatedGen)
+  deserCheck[MovedAttributesFromEserviceToDescriptors, MovedAttributesFromEserviceToDescriptorsV1](movedGen)
 
   // TODO move me in commons
   def serdeCheck[A: TypeTag, B](gen: Gen[(A, B)], adapter: B => B = identity[B](_))(implicit
@@ -195,6 +197,7 @@ object PersistentSerializationSpec {
     (suspendedAt, suspendedAtV1)   <- offsetDatetimeLongGen
     (deprecatedAt, deprecatedAtV1) <- offsetDatetimeLongGen
     (archivedAt, archivedAtV1)     <- offsetDatetimeLongGen
+    (attributes, attributesV1)     <- catalogAttributesGen
   } yield (
     CatalogDescriptor(
       id = id,
@@ -213,7 +216,8 @@ object PersistentSerializationSpec {
       publishedAt = if (state == Draft) None else publishedAt.some,
       suspendedAt = suspendedAt.some,
       deprecatedAt = deprecatedAt.some,
-      archivedAt = archivedAt.some
+      archivedAt = archivedAt.some,
+      attributes = attributes
     ),
     CatalogDescriptorV1(
       id = id.toString,
@@ -232,7 +236,8 @@ object PersistentSerializationSpec {
       publishedAt = if (stateV1.isDraft) None else publishedAtV1.some,
       suspendedAt = suspendedAtV1.some,
       deprecatedAt = deprecatedAtV1.some,
-      archivedAt = archivedAtV1.some
+      archivedAt = archivedAtV1.some,
+      attributes = attributesV1.some
     )
   )
 
@@ -242,12 +247,11 @@ object PersistentSerializationSpec {
     name                     <- stringGen
     description              <- stringGen
     (tech, techV1)           <- catalogItemTechnologyGen
-    (attr, attrV1)           <- catalogAttributesGen
     (desc, descV1)           <- listOf(catalogDescriptorGen).map(_.separate)
     (createdAt, createdAtV1) <- offsetDatetimeLongGen
   } yield (
-    CatalogItem(id, producerId, name, description, tech, attr, desc, createdAt),
-    CatalogItemV1(id.toString, producerId.toString, name, description, techV1, attrV1, descV1, createdAtV1.some)
+    CatalogItem(id, producerId, name, description, tech, None, desc, createdAt),
+    CatalogItemV1(id.toString, producerId.toString, name, description, techV1, None, descV1, createdAtV1.some)
   )
 
   val stateGen: Gen[(State, StateV1)] =
@@ -326,5 +330,10 @@ object PersistentSerializationSpec {
     CatalogItemDocumentUpdated(eServiceId, descriptorId, documentId, doc, serverUrls),
     CatalogItemDocumentUpdatedV1(eServiceId, descriptorId, documentId, docV1, serverUrls)
   )
+
+  val movedGen: Gen[(MovedAttributesFromEserviceToDescriptors, MovedAttributesFromEserviceToDescriptorsV1)] =
+    catalogItemGen.map { case (item, itemV1) =>
+      (MovedAttributesFromEserviceToDescriptors(item), MovedAttributesFromEserviceToDescriptorsV1(itemV1))
+    }
 
 }

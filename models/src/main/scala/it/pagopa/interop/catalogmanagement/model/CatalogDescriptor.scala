@@ -20,5 +20,6 @@ final case class CatalogDescriptor(
   publishedAt: Option[OffsetDateTime],
   suspendedAt: Option[OffsetDateTime],
   deprecatedAt: Option[OffsetDateTime],
-  archivedAt: Option[OffsetDateTime]
+  archivedAt: Option[OffsetDateTime],
+  attributes: CatalogAttributes
 )

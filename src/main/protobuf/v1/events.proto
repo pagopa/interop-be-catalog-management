@@ -60,3 +60,7 @@ message CatalogItemDescriptorUpdatedV1 {
   required string eServiceId = 1;
   required CatalogDescriptorV1 catalogDescriptor = 2;
 }
+
+message MovedAttributesFromEserviceToDescriptorsV1 {
+  required CatalogItemV1 catalogItem = 1;
+}

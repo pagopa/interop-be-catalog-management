@@ -3,32 +3,27 @@ package it.pagopa.interop.catalogmanagement.model.persistence
 import it.pagopa.interop.catalogmanagement.model.{CatalogDescriptor, CatalogDocument, CatalogItem}
 
 final case class State(items: Map[String, CatalogItem]) extends Persistable {
+
   def deleteDescriptor(catalogItem: CatalogItem, descriptorId: String): State = {
     val updated = catalogItem.copy(descriptors = catalogItem.descriptors.filter(_.id.toString != descriptorId))
     update(updated)
   }
 
-  def deleteEService(catalogItemId: String): State =
-    copy(items = items - catalogItemId)
+  def deleteEService(catalogItemId: String): State = copy(items = items - catalogItemId)
 
-  def add(catalogItem: CatalogItem): State =
-    copy(items = items + (catalogItem.id.toString -> catalogItem))
+  def add(catalogItem: CatalogItem): State = copy(items = items + (catalogItem.id.toString -> catalogItem))
 
-  def update(catalogItem: CatalogItem): State =
-    copy(items = items + (catalogItem.id.toString -> catalogItem))
+  def update(catalogItem: CatalogItem): State = copy(items = items + (catalogItem.id.toString -> catalogItem))
 
-  def addDescriptor(eServiceId: String, catalogDescriptor: CatalogDescriptor): State = {
-    items.get(eServiceId) match {
-      case Some(item) =>
-        val updatedItem = item.copy(descriptors = catalogDescriptor +: item.descriptors)
-        copy(items = items + (item.id.toString -> updatedItem))
-      case None       => this
-    }
+  def addDescriptor(eServiceId: String, catalogDescriptor: CatalogDescriptor): State = items.get(eServiceId) match {
+    case Some(item) =>
+      val updatedItem = item.copy(descriptors = catalogDescriptor +: item.descriptors)
+      copy(items = items + (item.id.toString -> updatedItem))
+    case None       => this
   }
 
-  def updateDescriptor(eServiceId: String, catalogDescriptor: CatalogDescriptor): State = {
+  def updateDescriptor(eServiceId: String, catalogDescriptor: CatalogDescriptor): State =
     updateDescriptorLens(eServiceId, catalogDescriptor.id.toString, _ => catalogDescriptor)
-  }
 
   def updateDocument(
     eServiceId: String,
@@ -65,13 +60,10 @@ final case class State(items: Map[String, CatalogItem]) extends Persistable {
     isInterface: Boolean,
     serverUrls: List[String]
   ): State = {
-    def addDocument(doc: CatalogDocument, isInterface: Boolean)(descriptor: CatalogDescriptor) = {
-      if (isInterface) {
-        descriptor.copy(interface = Some(doc), serverUrls = serverUrls)
-      } else {
-        descriptor.copy(docs = doc +: descriptor.docs)
-      }
-    }
+    def addDocument(doc: CatalogDocument, isInterface: Boolean)(descriptor: CatalogDescriptor) =
+      if (isInterface) descriptor.copy(interface = Some(doc), serverUrls = serverUrls)
+      else descriptor.copy(docs = doc +: descriptor.docs)
+
     updateDescriptorLens(eServiceId, descriptorId, addDocument(openapiDoc, isInterface))
   }
 
@@ -99,7 +91,7 @@ final case class State(items: Map[String, CatalogItem]) extends Persistable {
   /*
     Inspect the state data in order to find the corresponding descriptor to update with a custom descriptor operation.
     Even though quick and dirty, it behaves like a lens.
-    //TODO for updates of complex states as this, evaluate the introduction of an optic library (e.g.: Monocle)
+    TODO for updates of complex states as this, evaluate the introduction of an optic library (e.g.: Monocle)
    */
   private def updateDescriptorLens(
     eServiceId: String,

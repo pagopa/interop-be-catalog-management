@@ -26,6 +26,7 @@ import it.pagopa.interop.commons.utils.service.{OffsetDateTimeSupplier, UUIDSupp
 
 import scala.concurrent.duration.Duration
 import scala.concurrent.{Await, ExecutionContext, Future}
+import akka.Done
 
 class EServiceApiServiceImpl(
   system: ActorSystem[_],
@@ -50,10 +51,11 @@ class EServiceApiServiceImpl(
     val operationLabel = s"Creating EService ${eServiceSeed.name} for producer ${eServiceSeed.producerId}"
     logger.info(operationLabel)
 
-    val result: Future[EService] = for {
-      catalogItem <- CatalogItem.create(eServiceSeed, uuidSupplier, offsetDateTimeSupplier)
-      added       <- commander(catalogItem.id.toString).askWithStatus(ref => AddCatalogItem(catalogItem, ref))
-    } yield added.toApi
+    val catalogItem = CatalogItem.create(eServiceSeed, uuidSupplier, offsetDateTimeSupplier)
+
+    val result: Future[EService] = commander(catalogItem.id.toString)
+      .askWithStatus(ref => AddCatalogItem(catalogItem, ref))
+      .map(_.toApi)
 
     onComplete(result) { createEServiceResponse[EService](operationLabel)(createEService200) }
   }
@@ -158,7 +160,6 @@ class EServiceApiServiceImpl(
         .map(_.map(_.toApi))
 
     getEServicesResponse[Seq[EService]](operationLabel)(getEServices200)(result.toTry)
-
   }
 
   override def getEServiceDocument(eServiceId: String, descriptorId: String, documentId: String)(implicit
@@ -228,24 +229,25 @@ class EServiceApiServiceImpl(
 
     def mergeChanges(
       descriptor: CatalogDescriptor,
-      eServiceDescriptorSeed: UpdateEServiceDescriptorSeed
-    ): CatalogDescriptor =
-      descriptor
-        .copy(
-          description = eServiceDescriptorSeed.description,
-          audience = eServiceDescriptorSeed.audience,
-          voucherLifespan = eServiceDescriptorSeed.voucherLifespan,
-          dailyCallsPerConsumer = eServiceDescriptorSeed.dailyCallsPerConsumer,
-          state = CatalogDescriptorState.fromApi(eServiceDescriptorSeed.state),
-          dailyCallsTotal = eServiceDescriptorSeed.dailyCallsTotal,
-          agreementApprovalPolicy =
-            PersistentAgreementApprovalPolicy.fromApi(eServiceDescriptorSeed.agreementApprovalPolicy).some
-        )
+      eServiceDescriptorSeed: UpdateEServiceDescriptorSeed,
+      attributes: CatalogAttributes
+    ): CatalogDescriptor = descriptor.copy(
+      description = eServiceDescriptorSeed.description,
+      audience = eServiceDescriptorSeed.audience,
+      voucherLifespan = eServiceDescriptorSeed.voucherLifespan,
+      dailyCallsPerConsumer = eServiceDescriptorSeed.dailyCallsPerConsumer,
+      state = CatalogDescriptorState.fromApi(eServiceDescriptorSeed.state),
+      dailyCallsTotal = eServiceDescriptorSeed.dailyCallsTotal,
+      agreementApprovalPolicy =
+        PersistentAgreementApprovalPolicy.fromApi(eServiceDescriptorSeed.agreementApprovalPolicy).some,
+      attributes = attributes
+    )
 
     val result: Future[EService] = for {
       eService           <- retrieveCatalogItem(eServiceId)
       toUpdateDescriptor <- getDescriptor(eService, descriptorId).toFuture
-      updatedDescriptor = mergeChanges(toUpdateDescriptor, eServiceDescriptorSeed)
+      attributes         <- CatalogAttributes.fromApi(eServiceDescriptorSeed.attributes).toFuture
+      updatedDescriptor = mergeChanges(toUpdateDescriptor, eServiceDescriptorSeed, attributes)
       updatedItem       = eService.copy(descriptors =
         eService.descriptors.filter(_.id.toString != descriptorId) :+ updatedDescriptor
       )
@@ -265,27 +267,25 @@ class EServiceApiServiceImpl(
 
     val result: Future[EService] = for {
       eService <- retrieveCatalogItem(eServiceId)
-      update   <- eService.mergeWithSeed(updateEServiceSeed)
-      result   <- askWithResult(eServiceId, ref => UpdateCatalogItem(update, ref))
+      updated = eService.update(updateEServiceSeed)
+      result <- askWithResult(eServiceId, ref => UpdateCatalogItem(updated, ref))
     } yield result.toApi
 
     onComplete(result) { updateEServiceByIdResponse[EService](operationLabel)(updateEServiceById200) }
   }
 
   private def descriptorDeletable(catalogItem: CatalogItem, descriptorId: String): Either[ComponentError, Unit] =
-    getDescriptor(catalogItem, descriptorId)
-      .flatMap(descriptor =>
-        Left(DescriptorNotInDraft(catalogItem.id.toString, descriptorId)).withRight[Unit].unlessA(descriptor.isDraft)
-      )
+    getDescriptor(catalogItem, descriptorId).flatMap(descriptor =>
+      Left(DescriptorNotInDraft(catalogItem.id.toString, descriptorId)).withRight[Unit].unlessA(descriptor.isDraft)
+    )
 
   private def commander(id: String): EntityRef[Command] =
     sharding.entityRefFor(CatalogPersistentBehavior.TypeKey, getShard(id, settings.numberOfShards))
 
-  private def retrieveCatalogItem(eServiceId: String): Future[CatalogItem] =
-    for {
-      retrieved <- commander(eServiceId).askWithStatus(ref => GetCatalogItem(eServiceId, ref))
-      current   <- retrieved.toFuture(EServiceNotFound(eServiceId))
-    } yield current
+  private def retrieveCatalogItem(eServiceId: String): Future[CatalogItem] = for {
+    retrieved <- commander(eServiceId).askWithStatus(ref => GetCatalogItem(eServiceId, ref))
+    current   <- retrieved.toFuture(EServiceNotFound(eServiceId))
+  } yield current
 
   override def createDescriptor(eServiceId: String, eServiceDescriptorSeed: EServiceDescriptorSeed)(implicit
     toEntityMarshallerEServiceDescriptor: ToEntityMarshaller[EServiceDescriptor],
@@ -298,6 +298,7 @@ class EServiceApiServiceImpl(
     val result: Future[EServiceDescriptor] = for {
       current     <- retrieveCatalogItem(eServiceId)
       nextVersion <- VersionGenerator.next(current.currentVersion).toFuture
+      attributes  <- CatalogAttributes.fromApi(eServiceDescriptorSeed.attributes).toFuture
       createdCatalogDescriptor = CatalogDescriptor(
         id = uuidSupplier.get(),
         description = eServiceDescriptorSeed.description,
@@ -316,7 +317,8 @@ class EServiceApiServiceImpl(
         publishedAt = None,
         suspendedAt = None,
         deprecatedAt = None,
-        archivedAt = None
+        archivedAt = None,
+        attributes = attributes
       )
       _ <- commander(eServiceId).askWithStatus(ref =>
         AddCatalogItemDescriptor(current.id.toString, createdCatalogDescriptor, ref)
@@ -514,6 +516,19 @@ class EServiceApiServiceImpl(
     onComplete(result) { cloneEServiceByDescriptorResponse[EService](operationLabel)(cloneEServiceByDescriptor200) }
   }
 
+  override def moveAttributesToDescriptors(
+    eServiceId: String
+  )(implicit toEntityMarshallerProblem: ToEntityMarshaller[Problem], contexts: Seq[(String, String)]): Route =
+    authorize(INTERNAL_ROLE) {
+      val operationLabel = s"Moving attributes from EService $eServiceId to its descriptors"
+      logger.info(operationLabel)
+
+      val result: Future[Done] =
+        commander(eServiceId).askWithStatus(MoveAttributesFromEserviceToDescriptors(eServiceId, _))
+
+      onComplete(result) { moveAttributesToDescriptorsResponse[Done](operationLabel)(moveAttributesToDescriptors204) }
+    }
+
   private def cloneItemAsNewDraft(
     serviceToClone: CatalogItem,
     descriptorToClone: CatalogDescriptor,
@@ -540,7 +555,8 @@ class EServiceApiServiceImpl(
         publishedAt = None,
         suspendedAt = None,
         deprecatedAt = None,
-        archivedAt = None
+        archivedAt = None,
+        attributes = descriptorToClone.attributes
       )
     } yield CatalogItem(
       id = uuidSupplier.get(),
@@ -548,7 +564,7 @@ class EServiceApiServiceImpl(
       name = s"${serviceToClone.name} - clone",
       description = serviceToClone.description,
       technology = serviceToClone.technology,
-      attributes = serviceToClone.attributes,
+      attributes = None,
       descriptors = Seq(descriptor),
       createdAt = offsetDateTimeSupplier.get()
     )

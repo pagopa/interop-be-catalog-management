@@ -47,7 +47,23 @@ trait SpecHelper extends SpecConfiguration with AnyWordSpecLike with MockFactory
       dailyCallsPerConsumer = 2022,
       dailyCallsTotal = 2099,
       description = Some("string"),
-      agreementApprovalPolicy = AUTOMATIC
+      agreementApprovalPolicy = AUTOMATIC,
+      attributes = Attributes(
+        certified =
+          Seq(Attribute(single = Some(AttributeValue(id = UUID.randomUUID(), explicitAttributeVerification = false)))),
+        declared =
+          Seq(Attribute(single = Some(AttributeValue(id = UUID.randomUUID(), explicitAttributeVerification = false)))),
+        verified = Seq(
+          Attribute(group =
+            Some(
+              Seq(
+                AttributeValue(id = UUID.randomUUID(), explicitAttributeVerification = false),
+                AttributeValue(id = UUID.randomUUID(), explicitAttributeVerification = false)
+              )
+            )
+          )
+        )
+      )
     )
 
     val data = seed.toJson.compactPrint
@@ -66,23 +82,7 @@ trait SpecHelper extends SpecConfiguration with AnyWordSpecLike with MockFactory
       producerId = UUID.randomUUID(),
       name = "string",
       description = "string",
-      technology = EServiceTechnology.REST,
-      attributes = Attributes(
-        certified =
-          Seq(Attribute(single = Some(AttributeValue(id = UUID.randomUUID(), explicitAttributeVerification = false)))),
-        declared =
-          Seq(Attribute(single = Some(AttributeValue(id = UUID.randomUUID(), explicitAttributeVerification = false)))),
-        verified = Seq(
-          Attribute(group =
-            Some(
-              Seq(
-                AttributeValue(id = UUID.randomUUID(), explicitAttributeVerification = false),
-                AttributeValue(id = UUID.randomUUID(), explicitAttributeVerification = false)
-              )
-            )
-          )
-        )
-      )
+      technology = EServiceTechnology.REST
     )
 
     val data = seed.toJson.compactPrint
