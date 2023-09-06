@@ -210,16 +210,6 @@ object PersistentSerializationSpec {
       deprecatedAt = deprecatedAt.some,
       archivedAt = archivedAt.some,
       attributes = attributes
-      //   CatalogAttributes(
-      //   certified = List(
-      //     List(
-      //       CatalogAttribute(UUID.fromString("aa0e0f8f-f6d3-4190-933c-cc468e030a10"), true),
-      //       CatalogAttribute(UUID.fromString("aa0e0f8f-f6d3-4190-933c-cc468e030a11"), false)
-      //     )
-      //   ),
-      //   declared = List(),
-      //   verified = List()
-      // ) // CatalogAttributes.empty                          // attributes
     ),
     CatalogDescriptorV1(
       id = id.toString,
@@ -240,32 +230,6 @@ object PersistentSerializationSpec {
       deprecatedAt = deprecatedAtV1.some,
       archivedAt = archivedAtV1.some,
       attributes = attributesV1.some
-      //   Some(
-      //   CatalogAttributesV1(
-      //     List(
-      //       CatalogAttributeV1(
-      //         single = None,
-      //         group = List(
-      //           CatalogAttributeValueV1(
-      //             id = "aa0e0f8f-f6d3-4190-933c-cc468e030a10",
-      //             explicitAttributeVerification = true
-      //           ),
-      //           CatalogAttributeValueV1(
-      //             id = "aa0e0f8f-f6d3-4190-933c-cc468e030a11",
-      //             explicitAttributeVerification = false
-      //           )
-      //         )
-      //       )
-      //     ),
-      //     List(),
-      //     List()
-      //   )
-      // )
-      // CatalogAttributesV1(
-      //   List(CatalogAttributeV1(single = None, group = List(CatalogAttributeValueV1(id.toString, true)))),
-      //   List(),
-      //   List()
-      // ).some // attributesV1.some
     )
   )
 
