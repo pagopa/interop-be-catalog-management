@@ -22,37 +22,37 @@ import java.time.format.DateTimeFormatter
 import java.time.{OffsetDateTime, ZoneOffset}
 import scala.reflect.runtime.universe.{TypeTag, typeOf}
 
-class PersistentSerializationSpec extends ScalaCheckSuite with DiffxAssertions {
+class PersistentDeserializationSpec extends ScalaCheckSuite with DiffxAssertions {
 
-  serdeCheck[State, StateV1](stateGen, _.sorted)
-  serdeCheck[CatalogItemAdded, CatalogItemV1AddedV1](catalogItemAddedGen)
-  serdeCheck[ClonedCatalogItemAdded, ClonedCatalogItemV1AddedV1](clonedCatalogItemAddedGen)
-  serdeCheck[CatalogItemUpdated, CatalogItemV1UpdatedV1](catalogItemUpdatedGen)
-  serdeCheck[CatalogItemWithDescriptorsDeleted, CatalogItemWithDescriptorsDeletedV1](
+  deserCheck[State, StateV1](stateGen)
+  deserCheck[CatalogItemAdded, CatalogItemV1AddedV1](catalogItemAddedGen)
+  deserCheck[ClonedCatalogItemAdded, ClonedCatalogItemV1AddedV1](clonedCatalogItemAddedGen)
+  deserCheck[CatalogItemUpdated, CatalogItemV1UpdatedV1](catalogItemUpdatedGen)
+  deserCheck[CatalogItemWithDescriptorsDeleted, CatalogItemWithDescriptorsDeletedV1](
     catalogItemWithDescriptorsDeletedGen
   )
-  serdeCheck[CatalogItemDeleted, CatalogItemDeletedV1](catalogItemDeletedGen)
-  serdeCheck[CatalogItemDocumentDeleted, CatalogItemDocumentDeletedV1](catalogItemDocumentDeletedGen)
-  serdeCheck[CatalogItemDescriptorAdded, CatalogItemDescriptorAddedV1](catalogItemDescriptorAddedGen)
-  serdeCheck[CatalogItemDescriptorUpdated, CatalogItemDescriptorUpdatedV1](catalogItemDescriptorUpdatedGen)
-  serdeCheck[CatalogItemDocumentAdded, CatalogItemDocumentAddedV1](catalogItemDocumentAddedGen)
-  serdeCheck[CatalogItemDocumentUpdated, CatalogItemDocumentUpdatedV1](catalogItemDocumentUpdatedGen)
-  serdeCheck[MovedAttributesFromEserviceToDescriptors, MovedAttributesFromEserviceToDescriptorsV1](movedGen)
+  deserCheck[CatalogItemDeleted, CatalogItemDeletedV1](catalogItemDeletedGen)
+  deserCheck[CatalogItemDocumentDeleted, CatalogItemDocumentDeletedV1](catalogItemDocumentDeletedGen)
+  deserCheck[CatalogItemDescriptorAdded, CatalogItemDescriptorAddedV1](catalogItemDescriptorAddedGen)
+  deserCheck[CatalogItemDescriptorUpdated, CatalogItemDescriptorUpdatedV1](catalogItemDescriptorUpdatedGen)
+  deserCheck[CatalogItemDocumentAdded, CatalogItemDocumentAddedV1](catalogItemDocumentAddedGen)
+  deserCheck[CatalogItemDocumentUpdated, CatalogItemDocumentUpdatedV1](catalogItemDocumentUpdatedGen)
+  deserCheck[MovedAttributesFromEserviceToDescriptors, MovedAttributesFromEserviceToDescriptorsV1](movedGen)
 
   // TODO move me in commons
-  def serdeCheck[A: TypeTag, B](gen: Gen[(A, B)], adapter: B => B = identity[B](_))(implicit
-    e: PersistEventSerializer[A, B],
-    loc: munit.Location,
-    d: => Diff[Either[Throwable, B]]
-  ): Unit = property(s"${typeOf[A].typeSymbol.name.toString} is correctly serialized") {
-    forAll(gen) { case (state, stateV1) =>
-      implicit val diffX: Diff[Either[Throwable, B]] = d
-      assertEqual(PersistEventSerializer.to[A, B](state).map(adapter), Right(stateV1).map(adapter))
+  def deserCheck[A, B: TypeTag](
+    gen: Gen[(A, B)]
+  )(implicit e: PersistEventDeserializer[B, A], loc: munit.Location, d: => Diff[Either[Throwable, A]]): Unit =
+    property(s"${typeOf[B].typeSymbol.name.toString} is correctly deserialized") {
+      forAll(gen) { case (state, stateV1) =>
+        // * This is declared lazy in the signature to avoid a MethodTooBigException
+        implicit val diffX: Diff[Either[Throwable, A]] = d
+        assertEqual(PersistEventDeserializer.from[B, A](stateV1), Right(state))
+      }
     }
-  }
 }
 
-object PersistentSerializationSpec {
+object PersistentDeserializationSpec {
 
   val stringGen: Gen[String] = for {
     n <- Gen.chooseNum(4, 100)
@@ -86,11 +86,19 @@ object PersistentSerializationSpec {
     explicitVerification <- Gen.oneOf(true, false)
   } yield (CatalogAttribute(id, explicitVerification), CatalogAttributeValueV1(id.toString, explicitVerification))
 
-  val catalogAttributeGen: Gen[(List[CatalogAttribute], CatalogAttributeV1)] =
+  val singleCatalogAttributeGen: Gen[(Seq[CatalogAttribute], CatalogAttributeV1)] =
+    catalogAttributeValueGen.map { case (av, avv1) =>
+      (List(av), CatalogAttributeV1(single = Option(avv1), group = Nil))
+    }
+
+  val groupCatalogAttributeGen: Gen[(Seq[CatalogAttribute], CatalogAttributeV1)] =
     Gen.nonEmptyListOf(catalogAttributeValueGen).map { list =>
       val (a, b) = list.separate
       (a, CatalogAttributeV1(single = None, group = b))
     }
+
+  val catalogAttributeGen: Gen[(Seq[CatalogAttribute], CatalogAttributeV1)] =
+    Gen.oneOf(singleCatalogAttributeGen, groupCatalogAttributeGen)
 
   val catalogAttributesGen: Gen[(CatalogAttributes, CatalogAttributesV1)] = for {
     certified <- listOf(catalogAttributeGen)
