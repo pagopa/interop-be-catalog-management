@@ -245,8 +245,11 @@ class EServiceApiServiceImpl(
     val result: Future[EService] = for {
       eService           <- retrieveCatalogItem(eServiceId)
       toUpdateDescriptor <- getDescriptor(eService, descriptorId).toFuture
-      attributes         <- CatalogAttributes.fromApi(eServiceDescriptorSeed.attributes).toFuture
-      updatedDescriptor = mergeChanges(toUpdateDescriptor, eServiceDescriptorSeed, attributes)
+      updatedDescriptor = mergeChanges(
+        toUpdateDescriptor,
+        eServiceDescriptorSeed,
+        eServiceDescriptorSeed.attributes.fromApi
+      )
       updatedItem       = eService.copy(descriptors =
         eService.descriptors.filter(_.id.toString != descriptorId) :+ updatedDescriptor
       )
@@ -297,7 +300,6 @@ class EServiceApiServiceImpl(
     val result: Future[EServiceDescriptor] = for {
       current     <- retrieveCatalogItem(eServiceId)
       nextVersion <- VersionGenerator.next(current.currentVersion).toFuture
-      attributes  <- CatalogAttributes.fromApi(eServiceDescriptorSeed.attributes).toFuture
       createdCatalogDescriptor = CatalogDescriptor(
         id = uuidSupplier.get(),
         description = eServiceDescriptorSeed.description,
@@ -317,7 +319,7 @@ class EServiceApiServiceImpl(
         suspendedAt = None,
         deprecatedAt = None,
         archivedAt = None,
-        attributes = attributes
+        attributes = eServiceDescriptorSeed.attributes.fromApi
       )
       _ <- commander(eServiceId).askWithStatus(ref =>
         AddCatalogItemDescriptor(current.id.toString, createdCatalogDescriptor, ref)

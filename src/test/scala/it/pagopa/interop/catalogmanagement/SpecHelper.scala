@@ -49,18 +49,12 @@ trait SpecHelper extends SpecConfiguration with AnyWordSpecLike with MockFactory
       description = Some("string"),
       agreementApprovalPolicy = AUTOMATIC,
       attributes = Attributes(
-        certified =
-          Seq(Attribute(single = Some(AttributeValue(id = UUID.randomUUID(), explicitAttributeVerification = false)))),
-        declared =
-          Seq(Attribute(single = Some(AttributeValue(id = UUID.randomUUID(), explicitAttributeVerification = false)))),
+        certified = Seq(Seq(Attribute(id = UUID.randomUUID(), explicitAttributeVerification = false))),
+        declared = Seq(Seq(Attribute(id = UUID.randomUUID(), explicitAttributeVerification = false))),
         verified = Seq(
-          Attribute(group =
-            Some(
-              Seq(
-                AttributeValue(id = UUID.randomUUID(), explicitAttributeVerification = false),
-                AttributeValue(id = UUID.randomUUID(), explicitAttributeVerification = false)
-              )
-            )
+          Seq(
+            Attribute(id = UUID.randomUUID(), explicitAttributeVerification = false),
+            Attribute(id = UUID.randomUUID(), explicitAttributeVerification = false)
           )
         )
       )

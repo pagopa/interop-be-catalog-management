@@ -108,24 +108,16 @@ object PersistentSerializationSpec {
   val catalogItemTechnologyGen: Gen[(CatalogItemTechnology, CatalogItemTechnologyV1)] =
     Gen.oneOf((Rest, CatalogItemTechnologyV1.REST), (Soap, CatalogItemTechnologyV1.SOAP))
 
-  val catalogAttributeValueGen: Gen[(CatalogAttributeValue, CatalogAttributeValueV1)] = for {
+  val catalogAttributeValueGen: Gen[(CatalogAttribute, CatalogAttributeValueV1)] = for {
     id                   <- Gen.uuid
     explicitVerification <- Gen.oneOf(true, false)
-  } yield (CatalogAttributeValue(id, explicitVerification), CatalogAttributeValueV1(id.toString, explicitVerification))
+  } yield (CatalogAttribute(id, explicitVerification), CatalogAttributeValueV1(id.toString, explicitVerification))
 
-  val singleCatalogAttributeGen: Gen[(SingleAttribute, CatalogAttributeV1)] =
-    catalogAttributeValueGen.map { case (av, avv1) =>
-      (SingleAttribute(av), CatalogAttributeV1(single = Option(avv1), group = Nil))
-    }
-
-  val groupCatalogAttributeGen: Gen[(GroupAttribute, CatalogAttributeV1)] =
+  val catalogAttributeGen: Gen[(List[CatalogAttribute], CatalogAttributeV1)] =
     Gen.nonEmptyListOf(catalogAttributeValueGen).map { list =>
       val (a, b) = list.separate
-      (GroupAttribute(a), CatalogAttributeV1(single = None, group = b))
+      (a, CatalogAttributeV1(single = None, group = b))
     }
-
-  val catalogAttributeGen: Gen[(CatalogAttribute, CatalogAttributeV1)] =
-    Gen.oneOf(singleCatalogAttributeGen, groupCatalogAttributeGen)
 
   val catalogAttributesGen: Gen[(CatalogAttributes, CatalogAttributesV1)] = for {
     certified <- listOf(catalogAttributeGen)
@@ -218,6 +210,16 @@ object PersistentSerializationSpec {
       deprecatedAt = deprecatedAt.some,
       archivedAt = archivedAt.some,
       attributes = attributes
+      //   CatalogAttributes(
+      //   certified = List(
+      //     List(
+      //       CatalogAttribute(UUID.fromString("aa0e0f8f-f6d3-4190-933c-cc468e030a10"), true),
+      //       CatalogAttribute(UUID.fromString("aa0e0f8f-f6d3-4190-933c-cc468e030a11"), false)
+      //     )
+      //   ),
+      //   declared = List(),
+      //   verified = List()
+      // ) // CatalogAttributes.empty                          // attributes
     ),
     CatalogDescriptorV1(
       id = id.toString,
@@ -238,6 +240,32 @@ object PersistentSerializationSpec {
       deprecatedAt = deprecatedAtV1.some,
       archivedAt = archivedAtV1.some,
       attributes = attributesV1.some
+      //   Some(
+      //   CatalogAttributesV1(
+      //     List(
+      //       CatalogAttributeV1(
+      //         single = None,
+      //         group = List(
+      //           CatalogAttributeValueV1(
+      //             id = "aa0e0f8f-f6d3-4190-933c-cc468e030a10",
+      //             explicitAttributeVerification = true
+      //           ),
+      //           CatalogAttributeValueV1(
+      //             id = "aa0e0f8f-f6d3-4190-933c-cc468e030a11",
+      //             explicitAttributeVerification = false
+      //           )
+      //         )
+      //       )
+      //     ),
+      //     List(),
+      //     List()
+      //   )
+      // )
+      // CatalogAttributesV1(
+      //   List(CatalogAttributeV1(single = None, group = List(CatalogAttributeValueV1(id.toString, true)))),
+      //   List(),
+      //   List()
+      // ).some // attributesV1.some
     )
   )
 

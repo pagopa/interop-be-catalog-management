@@ -9,7 +9,6 @@ import spray.json.{DefaultJsonProtocol, RootJsonFormat}
 package object impl extends SprayJsonSupport with DefaultJsonProtocol {
 
   implicit val eServiceDocFormat: RootJsonFormat[EServiceDoc]                       = jsonFormat7(EServiceDoc)
-  implicit val attributeValueFormat: RootJsonFormat[AttributeValue]                 = jsonFormat2(AttributeValue)
   implicit val attributeFormat: RootJsonFormat[Attribute]                           = jsonFormat2(Attribute)
   implicit val attributesFormat: RootJsonFormat[Attributes]                         = jsonFormat3(Attributes)
   implicit val eServiceDescriptorFormat: RootJsonFormat[EServiceDescriptor]         = jsonFormat17(EServiceDescriptor)

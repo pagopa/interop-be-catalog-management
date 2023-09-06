@@ -1051,7 +1051,7 @@ components:
           type: array
           items:
             type: string     
-    AttributeValue:
+    Attribute:
       type: object
       properties:
         id:
@@ -1062,29 +1062,26 @@ components:
       required:
         - id
         - explicitAttributeVerification
-    Attribute:
-      type: object
-      properties:
-        single:
-          $ref: '#/components/schemas/AttributeValue'
-        group:
-          type: array
-          items:
-            $ref: '#/components/schemas/AttributeValue'
     Attributes:
       properties:
         certified:
           type: array
           items:
-            $ref: '#/components/schemas/Attribute'
+            type: array
+            items:
+              $ref: '#/components/schemas/Attribute'
         declared:
           type: array
           items:
-            $ref: '#/components/schemas/Attribute'
+            type: array
+            items:
+              $ref: '#/components/schemas/Attribute'
         verified:
           type: array
           items:
-            $ref: '#/components/schemas/Attribute'
+            type: array
+            items:
+              $ref: '#/components/schemas/Attribute'
       required:
         - certified
         - declared

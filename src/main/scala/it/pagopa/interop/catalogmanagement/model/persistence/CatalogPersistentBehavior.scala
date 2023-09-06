@@ -227,10 +227,11 @@ object CatalogPersistentBehavior {
   }
 
   def containsAttribute(catalogItem: CatalogItem, attributeId: String): Boolean =
-    catalogItem.descriptors.map(_.attributes).toList.flatMap(a => a.certified ++ a.declared ++ a.verified).exists {
-      case SingleAttribute(id) => id.id.toString == attributeId
-      case GroupAttribute(ids) => ids.exists(_.id.toString == attributeId)
-    }
+    catalogItem.descriptors
+      .map(_.attributes)
+      .toList
+      .flatMap(a => a.certified.flatten ++ a.declared.flatten ++ a.verified.flatten)
+      .exists(_.id.toString == attributeId)
 
   val eventHandler: (State, Event) => State = (state, event) =>
     event match {
