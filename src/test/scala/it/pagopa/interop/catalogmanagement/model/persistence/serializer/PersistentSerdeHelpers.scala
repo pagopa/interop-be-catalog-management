@@ -21,7 +21,7 @@ import java.time.format.DateTimeFormatter
 import java.time.{OffsetDateTime, ZoneOffset}
 import scala.reflect.runtime.universe.{TypeTag, typeOf}
 
-trait PersistentFunctions extends ScalaCheckSuite with DiffxAssertions {
+trait PersistentSerdeHelpers extends ScalaCheckSuite with DiffxAssertions {
 
   // TODO move me in commons
   def serdeCheck[A: TypeTag, B](gen: Gen[(A, B)], adapter: B => B = identity[B](_))(implicit
@@ -288,7 +288,7 @@ trait PersistentFunctions extends ScalaCheckSuite with DiffxAssertions {
 
 }
 
-object PersistentFunctions {
+object PersistentSerdeHelpers {
   implicit class PimpedStateV1(val stateV1: StateV1) extends AnyVal {
     def sorted: StateV1 = stateV1.copy(items = stateV1.items.sortBy(_.key))
   }

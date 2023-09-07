@@ -9,7 +9,7 @@ import it.pagopa.interop.catalogmanagement.model.persistence.serializer.v1.state
 import it.pagopa.interop.catalogmanagement.model.persistence.serializer.v1.catalog_item.CatalogAttributeV1
 import it.pagopa.interop.catalogmanagement.model.CatalogAttribute
 
-class PersistentDeserializationSpec extends PersistentFunctions {
+class PersistentDeserializationSpec extends PersistentSerdeHelpers {
 
   deserCheck[State, StateV1](stateGen)
   deserCheck[CatalogItemAdded, CatalogItemV1AddedV1](catalogItemAddedGen)

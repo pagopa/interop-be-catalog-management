@@ -6,11 +6,11 @@ import org.scalacheck.Gen
 import it.pagopa.interop.catalogmanagement.model.persistence._
 import it.pagopa.interop.catalogmanagement.model.persistence.serializer.v1.events._
 import it.pagopa.interop.catalogmanagement.model.persistence.serializer.v1.state._
-import it.pagopa.interop.catalogmanagement.model.persistence.serializer.PersistentFunctions._
+import it.pagopa.interop.catalogmanagement.model.persistence.serializer.PersistentSerdeHelpers._
 import it.pagopa.interop.catalogmanagement.model.persistence.serializer.v1.catalog_item.CatalogAttributeV1
 import it.pagopa.interop.catalogmanagement.model.CatalogAttribute
 
-class PersistentSerializationSpec extends PersistentFunctions {
+class PersistentSerializationSpec extends PersistentSerdeHelpers {
 
   serdeCheck[State, StateV1](stateGen, _.sorted)
   serdeCheck[CatalogItemAdded, CatalogItemV1AddedV1](catalogItemAddedGen)
