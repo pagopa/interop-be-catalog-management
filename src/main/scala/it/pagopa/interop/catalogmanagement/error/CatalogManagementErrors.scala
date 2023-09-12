@@ -1,6 +1,5 @@
 package it.pagopa.interop.catalogmanagement.error
 
-import it.pagopa.interop.catalogmanagement.model.Attribute
 import it.pagopa.interop.commons.utils.errors.ComponentError
 
 object CatalogManagementErrors {
@@ -27,13 +26,6 @@ object CatalogManagementErrors {
 
   final case class DocumentAlreadyUploaded(eServiceId: String, fileName: String)
       extends ComponentError("0006", s"File $fileName already uploaded for EService $eServiceId")
-
-  final case class InvalidAttribute(attribute: Attribute)
-      extends ComponentError(
-        "0007",
-        s"Invalid attribute: single:${attribute.single.map(_.id).getOrElse("None")} / " +
-          s"group:${attribute.group.map(_.map(_.id).mkString(", ")).getOrElse("None")}"
-      )
 
   final case class DescriptorNotInDraft(eServiceId: String, descriptorId: String)
       extends ComponentError("0008", s"Descriptor $descriptorId of EService $eServiceId is not Draft")

@@ -120,9 +120,9 @@ class CatalogManagementServiceSpec
                     |   , "dailyCallsTotal": 2099
                     |   , "agreementApprovalPolicy": "AUTOMATIC"
                     |   , "attributes": {
-                    |       "certified": [
-                    |         {"single": { "id": "${attributeUUID}", "explicitAttributeVerification": true}}
-                    |       ],
+                    |       "certified": [[
+                    |         { "id": "${attributeUUID}", "explicitAttributeVerification": true}
+                    |       ]],
                     |       "verified": [],
                     |       "declared": []
                     |     }
@@ -143,7 +143,7 @@ class CatalogManagementServiceSpec
       response.status shouldBe StatusCodes.OK
       val descriptor = Await.result(Unmarshal(response).to[EServiceDescriptor], Duration.Inf)
       descriptor.attributes shouldBe Attributes(
-        certified = List(Attribute(single = Some(AttributeValue(attributeUUID, true)))),
+        certified = Seq(Seq(Attribute(attributeUUID, true))),
         declared = Nil,
         verified = Nil
       )

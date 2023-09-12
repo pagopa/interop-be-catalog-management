@@ -1,61 +1,35 @@
 package it.pagopa.interop.catalogmanagement.model
 
 import cats.implicits._
-import it.pagopa.interop.catalogmanagement.error.CatalogManagementErrors.InvalidAttribute
 import it.pagopa.interop.catalogmanagement.service.CatalogFileManager
-import it.pagopa.interop.commons.utils.TypeConversions._
 import it.pagopa.interop.commons.utils.service.{OffsetDateTimeSupplier, UUIDSupplier}
 
 import java.util.UUID
 import scala.concurrent.{ExecutionContext, Future}
-import scala.util._
 
 object CatalogAdapters {
 
   implicit class CatalogAttributeWrapper(private val p: CatalogAttribute) extends AnyVal {
-    def toApi: Attribute = p match {
-      case SingleAttribute(id) => Attribute(single = Some(id.toApi), group = None)
-      case GroupAttribute(ids) => Attribute(single = None, group = Some(ids.map(_.toApi)))
-    }
+    def toApi: Attribute = Attribute(p.id, p.explicitAttributeVerification)
   }
 
-  implicit class CatalogAttributeObjectWrapper(private val p: CatalogAttribute.type) extends AnyVal {
-    def fromApi(attribute: Attribute): Either[Throwable, CatalogAttribute] = {
-      val single: Option[SingleAttribute] =
-        attribute.single.map(CatalogAttributeValue.fromApi).map(SingleAttribute(_))
-
-      val group: Option[GroupAttribute] =
-        attribute.group.filterNot(_.isEmpty).map(_.map(CatalogAttributeValue.fromApi)).map(GroupAttribute)
-
-      single.orElse(group).toRight[Throwable](InvalidAttribute(attribute))
-    }
+  implicit class AttributeWrapper(private val p: Attribute) extends AnyVal {
+    def fromApi: CatalogAttribute = CatalogAttribute(p.id, p.explicitAttributeVerification)
   }
 
   implicit class CatalogAttributesWrapper(private val p: CatalogAttributes) extends AnyVal {
     def toApi: Attributes = Attributes(
-      certified = p.certified.map(_.toApi),
-      declared = p.declared.map(_.toApi),
-      verified = p.verified.map(_.toApi)
+      certified = p.certified.map(_.map(_.toApi)),
+      declared = p.declared.map(_.map(_.toApi)),
+      verified = p.verified.map(_.map(_.toApi))
     )
   }
 
-  implicit class CatalogAttributesObjectWrapper(private val p: CatalogAttributes.type) extends AnyVal {
-    def fromApi(attributes: Attributes): Either[Throwable, CatalogAttributes] = for {
-      certified <- attributes.certified.toList.traverse(CatalogAttribute.fromApi)
-      declared  <- attributes.declared.toList.traverse(CatalogAttribute.fromApi)
-      verified  <- attributes.verified.toList.traverse(CatalogAttribute.fromApi)
-    } yield CatalogAttributes(certified = certified, declared = declared, verified = verified)
-  }
-
-  implicit class CatalogAttributeValueWrapper(private val p: CatalogAttributeValue) extends AnyVal {
-    def toApi: AttributeValue =
-      AttributeValue(id = p.id, explicitAttributeVerification = p.explicitAttributeVerification)
-  }
-
-  implicit class CatalogAttributeValueObjectWrapper(private val p: CatalogAttributeValue.type) extends AnyVal {
-    def fromApi(attributeValue: AttributeValue): CatalogAttributeValue = CatalogAttributeValue(
-      id = attributeValue.id,
-      explicitAttributeVerification = attributeValue.explicitAttributeVerification
+  implicit class CatalogAttributesObjectWrapper(private val p: Attributes) extends AnyVal {
+    def fromApi: CatalogAttributes = CatalogAttributes(
+      certified = p.certified.map(_.map(_.fromApi)),
+      declared = p.declared.map(_.map(_.fromApi)),
+      verified = p.verified.map(_.map(_.fromApi))
     )
   }
 
@@ -80,23 +54,18 @@ object CatalogAdapters {
       attributes = p.attributes.toApi
     )
 
-    def mergeWithSeed(updateEServiceDescriptorSeed: UpdateEServiceDescriptorSeed): Future[CatalogDescriptor] =
-      CatalogAttributes
-        .fromApi(updateEServiceDescriptorSeed.attributes)
-        .map(attributes =>
-          p.copy(
-            description = updateEServiceDescriptorSeed.description,
-            state = CatalogDescriptorState.fromApi(updateEServiceDescriptorSeed.state),
-            audience = updateEServiceDescriptorSeed.audience,
-            voucherLifespan = updateEServiceDescriptorSeed.voucherLifespan,
-            dailyCallsPerConsumer = updateEServiceDescriptorSeed.dailyCallsPerConsumer,
-            dailyCallsTotal = updateEServiceDescriptorSeed.dailyCallsTotal,
-            agreementApprovalPolicy =
-              PersistentAgreementApprovalPolicy.fromApi(updateEServiceDescriptorSeed.agreementApprovalPolicy).some,
-            attributes = attributes
-          )
-        )
-        .toFuture
+    def mergeWithSeed(updateEServiceDescriptorSeed: UpdateEServiceDescriptorSeed): CatalogDescriptor =
+      p.copy(
+        description = updateEServiceDescriptorSeed.description,
+        state = CatalogDescriptorState.fromApi(updateEServiceDescriptorSeed.state),
+        audience = updateEServiceDescriptorSeed.audience,
+        voucherLifespan = updateEServiceDescriptorSeed.voucherLifespan,
+        dailyCallsPerConsumer = updateEServiceDescriptorSeed.dailyCallsPerConsumer,
+        dailyCallsTotal = updateEServiceDescriptorSeed.dailyCallsTotal,
+        agreementApprovalPolicy =
+          PersistentAgreementApprovalPolicy.fromApi(updateEServiceDescriptorSeed.agreementApprovalPolicy).some,
+        attributes = updateEServiceDescriptorSeed.attributes.fromApi
+      )
 
     def isDraft: Boolean = p.state == Draft
   }

@@ -57,23 +57,7 @@ object JsonFormats {
 
   implicit val cdocFormat: RootJsonFormat[CatalogDocument] = jsonFormat7(CatalogDocument.apply)
 
-  implicit val cavFormat: RootJsonFormat[CatalogAttributeValue] = jsonFormat2(CatalogAttributeValue.apply)
-  implicit val saFormat: RootJsonFormat[SingleAttribute]        = jsonFormat1(SingleAttribute.apply)
-  implicit val gaFormat: RootJsonFormat[GroupAttribute]         = jsonFormat1(GroupAttribute.apply)
-
-  implicit val caFormat: RootJsonFormat[CatalogAttribute] =
-    new RootJsonFormat[CatalogAttribute] {
-      override def read(json: JsValue): CatalogAttribute = json match {
-        case JsObject(fields) if fields.contains("ids") => gaFormat.read(json)
-        case JsObject(fields) if fields.contains("id")  => saFormat.read(json)
-        case other => deserializationError(s"Unable to deserialize json as a CatalogAttribute: $other")
-      }
-
-      override def write(obj: CatalogAttribute): JsValue = obj match {
-        case ca: SingleAttribute => ca.toJson
-        case ca: GroupAttribute  => ca.toJson
-      }
-    }
+  implicit val saFormat: RootJsonFormat[CatalogAttribute] = jsonFormat2(CatalogAttribute.apply)
 
   implicit val casFormat: RootJsonFormat[CatalogAttributes] = jsonFormat3(CatalogAttributes.apply)
   implicit val cdFormat: RootJsonFormat[CatalogDescriptor]  = jsonFormat18(CatalogDescriptor.apply)

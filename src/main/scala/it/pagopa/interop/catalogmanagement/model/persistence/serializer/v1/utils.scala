@@ -1,6 +1,6 @@
 package it.pagopa.interop.catalogmanagement.model.persistence.serializer.v1
 
-import cats.implicits._
+import cats.syntax.all._
 import it.pagopa.interop.catalogmanagement.model._
 import it.pagopa.interop.catalogmanagement.model.persistence.serializer.v1.catalog_item.CatalogItemTechnologyV1.{
   Unrecognized => UnrecognizedTechnology
@@ -14,15 +14,11 @@ import java.util.UUID
 
 object utils {
 
-  def convertAttributeValueToV1(catalogAttributeValue: CatalogAttributeValue): CatalogAttributeValueV1 =
-    CatalogAttributeValueV1(catalogAttributeValue.id.toString, catalogAttributeValue.explicitAttributeVerification)
+  def convertAttributeValueToV1(catalogAttribute: CatalogAttribute): CatalogAttributeValueV1 =
+    CatalogAttributeValueV1(catalogAttribute.id.toString, catalogAttribute.explicitAttributeVerification)
 
-  def convertAttributeToV1(catalogAttribute: CatalogAttribute): CatalogAttributeV1 =
-    catalogAttribute match {
-      case s: SingleAttribute =>
-        CatalogAttributeV1(Some(convertAttributeValueToV1(s.id)), Seq.empty[CatalogAttributeValueV1])
-      case g: GroupAttribute  => CatalogAttributeV1(None, g.ids.map(convertAttributeValueToV1))
-    }
+  def convertAttributeToV1(catalogAttribute: Seq[CatalogAttribute]): CatalogAttributeV1 =
+    CatalogAttributeV1(single = None, group = catalogAttribute.map(convertAttributeValueToV1))
 
   def convertAttributesToV1(attributes: CatalogAttributes): CatalogAttributesV1 = {
     CatalogAttributesV1(
@@ -32,22 +28,18 @@ object utils {
     )
   }
 
-  def convertAttributeFromV1(catalogAttributeV1: CatalogAttributeV1): Either[Throwable, CatalogAttribute] = {
-    val singleAttribute: Option[Either[Throwable, SingleAttribute]] = catalogAttributeV1.single.map(attr =>
-      attr.id.toUUID.toEither.map(uuid =>
-        SingleAttribute(CatalogAttributeValue(uuid, attr.explicitAttributeVerification))
-      )
+  def convertAttributeFromV1(catalogAttributeV1: CatalogAttributeV1): Either[Throwable, Seq[CatalogAttribute]] = {
+    val singleAttribute: Option[Either[Throwable, Seq[CatalogAttribute]]] = catalogAttributeV1.single.map(attr =>
+      attr.id.toUUID.toEither.map(uuid => Seq(CatalogAttribute(uuid, attr.explicitAttributeVerification)))
     )
-
-    val groupAttribute: Option[Either[Throwable, GroupAttribute]] =
+    val groupAttribute: Option[Either[Throwable, Seq[CatalogAttribute]]]  =
       Option
         .unless(catalogAttributeV1.group.isEmpty)(catalogAttributeV1.group)
         .map(attributes =>
           attributes
             .traverse(attr =>
-              attr.id.toUUID.toEither.map(id => CatalogAttributeValue(id, attr.explicitAttributeVerification))
+              attr.id.toUUID.toEither.map(id => CatalogAttribute(id, attr.explicitAttributeVerification))
             )
-            .map(GroupAttribute)
         )
 
     singleAttribute
