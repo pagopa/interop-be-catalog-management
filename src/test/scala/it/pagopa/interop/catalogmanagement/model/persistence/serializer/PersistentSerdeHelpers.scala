@@ -140,7 +140,7 @@ trait PersistentSerdeHelpers extends ScalaCheckSuite with DiffxAssertions {
     (createdAt, createdAtV1) <- offsetDatetimeLongGen
   } yield (
     CatalogRiskAnalysis(id = id, name = name, riskAnalysisForm = form, createdAt = createdAt),
-    CatalogRiskAnalysisV1(id = id.toString, name = name, riskAnalysisForm = formV1, createdAt = createdAtV1.some)
+    CatalogRiskAnalysisV1(id = id.toString, name = name, riskAnalysisForm = formV1, createdAt = createdAtV1)
   )
 
   def catalogRiskAnalysisFormGen: Gen[(CatalogRiskAnalysisForm, CatalogRiskAnalysisFormV1)] = for {

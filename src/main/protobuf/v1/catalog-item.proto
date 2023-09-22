@@ -24,7 +24,7 @@ message CatalogRiskAnalysisV1 {
   required string id = 1;
   required string name = 2;
   required CatalogRiskAnalysisFormV1 riskAnalysisForm = 3;
-  optional int64 createdAt = 4;
+  required int64 createdAt = 4;
 }
 
 message CatalogRiskAnalysisFormV1 {

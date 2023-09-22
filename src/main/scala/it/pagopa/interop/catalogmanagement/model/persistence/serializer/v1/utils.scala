@@ -104,12 +104,12 @@ object utils {
     descriptors.traverse(convertDescriptorToV1)
 
   def convertRiskAnalysisFromV1(ver1: CatalogRiskAnalysisV1): Either[Throwable, CatalogRiskAnalysis] = for {
-    createdAt <- ver1.createdAt.traverse(_.toOffsetDateTime.toEither)
+    createdAt <- ver1.createdAt.toOffsetDateTime.toEither
     form = convertRiskAnalysisFormFromV1(ver1.riskAnalysisForm)
   } yield CatalogRiskAnalysis(
     id = UUID.fromString(ver1.id),
     name = ver1.name,
-    createdAt = createdAt.getOrElse(defaultCreatedAt),
+    createdAt = createdAt,
     riskAnalysisForm = form
   )
 
@@ -129,7 +129,7 @@ object utils {
   def convertRiskAnalysisToV1(risk: CatalogRiskAnalysis): CatalogRiskAnalysisV1 = CatalogRiskAnalysisV1(
     id = risk.id.toString(),
     name = risk.name,
-    createdAt = risk.createdAt.toMillis.some,
+    createdAt = risk.createdAt.toMillis,
     riskAnalysisForm = convertRiskAnalysisFormToV1(risk.riskAnalysisForm)
   )
 
