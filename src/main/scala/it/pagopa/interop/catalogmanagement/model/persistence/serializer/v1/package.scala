@@ -28,12 +28,14 @@ package object v1 {
   implicit def catalogItemV1AddedV1PersistEventDeserializer
     : PersistEventDeserializer[CatalogItemV1AddedV1, CatalogItemAdded] = event =>
     for {
-      attributes  <- event.catalogItem.attributes.traverse(convertAttributesFromV1)
-      descriptors <- convertDescriptorsFromV1(event.catalogItem.descriptors)
-      technology  <- convertItemTechnologyFromV1(event.catalogItem.technology)
-      uuid        <- event.catalogItem.id.toUUID.toEither
-      producerId  <- event.catalogItem.producerId.toUUID.toEither
-      createdAt   <- event.catalogItem.createdAt.traverse(_.toOffsetDateTime).toEither
+      attributes   <- event.catalogItem.attributes.traverse(convertAttributesFromV1)
+      descriptors  <- convertDescriptorsFromV1(event.catalogItem.descriptors)
+      technology   <- convertItemTechnologyFromV1(event.catalogItem.technology)
+      uuid         <- event.catalogItem.id.toUUID.toEither
+      producerId   <- event.catalogItem.producerId.toUUID.toEither
+      createdAt    <- event.catalogItem.createdAt.traverse(_.toOffsetDateTime).toEither
+      mode         <- event.catalogItem.mode.traverse(convertItemModeFromV1)
+      riskAnalysis <- event.catalogItem.riskAnalysis.traverse(convertRiskAnalysisFromV1)
     } yield CatalogItemAdded(catalogItem =
       CatalogItem(
         id = uuid,
@@ -43,7 +45,9 @@ package object v1 {
         technology = technology,
         descriptors = descriptors,
         createdAt = createdAt.getOrElse(defaultCreatedAt),
-        attributes = attributes
+        attributes = attributes,
+        mode = mode.getOrElse(CatalogItemMode.default),
+        riskAnalysis = riskAnalysis
       )
     )
 
@@ -51,6 +55,7 @@ package object v1 {
     : PersistEventSerializer[CatalogItemAdded, CatalogItemV1AddedV1] = event =>
     for {
       descriptors <- convertDescriptorsToV1(event.catalogItem.descriptors)
+      riskAnalysis = event.catalogItem.riskAnalysis.map(convertRiskAnalysisToV1)
     } yield CatalogItemV1AddedV1
       .of(
         CatalogItemV1(
@@ -61,19 +66,23 @@ package object v1 {
           technology = convertItemTechnologyToV1(event.catalogItem.technology),
           attributes = event.catalogItem.attributes.map(convertAttributesToV1),
           descriptors = descriptors,
-          createdAt = event.catalogItem.createdAt.toMillis.some
+          createdAt = event.catalogItem.createdAt.toMillis.some,
+          mode = convertItemModeToV1(event.catalogItem.mode).some,
+          riskAnalysis = riskAnalysis
         )
       )
 
   implicit def clonedCatalogItemV1AddedV1PersistEventDeserializer
     : PersistEventDeserializer[ClonedCatalogItemV1AddedV1, ClonedCatalogItemAdded] = event =>
     for {
-      descriptors <- convertDescriptorsFromV1(event.catalogItem.descriptors)
-      technology  <- convertItemTechnologyFromV1(event.catalogItem.technology)
-      uuid        <- event.catalogItem.id.toUUID.toEither
-      producerId  <- event.catalogItem.producerId.toUUID.toEither
-      createdAt   <- event.catalogItem.createdAt.traverse(_.toOffsetDateTime).toEither
-      attributes  <- event.catalogItem.attributes.traverse(convertAttributesFromV1)
+      descriptors  <- convertDescriptorsFromV1(event.catalogItem.descriptors)
+      technology   <- convertItemTechnologyFromV1(event.catalogItem.technology)
+      uuid         <- event.catalogItem.id.toUUID.toEither
+      producerId   <- event.catalogItem.producerId.toUUID.toEither
+      createdAt    <- event.catalogItem.createdAt.traverse(_.toOffsetDateTime).toEither
+      attributes   <- event.catalogItem.attributes.traverse(convertAttributesFromV1)
+      mode         <- event.catalogItem.mode.traverse(convertItemModeFromV1)
+      riskAnalysis <- event.catalogItem.riskAnalysis.traverse(convertRiskAnalysisFromV1)
     } yield ClonedCatalogItemAdded(catalogItem =
       CatalogItem(
         id = uuid,
@@ -83,7 +92,9 @@ package object v1 {
         technology = technology,
         descriptors = descriptors,
         attributes = attributes,
-        createdAt = createdAt.getOrElse(defaultCreatedAt)
+        createdAt = createdAt.getOrElse(defaultCreatedAt),
+        mode = mode.getOrElse(CatalogItemMode.default),
+        riskAnalysis = riskAnalysis
       )
     )
 
@@ -91,6 +102,7 @@ package object v1 {
     : PersistEventSerializer[ClonedCatalogItemAdded, ClonedCatalogItemV1AddedV1] = event =>
     for {
       descriptors <- convertDescriptorsToV1(event.catalogItem.descriptors)
+      riskAnalysis = event.catalogItem.riskAnalysis.map(convertRiskAnalysisToV1)
     } yield ClonedCatalogItemV1AddedV1.of(
       CatalogItemV1(
         id = event.catalogItem.id.toString,
@@ -100,19 +112,23 @@ package object v1 {
         technology = convertItemTechnologyToV1(event.catalogItem.technology),
         attributes = event.catalogItem.attributes.map(convertAttributesToV1),
         descriptors = descriptors,
-        createdAt = event.catalogItem.createdAt.toMillis.some
+        createdAt = event.catalogItem.createdAt.toMillis.some,
+        mode = convertItemModeToV1(event.catalogItem.mode).some,
+        riskAnalysis = riskAnalysis
       )
     )
 
   implicit def CatalogItemWithDescriptorsDeletedV1PersistEventDeserializer
     : PersistEventDeserializer[CatalogItemWithDescriptorsDeletedV1, CatalogItemWithDescriptorsDeleted] = event =>
     for {
-      descriptors <- convertDescriptorsFromV1(event.catalogItem.descriptors)
-      technology  <- convertItemTechnologyFromV1(event.catalogItem.technology)
-      uuid        <- event.catalogItem.id.toUUID.toEither
-      producerId  <- event.catalogItem.producerId.toUUID.toEither
-      createdAt   <- event.catalogItem.createdAt.traverse(_.toOffsetDateTime).toEither
-      attributes  <- event.catalogItem.attributes.traverse(convertAttributesFromV1)
+      descriptors  <- convertDescriptorsFromV1(event.catalogItem.descriptors)
+      technology   <- convertItemTechnologyFromV1(event.catalogItem.technology)
+      uuid         <- event.catalogItem.id.toUUID.toEither
+      producerId   <- event.catalogItem.producerId.toUUID.toEither
+      createdAt    <- event.catalogItem.createdAt.traverse(_.toOffsetDateTime).toEither
+      attributes   <- event.catalogItem.attributes.traverse(convertAttributesFromV1)
+      mode         <- event.catalogItem.mode.traverse(convertItemModeFromV1)
+      riskAnalysis <- event.catalogItem.riskAnalysis.traverse(convertRiskAnalysisFromV1)
     } yield CatalogItemWithDescriptorsDeleted(
       catalogItem = CatalogItem(
         id = uuid,
@@ -122,7 +138,9 @@ package object v1 {
         technology = technology,
         descriptors = descriptors,
         attributes = attributes,
-        createdAt = createdAt.getOrElse(defaultCreatedAt)
+        createdAt = createdAt.getOrElse(defaultCreatedAt),
+        mode = mode.getOrElse(CatalogItemMode.default),
+        riskAnalysis = riskAnalysis
       ),
       descriptorId = event.descriptorId
     )
@@ -131,6 +149,7 @@ package object v1 {
     : PersistEventSerializer[CatalogItemWithDescriptorsDeleted, CatalogItemWithDescriptorsDeletedV1] = event =>
     for {
       descriptors <- convertDescriptorsToV1(event.catalogItem.descriptors)
+      riskAnalysis = event.catalogItem.riskAnalysis.map(convertRiskAnalysisToV1)
     } yield CatalogItemWithDescriptorsDeletedV1
       .of(
         CatalogItemV1(
@@ -141,7 +160,9 @@ package object v1 {
           technology = convertItemTechnologyToV1(event.catalogItem.technology),
           attributes = event.catalogItem.attributes.map(convertAttributesToV1),
           descriptors = descriptors,
-          createdAt = event.catalogItem.createdAt.toMillis.some
+          createdAt = event.catalogItem.createdAt.toMillis.some,
+          mode = convertItemModeToV1(event.catalogItem.mode).some,
+          riskAnalysis = riskAnalysis
         ),
         descriptorId = event.descriptorId
       )
@@ -157,13 +178,14 @@ package object v1 {
   implicit def catalogItemV1UpdatedV1PersistEventDeserializer
     : PersistEventDeserializer[CatalogItemV1UpdatedV1, CatalogItemUpdated] = event =>
     for {
-      descriptors <- convertDescriptorsFromV1(event.catalogItem.descriptors)
-      technology  <- convertItemTechnologyFromV1(event.catalogItem.technology)
-      uuid        <- event.catalogItem.id.toUUID.toEither
-      producerId  <- event.catalogItem.producerId.toUUID.toEither
-      createdAt   <- event.catalogItem.createdAt.traverse(_.toOffsetDateTime).toEither
-      attributes  <- event.catalogItem.attributes.traverse(convertAttributesFromV1)
-
+      descriptors  <- convertDescriptorsFromV1(event.catalogItem.descriptors)
+      technology   <- convertItemTechnologyFromV1(event.catalogItem.technology)
+      uuid         <- event.catalogItem.id.toUUID.toEither
+      producerId   <- event.catalogItem.producerId.toUUID.toEither
+      createdAt    <- event.catalogItem.createdAt.traverse(_.toOffsetDateTime).toEither
+      attributes   <- event.catalogItem.attributes.traverse(convertAttributesFromV1)
+      mode         <- event.catalogItem.mode.traverse(convertItemModeFromV1)
+      riskAnalysis <- event.catalogItem.riskAnalysis.traverse(convertRiskAnalysisFromV1)
     } yield CatalogItemUpdated(catalogItem =
       CatalogItem(
         id = uuid,
@@ -173,7 +195,9 @@ package object v1 {
         technology = technology,
         descriptors = descriptors,
         attributes = attributes,
-        createdAt = createdAt.getOrElse(defaultCreatedAt)
+        createdAt = createdAt.getOrElse(defaultCreatedAt),
+        mode = mode.getOrElse(CatalogItemMode.default),
+        riskAnalysis = riskAnalysis
       )
     )
 
@@ -181,6 +205,7 @@ package object v1 {
     : PersistEventSerializer[CatalogItemUpdated, CatalogItemV1UpdatedV1] = event =>
     for {
       descriptors <- convertDescriptorsToV1(event.catalogItem.descriptors)
+      riskAnalysis = event.catalogItem.riskAnalysis.map(convertRiskAnalysisToV1)
     } yield CatalogItemV1UpdatedV1
       .of(
         CatalogItemV1(
@@ -191,7 +216,9 @@ package object v1 {
           technology = convertItemTechnologyToV1(event.catalogItem.technology),
           attributes = event.catalogItem.attributes.map(convertAttributesToV1),
           descriptors = descriptors,
-          createdAt = event.catalogItem.createdAt.toMillis.some
+          createdAt = event.catalogItem.createdAt.toMillis.some,
+          mode = convertItemModeToV1(event.catalogItem.mode).some,
+          riskAnalysis = riskAnalysis
         )
       )
 

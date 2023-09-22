@@ -76,7 +76,8 @@ trait SpecHelper extends SpecConfiguration with AnyWordSpecLike with MockFactory
       producerId = UUID.randomUUID(),
       name = "string",
       description = "string",
-      technology = EServiceTechnology.REST
+      technology = EServiceTechnology.REST,
+      mode = EServiceMode.DELIVER
     )
 
     val data = seed.toJson.compactPrint

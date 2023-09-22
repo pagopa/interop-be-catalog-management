@@ -133,6 +133,43 @@ trait PersistentSerdeHelpers extends ScalaCheckSuite with DiffxAssertions {
   def agreementApprovalPolicyGen: Gen[(PersistentAgreementApprovalPolicy, AgreementApprovalPolicyV1)] =
     Gen.oneOf((Automatic, AUTOMATIC), (Manual, MANUAL))
 
+  def catalogRiskAnalysisGen: Gen[(CatalogRiskAnalysis, CatalogRiskAnalysisV1)] = for {
+    id                       <- Gen.uuid
+    name                     <- stringGen
+    (form, formV1)           <- catalogRiskAnalysisFormGen
+    (createdAt, createdAtV1) <- offsetDatetimeLongGen
+  } yield (
+    CatalogRiskAnalysis(id = id, name = name, riskAnalysisForm = form, createdAt = createdAt),
+    CatalogRiskAnalysisV1(id = id.toString, name = name, riskAnalysisForm = formV1, createdAt = createdAtV1.some)
+  )
+
+  def catalogRiskAnalysisFormGen: Gen[(CatalogRiskAnalysisForm, CatalogRiskAnalysisFormV1)] = for {
+    version                          <- stringGen
+    (singleAnswers, singleAnswersV1) <- listOf(catalogRiskAnalysisSingleAnswersGen).map(_.separate)
+    (multiAnswers, multiAnswersV1)   <- listOf(catalogRiskAnalysisMultiAnswersGen).map(_.separate)
+  } yield (
+    CatalogRiskAnalysisForm(version = version, singleAnswers = singleAnswers, multiAnswers = multiAnswers),
+    CatalogRiskAnalysisFormV1(version = version, singleAnswers = singleAnswersV1, multiAnswers = multiAnswersV1)
+  )
+
+  def catalogRiskAnalysisSingleAnswersGen: Gen[(CatalogRiskAnalysisSingleAnswer, CatalogRiskAnalysisSingleAnswerV1)] =
+    for {
+      key   <- stringGen
+      value <- stringGen
+    } yield (
+      CatalogRiskAnalysisSingleAnswer(key = key, value = value.some),
+      CatalogRiskAnalysisSingleAnswerV1(key = key, value = value.some)
+    )
+
+  def catalogRiskAnalysisMultiAnswersGen: Gen[(CatalogRiskAnalysisMultiAnswer, CatalogRiskAnalysisMultiAnswerV1)] =
+    for {
+      key    <- stringGen
+      values <- listOf(stringGen)
+    } yield (
+      CatalogRiskAnalysisMultiAnswer(key = key, values = values),
+      CatalogRiskAnalysisMultiAnswerV1(key = key, values = values)
+    )
+
   def catalogDescriptorGen: Gen[(CatalogDescriptor, CatalogDescriptorV1)] = for {
     id                             <- Gen.uuid
     version                        <- stringGen
@@ -195,6 +232,9 @@ trait PersistentSerdeHelpers extends ScalaCheckSuite with DiffxAssertions {
     )
   )
 
+  def catalogItemModeGen: Gen[(CatalogItemMode, CatalogItemModeV1)] =
+    Gen.oneOf((RECEIVE, CatalogItemModeV1.RECEIVE), (DELIVER, CatalogItemModeV1.DELIVER))
+
   def catalogItemGen: Gen[(CatalogItem, CatalogItemV1)] = for {
     id                       <- Gen.uuid
     producerId               <- Gen.uuid
@@ -202,10 +242,23 @@ trait PersistentSerdeHelpers extends ScalaCheckSuite with DiffxAssertions {
     description              <- stringGen
     (tech, techV1)           <- catalogItemTechnologyGen
     (desc, descV1)           <- listOf(catalogDescriptorGen).map(_.separate)
+    (risk, riskV1)           <- listOf(catalogRiskAnalysisGen).map(_.separate)
     (createdAt, createdAtV1) <- offsetDatetimeLongGen
+    (mode, modeV1)           <- catalogItemModeGen
   } yield (
-    CatalogItem(id, producerId, name, description, tech, None, desc, createdAt),
-    CatalogItemV1(id.toString, producerId.toString, name, description, techV1, None, descV1, createdAtV1.some)
+    CatalogItem(id, producerId, name, description, tech, None, desc, risk, mode, createdAt),
+    CatalogItemV1(
+      id.toString,
+      producerId.toString,
+      name,
+      description,
+      techV1,
+      None,
+      descV1,
+      createdAtV1.some,
+      riskV1,
+      modeV1.some
+    )
   )
 
   def stateGen: Gen[(State, StateV1)] =

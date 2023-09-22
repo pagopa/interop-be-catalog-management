@@ -813,6 +813,7 @@ components:
         - name
         - description
         - technology
+        - mode
       properties:
         producerId:
           type: string
@@ -823,6 +824,8 @@ components:
           type: string
         technology:
           $ref: '#/components/schemas/EServiceTechnology'
+        mode:
+          $ref: '#/components/schemas/EServiceMode'  
     EService:
       type: object
       required:
@@ -832,6 +835,8 @@ components:
         - description
         - technology
         - descriptors
+        - riskAnalysis
+        - mode
       properties:
         id:
           type: string
@@ -849,6 +854,74 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/EServiceDescriptor'
+        riskAnalysis:
+          type: array
+          items:
+            $ref: '#/components/schemas/RiskAnalysis'
+        mode:
+           $ref: '#/components/schemas/EServiceMode'
+    EServiceMode:
+      type: string
+      description: Risk Analysis Mode
+      enum:
+        - RECEIVE
+        - DELIVER 
+    RiskAnalysis:
+      type: object
+      required:
+        - id
+        - name
+        - riskAnalysisForm
+        - createdAt
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        riskAnalysisForm:
+          $ref: '#/components/schemas/RiskAnalysisForm'  
+        createdAt:
+          type: string
+          format: date-time
+    RiskAnalysisForm:
+      type: object
+      required:
+        - version
+        - singleAnswers
+        - multiAnswers
+      properties:
+        version:
+          type: string
+        singleAnswers:
+          type: array
+          items:
+            $ref: '#/components/schemas/RiskAnalysisSingleAnswer'
+        multiAnswers:
+          type: array
+          items:
+            $ref: '#/components/schemas/RiskAnalysisMultiAnswer'
+    RiskAnalysisSingleAnswer:
+      type: object
+      required:
+        - key
+      properties:
+        key:
+          type: string
+        value:
+          type: string
+    RiskAnalysisMultiAnswer:
+      type: object
+      required:
+        - key
+        - values
+      properties:
+        key:
+          type: string
+        values:
+          type: array
+          items:
+            type: string
     EServiceDoc:
       type: object
       required:

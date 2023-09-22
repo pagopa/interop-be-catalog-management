@@ -136,7 +136,9 @@ object CatalogAdapters {
       name = p.name,
       description = p.description,
       technology = p.technology.toApi,
-      descriptors = p.descriptors.map(_.toApi)
+      descriptors = p.descriptors.map(_.toApi),
+      riskAnalysis = p.riskAnalysis.map(_.toApi),
+      mode = p.mode.toApi
     )
 
     def getInterfacePath(descriptorId: String): Option[String] = for {
@@ -170,8 +172,72 @@ object CatalogAdapters {
       technology = CatalogItemTechnology.fromApi(seed.technology),
       descriptors = List.empty[CatalogDescriptor],
       createdAt = offsetDateTimeSupplier.get(),
-      attributes = None
+      attributes = None,
+      riskAnalysis = List.empty[CatalogRiskAnalysis],
+      mode = CatalogItemMode.fromApi(seed.mode)
     )
+  }
+
+  implicit class CatalogRiskAnalysisObjectWrapper(private val p: CatalogRiskAnalysis) extends AnyVal {
+    def toApi: RiskAnalysis =
+      RiskAnalysis(id = p.id, name = p.name, riskAnalysisForm = p.riskAnalysisForm.toApi, createdAt = p.createdAt)
+  }
+
+  implicit class CatalogRiskAnalysisFormObjectWrapper(private val p: CatalogRiskAnalysisForm) extends AnyVal {
+    def toApi: RiskAnalysisForm = RiskAnalysisForm(
+      version = p.version,
+      singleAnswers = p.singleAnswers.map(_.toApi),
+      multiAnswers = p.multiAnswers.map(_.toApi)
+    )
+  }
+
+  implicit class CatalogRiskAnalysisSingleAnswerObjectWrapper(private val p: CatalogRiskAnalysisSingleAnswer)
+      extends AnyVal {
+    def toApi: RiskAnalysisSingleAnswer = RiskAnalysisSingleAnswer(key = p.key, value = p.value)
+  }
+
+  implicit class CatalogRiskAnalysisMultiAnswerObjectWrapper(private val p: CatalogRiskAnalysisMultiAnswer)
+      extends AnyVal {
+    def toApi: RiskAnalysisMultiAnswer = RiskAnalysisMultiAnswer(key = p.key, values = p.values)
+  }
+
+  implicit class RiskAnalysisObjectWrapper(private val p: RiskAnalysis) extends AnyVal {
+    def fromApi: CatalogRiskAnalysis = CatalogRiskAnalysis(
+      id = p.id,
+      name = p.name,
+      riskAnalysisForm = p.riskAnalysisForm.fromApi,
+      createdAt = p.createdAt
+    )
+  }
+
+  implicit class RiskAnalysisFormObjectWrapper(private val p: RiskAnalysisForm) extends AnyVal {
+    def fromApi: CatalogRiskAnalysisForm = CatalogRiskAnalysisForm(
+      version = p.version,
+      singleAnswers = p.singleAnswers.map(_.fromApi),
+      multiAnswers = p.multiAnswers.map(_.fromApi)
+    )
+  }
+
+  implicit class RiskAnalysisSingleAnswerObjectWrapper(private val p: RiskAnalysisSingleAnswer) extends AnyVal {
+    def fromApi: CatalogRiskAnalysisSingleAnswer = CatalogRiskAnalysisSingleAnswer(key = p.key, value = p.value)
+  }
+
+  implicit class RiskAnalysisMultiAnswerObjectWrapper(private val p: RiskAnalysisMultiAnswer) extends AnyVal {
+    def fromApi: CatalogRiskAnalysisMultiAnswer = CatalogRiskAnalysisMultiAnswer(key = p.key, values = p.values)
+  }
+
+  implicit class ModeObjectWrapper(private val p: CatalogItemMode.type) extends AnyVal {
+    def fromApi(status: EServiceMode): CatalogItemMode = status match {
+      case EServiceMode.RECEIVE => RECEIVE
+      case EServiceMode.DELIVER => DELIVER
+    }
+  }
+
+  implicit class CatalogItemModeObjectWrapper(private val p: CatalogItemMode) extends AnyVal {
+    def toApi: EServiceMode = p match {
+      case RECEIVE => EServiceMode.RECEIVE
+      case DELIVER => EServiceMode.DELIVER
+    }
   }
 
   implicit class CatalogItemTechnologyWrapper(private val p: CatalogItemTechnology) extends AnyVal {
@@ -187,5 +253,4 @@ object CatalogAdapters {
       case EServiceTechnology.SOAP => Soap
     }
   }
-
 }

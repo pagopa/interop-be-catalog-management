@@ -4,7 +4,7 @@ import it.pagopa.interop.catalogmanagement.model._
 import it.pagopa.interop.commons.utils.SprayCommonFormats._
 import spray.json.DefaultJsonProtocol._
 import spray.json._
-
+import it.pagopa.interop.catalogmanagement.model.{DELIVER, RECEIVE}
 object JsonFormats {
 
   implicit val citFormat: RootJsonFormat[CatalogItemTechnology] =
@@ -55,13 +55,35 @@ object JsonFormats {
       }
     }
 
+  implicit val modeFormat: RootJsonFormat[CatalogItemMode] =
+    new RootJsonFormat[CatalogItemMode] {
+      override def read(json: JsValue): CatalogItemMode = json match {
+        case JsString("RECEIVE") => RECEIVE
+        case JsString("DELIVER") => DELIVER
+        case other               => deserializationError(s"Unable to deserialize json as a CatalogMode: $other")
+      }
+
+      override def write(obj: CatalogItemMode): JsValue = obj match {
+        case RECEIVE => JsString("RECEIVE")
+        case DELIVER => JsString("DELIVER")
+      }
+    }
+
   implicit val cdocFormat: RootJsonFormat[CatalogDocument] = jsonFormat7(CatalogDocument.apply)
 
   implicit val saFormat: RootJsonFormat[CatalogAttribute] = jsonFormat2(CatalogAttribute.apply)
 
-  implicit val casFormat: RootJsonFormat[CatalogAttributes] = jsonFormat3(CatalogAttributes.apply)
-  implicit val cdFormat: RootJsonFormat[CatalogDescriptor]  = jsonFormat18(CatalogDescriptor.apply)
-  implicit val ciFormat: RootJsonFormat[CatalogItem]        = jsonFormat8(CatalogItem.apply)
+  implicit val casFormat: RootJsonFormat[CatalogAttributes]                = jsonFormat3(CatalogAttributes.apply)
+  implicit val cdFormat: RootJsonFormat[CatalogDescriptor]                 = jsonFormat18(CatalogDescriptor.apply)
+  implicit val ramaFormat: RootJsonFormat[CatalogRiskAnalysisMultiAnswer]  = jsonFormat2(
+    CatalogRiskAnalysisMultiAnswer.apply
+  )
+  implicit val rasaFormat: RootJsonFormat[CatalogRiskAnalysisSingleAnswer] = jsonFormat2(
+    CatalogRiskAnalysisSingleAnswer.apply
+  )
+  implicit val rafFormat: RootJsonFormat[CatalogRiskAnalysisForm]          = jsonFormat3(CatalogRiskAnalysisForm.apply)
+  implicit val raFormat: RootJsonFormat[CatalogRiskAnalysis]               = jsonFormat4(CatalogRiskAnalysis.apply)
+  implicit val ciFormat: RootJsonFormat[CatalogItem]                       = jsonFormat10(CatalogItem.apply)
 
   implicit val ciaFormat: RootJsonFormat[CatalogItemAdded]        = jsonFormat1(CatalogItemAdded.apply)
   implicit val cciaFormat: RootJsonFormat[ClonedCatalogItemAdded] = jsonFormat1(ClonedCatalogItemAdded.apply)

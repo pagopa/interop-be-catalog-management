@@ -566,7 +566,9 @@ class EServiceApiServiceImpl(
       technology = serviceToClone.technology,
       attributes = None,
       descriptors = Seq(descriptor),
-      createdAt = offsetDateTimeSupplier.get()
+      createdAt = offsetDateTimeSupplier.get(),
+      riskAnalysis = serviceToClone.riskAnalysis,
+      mode = serviceToClone.mode
     )
   }
 
