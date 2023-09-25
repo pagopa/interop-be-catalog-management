@@ -103,7 +103,7 @@ object utils {
   def convertDescriptorsToV1(descriptors: Seq[CatalogDescriptor]): Either[Throwable, Seq[CatalogDescriptorV1]] =
     descriptors.traverse(convertDescriptorToV1)
 
-  def convertRiskAnalysisFromV1(ver1: CatalogRiskAnalysisV1): Either[Throwable, CatalogRiskAnalysis] = for {
+  def convertRiskAnalysisFromV1(ver1: CatalogItemRiskAnalysisV1): Either[Throwable, CatalogRiskAnalysis] = for {
     createdAt <- ver1.createdAt.toOffsetDateTime.toEither
     form = convertRiskAnalysisFormFromV1(ver1.riskAnalysisForm)
   } yield CatalogRiskAnalysis(
@@ -115,36 +115,43 @@ object utils {
 
   def convertRiskAnalysisFormFromV1(ver1: CatalogRiskAnalysisFormV1): CatalogRiskAnalysisForm =
     CatalogRiskAnalysisForm(
+      id = UUID.fromString(ver1.id),
       version = ver1.version,
       singleAnswers = ver1.singleAnswers.map(convertRiskAnalysisSingleAnswerFromV1),
       multiAnswers = ver1.multiAnswers.map(convertRiskAnalysisMultiAnswerFromV1)
     )
 
   def convertRiskAnalysisSingleAnswerFromV1(ver1: CatalogRiskAnalysisSingleAnswerV1): CatalogRiskAnalysisSingleAnswer =
-    CatalogRiskAnalysisSingleAnswer(key = ver1.key, value = ver1.value)
+    CatalogRiskAnalysisSingleAnswer(id = UUID.fromString(ver1.id), key = ver1.key, value = ver1.value)
 
   def convertRiskAnalysisMultiAnswerFromV1(ver1: CatalogRiskAnalysisMultiAnswerV1): CatalogRiskAnalysisMultiAnswer =
-    CatalogRiskAnalysisMultiAnswer(key = ver1.key, values = ver1.values)
+    CatalogRiskAnalysisMultiAnswer(id = UUID.fromString(ver1.id), key = ver1.key, values = ver1.values)
 
-  def convertRiskAnalysisToV1(risk: CatalogRiskAnalysis): CatalogRiskAnalysisV1 = CatalogRiskAnalysisV1(
-    id = risk.id.toString(),
-    name = risk.name,
-    createdAt = risk.createdAt.toMillis,
-    riskAnalysisForm = convertRiskAnalysisFormToV1(risk.riskAnalysisForm)
+  def convertRiskAnalysisToV1(risks: Seq[CatalogRiskAnalysis]): Either[Throwable, Seq[CatalogItemRiskAnalysisV1]] =
+    risks.traverse(convertRiskAnalysisToV1)
+
+  def convertRiskAnalysisToV1(risk: CatalogRiskAnalysis): Either[Throwable, CatalogItemRiskAnalysisV1] = Right(
+    CatalogItemRiskAnalysisV1(
+      id = risk.id.toString(),
+      name = risk.name,
+      createdAt = risk.createdAt.toMillis,
+      riskAnalysisForm = convertRiskAnalysisFormToV1(risk.riskAnalysisForm)
+    )
   )
 
   def convertRiskAnalysisFormToV1(form: CatalogRiskAnalysisForm): CatalogRiskAnalysisFormV1 =
     CatalogRiskAnalysisFormV1(
+      id = form.id.toString,
       version = form.version,
       singleAnswers = form.singleAnswers.map(convertRiskAnalysisSingleAnswerToV1),
       multiAnswers = form.multiAnswers.map(convertRiskAnalysisMultiAnswerToV1)
     )
 
   def convertRiskAnalysisSingleAnswerToV1(answer: CatalogRiskAnalysisSingleAnswer): CatalogRiskAnalysisSingleAnswerV1 =
-    CatalogRiskAnalysisSingleAnswerV1(key = answer.key, value = answer.value)
+    CatalogRiskAnalysisSingleAnswerV1(id = answer.id.toString, key = answer.key, value = answer.value)
 
   def convertRiskAnalysisMultiAnswerToV1(answer: CatalogRiskAnalysisMultiAnswer): CatalogRiskAnalysisMultiAnswerV1 =
-    CatalogRiskAnalysisMultiAnswerV1(key = answer.key, values = answer.values)
+    CatalogRiskAnalysisMultiAnswerV1(id = answer.id.toString, key = answer.key, values = answer.values)
 
   def convertDescriptorFromV1(ver1: CatalogDescriptorV1): Either[Throwable, CatalogDescriptor] =
     for {
@@ -223,7 +230,8 @@ object utils {
   )
 
   def convertCatalogItemsToV1(item: CatalogItem): Either[Throwable, CatalogItemV1] = for {
-    descriptors <- convertDescriptorsToV1(item.descriptors)
+    descriptors  <- convertDescriptorsToV1(item.descriptors)
+    riskAnalysis <- convertRiskAnalysisToV1(item.riskAnalysis)
   } yield CatalogItemV1(
     id = item.id.toString,
     producerId = item.producerId.toString,
@@ -234,7 +242,7 @@ object utils {
     createdAt = item.createdAt.toMillis.some,
     attributes = item.attributes.map(convertAttributesToV1),
     mode = convertItemModeToV1(item.mode).some,
-    riskAnalysis = item.riskAnalysis.map(convertRiskAnalysisToV1)
+    riskAnalysis = riskAnalysis
   )
 
   def convertDescriptorStateFromV1(state: CatalogDescriptorStateV1): Either[Throwable, CatalogDescriptorState] =

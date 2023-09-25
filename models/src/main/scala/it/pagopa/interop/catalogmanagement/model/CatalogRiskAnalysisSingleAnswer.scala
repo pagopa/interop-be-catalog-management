@@ -1,3 +1,5 @@
 package it.pagopa.interop.catalogmanagement.model
 
-final case class CatalogRiskAnalysisSingleAnswer(key: String, value: Option[String] = None)
+import java.util.UUID
+
+final case class CatalogRiskAnalysisSingleAnswer(id: UUID, key: String, value: Option[String] = None)

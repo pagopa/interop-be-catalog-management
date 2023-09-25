@@ -117,6 +117,23 @@ trait ItSpecHelper
   def sortEServiceArrayFields(eService: CatalogItem): CatalogItem =
     eService.copy(descriptors = eService.descriptors.sortBy(_.id).map(desc => desc.copy(docs = desc.docs.sortBy(_.id))))
 
+  def createEServiceRiskAnalysis(eServiceId: UUID, riskAnalysisId: UUID): EServiceRiskAnalysis = {
+    (() => mockUUIDSupplier.get()).expects().returning(riskAnalysisId).once()
+
+    val seed = RiskAnalysisSeed(
+      name = "name",
+      riskAnalysisForm = RiskAnalysisFormSeed(version = "2.0", singleAnswers = Seq.empty, multiAnswers = Seq.empty)
+    )
+
+    val data = seed.toJson.compactPrint
+
+    val response = request(s"$serviceURL/eservices/$eServiceId/riskAnalysis", HttpMethods.POST, Some(data))
+
+    response.status shouldBe StatusCodes.OK
+
+    Await.result(Unmarshal(response).to[EServiceRiskAnalysis], Duration.Inf)
+  }
+
   def createEServiceDescriptor(eServiceId: UUID, descriptorId: UUID): EServiceDescriptor = {
     (() => mockUUIDSupplier.get()).expects().returning(descriptorId).once()
 
@@ -126,7 +143,8 @@ trait ItSpecHelper
       dailyCallsPerConsumer = 2022,
       dailyCallsTotal = 2099,
       description = Some("string"),
-      agreementApprovalPolicy = AUTOMATIC
+      agreementApprovalPolicy = AUTOMATIC,
+      attributes = Attributes(Seq.empty, Seq.empty, Seq.empty)
     )
 
     val data = seed.toJson.compactPrint
@@ -146,22 +164,7 @@ trait ItSpecHelper
       name = "string",
       description = "string",
       technology = EServiceTechnology.REST,
-      attributes = Attributes(
-        certified =
-          Seq(Attribute(single = Some(AttributeValue(id = UUID.randomUUID(), explicitAttributeVerification = false)))),
-        declared =
-          Seq(Attribute(single = Some(AttributeValue(id = UUID.randomUUID(), explicitAttributeVerification = false)))),
-        verified = Seq(
-          Attribute(group =
-            Some(
-              Seq(
-                AttributeValue(id = UUID.randomUUID(), explicitAttributeVerification = false),
-                AttributeValue(id = UUID.randomUUID(), explicitAttributeVerification = false)
-              )
-            )
-          )
-        )
-      )
+      mode = EServiceMode.DELIVER
     )
 
     val data = seed.toJson.compactPrint
@@ -275,27 +278,8 @@ trait ItSpecHelper
 
   def updateEService(eServiceId: UUID): EService = {
 
-    val seed = UpdateEServiceSeed(
-      name = "New name",
-      description = "New description",
-      technology = EServiceTechnology.SOAP,
-      attributes = Attributes(
-        certified =
-          Seq(Attribute(single = Some(AttributeValue(id = UUID.randomUUID(), explicitAttributeVerification = true)))),
-        declared =
-          Seq(Attribute(single = Some(AttributeValue(id = UUID.randomUUID(), explicitAttributeVerification = true)))),
-        verified = Seq(
-          Attribute(group =
-            Some(
-              Seq(
-                AttributeValue(id = UUID.randomUUID(), explicitAttributeVerification = true),
-                AttributeValue(id = UUID.randomUUID(), explicitAttributeVerification = true)
-              )
-            )
-          )
-        )
-      )
-    )
+    val seed =
+      UpdateEServiceSeed(name = "New name", description = "New description", technology = EServiceTechnology.SOAP)
 
     val data = seed.toJson.compactPrint
 
@@ -315,7 +299,8 @@ trait ItSpecHelper
       voucherLifespan = 987654,
       dailyCallsPerConsumer = 556644,
       dailyCallsTotal = 884455,
-      agreementApprovalPolicy = AUTOMATIC
+      agreementApprovalPolicy = AUTOMATIC,
+      attributes = Attributes(Seq.empty, Seq.empty, Seq.empty)
     )
 
     val data = seed.toJson.compactPrint

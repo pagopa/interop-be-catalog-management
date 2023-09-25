@@ -75,13 +75,13 @@ object JsonFormats {
 
   implicit val casFormat: RootJsonFormat[CatalogAttributes]                = jsonFormat3(CatalogAttributes.apply)
   implicit val cdFormat: RootJsonFormat[CatalogDescriptor]                 = jsonFormat18(CatalogDescriptor.apply)
-  implicit val ramaFormat: RootJsonFormat[CatalogRiskAnalysisMultiAnswer]  = jsonFormat2(
+  implicit val ramaFormat: RootJsonFormat[CatalogRiskAnalysisMultiAnswer]  = jsonFormat3(
     CatalogRiskAnalysisMultiAnswer.apply
   )
-  implicit val rasaFormat: RootJsonFormat[CatalogRiskAnalysisSingleAnswer] = jsonFormat2(
+  implicit val rasaFormat: RootJsonFormat[CatalogRiskAnalysisSingleAnswer] = jsonFormat3(
     CatalogRiskAnalysisSingleAnswer.apply
   )
-  implicit val rafFormat: RootJsonFormat[CatalogRiskAnalysisForm]          = jsonFormat3(CatalogRiskAnalysisForm.apply)
+  implicit val rafFormat: RootJsonFormat[CatalogRiskAnalysisForm]          = jsonFormat4(CatalogRiskAnalysisForm.apply)
   implicit val raFormat: RootJsonFormat[CatalogRiskAnalysis]               = jsonFormat4(CatalogRiskAnalysis.apply)
   implicit val ciFormat: RootJsonFormat[CatalogItem]                       = jsonFormat10(CatalogItem.apply)
 
@@ -101,6 +101,9 @@ object JsonFormats {
   )
   implicit val mafetdFormat: RootJsonFormat[MovedAttributesFromEserviceToDescriptors] = jsonFormat1(
     MovedAttributesFromEserviceToDescriptors.apply
+  )
+  implicit val ciraFormat: RootJsonFormat[CatalogItemRiskAnalysisAdded]               = jsonFormat2(
+    CatalogItemRiskAnalysisAdded.apply
   )
 
 }

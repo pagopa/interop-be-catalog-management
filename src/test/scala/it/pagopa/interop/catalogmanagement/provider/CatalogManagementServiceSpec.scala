@@ -179,6 +179,34 @@ class CatalogManagementServiceSpec
     }
   }
 
+  "Create a risk Analysis" should {
+    "succeed" in {
+      val eServiceUuid = UUID.randomUUID().toString()
+      val eService     = createEService(eServiceUuid)
+
+      val data =
+        """{"name":"string","riskAnalysisForm":{"multiAnswers":[{"key":"1","values":["val1","val2","val3"]}],"singleAnswers":[{"key":"1","value":"value1"}],"version":"2.0"}}"""
+
+      (() => mockUUIDSupplier.get()).expects().returning(UUID.randomUUID()).repeat(4)
+      (() => mockOffsetDateTimeSupplier.get()).expects().returning(OffsetDateTime.now()).once()
+
+      val response = Await.result(
+        Http().singleRequest(
+          HttpRequest(
+            uri = s"$serviceURL/eservices/${eService.id.toString}/riskanalysis",
+            method = HttpMethods.POST,
+            entity = HttpEntity(ContentType(MediaTypes.`application/json`), data),
+            headers = requestHeaders
+          )
+        ),
+        Duration.Inf
+      )
+
+      response.status shouldBe StatusCodes.OK
+      Await.result(Unmarshal(response).to[EServiceRiskAnalysis], Duration.Inf)
+    }
+  }
+
   "Update descriptor" should {
 
     "succeed" in {
@@ -477,5 +505,4 @@ class CatalogManagementServiceSpec
       response.status shouldBe StatusCodes.Conflict
     }
   }
-
 }

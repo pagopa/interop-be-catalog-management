@@ -14,8 +14,7 @@ import it.pagopa.interop.catalogmanagement.model.{
   EServiceDoc
 }
 import it.pagopa.interop.catalogmanagement.model.CatalogAdapters._
-import it.pagopa.interop.catalogmanagement.model.EServiceDescriptorState.DRAFT
-import it.pagopa.interop.catalogmanagement.model.persistence.serializer.v1.defaultActivatedAt
+import it.pagopa.interop.catalogmanagement.model.CatalogItemMode
 
 object PersistentAdapters {
 
@@ -27,9 +26,11 @@ object PersistentAdapters {
         name = p.name,
         description = p.description,
         technology = CatalogItemTechnology.fromApi(p.technology),
-        attributes = CatalogAttributes.fromApi(p.attributes).toOption.get,
+        attributes = Some(CatalogAttributes.empty),
         descriptors = p.descriptors.map(_.toPersistent),
-        createdAt = ItSpecData.timestamp // TODO Replace this when createdAt will be added to API
+        createdAt = ItSpecData.timestamp, // TODO Replace this when createdAt will be added to API,
+        riskAnalysis = Seq.empty,
+        mode = CatalogItemMode.default
       )
   }
 
@@ -49,7 +50,11 @@ object PersistentAdapters {
         agreementApprovalPolicy = Some(Automatic),
         serverUrls = p.serverUrls.toList,
         createdAt = ItSpecData.timestamp, // TODO Replace this when createdAt will be added to API
-        activatedAt = if (p.state == DRAFT) None else Some(defaultActivatedAt)
+        publishedAt = None,
+        suspendedAt = None,
+        deprecatedAt = None,
+        archivedAt = None,
+        attributes = CatalogAttributes.empty
       )
   }
 

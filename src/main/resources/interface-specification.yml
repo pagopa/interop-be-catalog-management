@@ -792,6 +792,50 @@ paths:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/Problem'
+  /eservices/{eServiceId}/riskanalysis:
+    parameters:
+      - $ref: '#/components/parameters/CorrelationIdHeader'
+      - $ref: '#/components/parameters/IpAddress'
+    post:
+      security:
+        - bearerAuth: [ ]
+      tags:
+        - e_service
+      summary: Create Risk Analysis
+      operationId: createRiskAnalysis
+      parameters:
+        - name: eServiceId
+          in: path
+          description: the eService Id
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: EService Risk Analysis created.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EServiceRiskAnalysis'
+        "400":
+          description: Invalid input
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        "404":
+          description: Not found
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+      requestBody:
+        description: A payload containing the the risk analysis
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RiskAnalysisSeed'  
 components:
   parameters:
     CorrelationIdHeader:
@@ -806,6 +850,16 @@ components:
       schema:
         type: string
   schemas:
+    RiskAnalysisSeed:
+      type: object
+      required:
+        - name
+        - riskAnalysisForm
+      properties:
+        name:
+          type: string
+        riskAnalysisForm:
+          $ref:  '#/components/schemas/RiskAnalysisFormSeed'
     EServiceSeed:
       type: object
       required:
@@ -857,7 +911,7 @@ components:
         riskAnalysis:
           type: array
           items:
-            $ref: '#/components/schemas/RiskAnalysis'
+            $ref: '#/components/schemas/EServiceRiskAnalysis'
         mode:
            $ref: '#/components/schemas/EServiceMode'
     EServiceMode:
@@ -866,7 +920,7 @@ components:
       enum:
         - RECEIVE
         - DELIVER 
-    RiskAnalysis:
+    EServiceRiskAnalysis:
       type: object
       required:
         - id
@@ -887,10 +941,14 @@ components:
     RiskAnalysisForm:
       type: object
       required:
+        - id
         - version
         - singleAnswers
         - multiAnswers
       properties:
+        id:
+          type: string
+          format: uuid
         version:
           type: string
         singleAnswers:
@@ -901,7 +959,24 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/RiskAnalysisMultiAnswer'
-    RiskAnalysisSingleAnswer:
+    RiskAnalysisFormSeed:
+      type: object
+      required:
+        - version
+        - singleAnswers
+        - multiAnswers
+      properties:
+        version:
+          type: string
+        singleAnswers:
+          type: array
+          items:
+            $ref: '#/components/schemas/RiskAnalysisSingleAnswerSeed'
+        multiAnswers:
+          type: array
+          items:
+            $ref: '#/components/schemas/RiskAnalysisMultiAnswerSeed'    
+    RiskAnalysisSingleAnswerSeed:
       type: object
       required:
         - key
@@ -910,12 +985,41 @@ components:
           type: string
         value:
           type: string
-    RiskAnalysisMultiAnswer:
+    RiskAnalysisMultiAnswerSeed:
       type: object
       required:
         - key
         - values
       properties:
+        key:
+          type: string
+        values:
+          type: array
+          items:
+            type: string            
+    RiskAnalysisSingleAnswer:
+      type: object
+      required:
+        - id 
+        - key
+      properties:
+        id:
+          type: string
+          format: uuid
+        key:
+          type: string
+        value:
+          type: string
+    RiskAnalysisMultiAnswer:
+      type: object
+      required:
+        - id
+        - key
+        - values
+      properties:
+        id:
+          type: string
+          format: uuid
         key:
           type: string
         values:

@@ -64,3 +64,8 @@ message CatalogItemDescriptorUpdatedV1 {
 message MovedAttributesFromEserviceToDescriptorsV1 {
   required CatalogItemV1 catalogItem = 1;
 }
+
+message CatalogItemRiskAnalysisAddedV1 {
+  required string eServiceId = 1;
+  required CatalogItemRiskAnalysisV1 catalogRiskAnalysisV1 = 2;
+}

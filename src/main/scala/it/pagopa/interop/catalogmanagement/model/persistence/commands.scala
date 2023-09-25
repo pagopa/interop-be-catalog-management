@@ -9,6 +9,7 @@ import it.pagopa.interop.catalogmanagement.model.{
   CatalogDocument,
   CatalogItem
 }
+import it.pagopa.interop.catalogmanagement.model.CatalogRiskAnalysis
 
 sealed trait Command
 
@@ -69,6 +70,12 @@ final case class AddCatalogItemDescriptor(
   eServiceId: String,
   catalogDescriptor: CatalogDescriptor,
   replyTo: ActorRef[StatusReply[Option[CatalogDescriptor]]]
+) extends Command
+
+final case class AddCatalogItemRiskAnalysis(
+  eServiceId: String,
+  catalogRiskAnalysis: CatalogRiskAnalysis,
+  replyTo: ActorRef[StatusReply[Option[CatalogRiskAnalysis]]]
 ) extends Command
 
 final case class UpdateCatalogItemDescriptor(
