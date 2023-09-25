@@ -41,7 +41,7 @@ class CqrsProjectionSpec extends ScalaTestWithActorTestKit(ItSpecConfiguration.c
       expectedData shouldBe persisted
     }
 
-    "succeed for event CatalogItemDRiskAnalysisAdded" in {
+    "succeed for event CatalogItemRiskAnalysisAdded" in {
       val eServiceId     = UUID.randomUUID()
       val riskAnalysisId = UUID.randomUUID()
 

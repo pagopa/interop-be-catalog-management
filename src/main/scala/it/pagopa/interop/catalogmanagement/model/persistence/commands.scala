@@ -75,7 +75,7 @@ final case class AddCatalogItemDescriptor(
 final case class AddCatalogItemRiskAnalysis(
   eServiceId: String,
   catalogRiskAnalysis: CatalogRiskAnalysis,
-  replyTo: ActorRef[StatusReply[Option[CatalogRiskAnalysis]]]
+  replyTo: ActorRef[StatusReply[Done]]
 ) extends Command
 
 final case class UpdateCatalogItemRiskAnalysis(
