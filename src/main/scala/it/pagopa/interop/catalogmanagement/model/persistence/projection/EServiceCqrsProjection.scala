@@ -34,6 +34,16 @@ object EServiceCqrsProjection {
         Updates.push(s"data.riskAnalysis", riskAnalysis.toDocument)
       )
 
+    case CatalogItemRiskAnalysisUpdated(esId, ra) =>
+      ActionWithBson(
+        collection.updateMany(
+          Filters.eq("data.id", esId),
+          _,
+          UpdateOptions().arrayFilters(List(Filters.eq("elem.id", ra.id.toString)).asJava)
+        ),
+        Updates.set("data.riskAnalysis.$[elem]", ra.toDocument)
+      )
+
     case CatalogItemDescriptorAdded(esId, descriptor) =>
       ActionWithBson(
         collection.updateOne(Filters.eq("data.id", esId), _),

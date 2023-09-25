@@ -35,6 +35,9 @@ final case class CatalogItemDescriptorAdded(eServiceId: String, catalogDescripto
 final case class CatalogItemRiskAnalysisAdded(eServiceId: String, catalogRiskAnalysis: CatalogRiskAnalysis)
     extends Event
 
+final case class CatalogItemRiskAnalysisUpdated(eServiceId: String, catalogRiskAnalysis: CatalogRiskAnalysis)
+    extends Event
+
 final case class CatalogItemDescriptorUpdated(eServiceId: String, catalogDescriptor: CatalogDescriptor) extends Event
 
 final case class MovedAttributesFromEserviceToDescriptors(catalogItem: CatalogItem) extends Event

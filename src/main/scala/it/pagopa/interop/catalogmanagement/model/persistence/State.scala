@@ -24,6 +24,9 @@ final case class State(items: Map[String, CatalogItem]) extends Persistable {
       case None       => this
     }
 
+  def updateRiskAnalysis(eServiceId: String, catalogRiskAnalysis: CatalogRiskAnalysis): State =
+    updateRiskAnalysisLens(eServiceId, catalogRiskAnalysis.id.toString, _ => catalogRiskAnalysis)
+
   def addDescriptor(eServiceId: String, catalogDescriptor: CatalogDescriptor): State = items.get(eServiceId) match {
     case Some(item) =>
       val updatedItem = item.copy(descriptors = catalogDescriptor +: item.descriptors)
@@ -113,6 +116,29 @@ final case class State(items: Map[String, CatalogItem]) extends Persistable {
       descriptor <- item.descriptors.find(_.id.toString == descriptorId)
       updatedItem  = item.copy(descriptors =
         item.descriptors.filterNot(_.id.toString == descriptorId).prepended(descriptorOperation(descriptor))
+      )
+      updatedState = copy(items = items + (item.id.toString -> updatedItem))
+    } yield updatedState
+
+    newState.getOrElse(this)
+  }
+
+  /*
+    Inspect the state data in order to find the corresponding risk analysis to update with a custom risk analysis operation.
+    Even though quick and dirty, it behaves like a lens.
+    TODO for updates of complex states as this, evaluate the introduction of an optic library (e.g.: Monocle) It would be a good choice!
+   */
+  private def updateRiskAnalysisLens(
+    eServiceId: String,
+    riskAnalysisId: String,
+    riskAnalysisOperation: CatalogRiskAnalysis => CatalogRiskAnalysis
+  ): State = {
+
+    val newState = for {
+      item         <- items.get(eServiceId)
+      riskAnalysis <- item.riskAnalysis.find(_.id.toString == riskAnalysisId)
+      updatedItem  = item.copy(riskAnalysis =
+        item.riskAnalysis.filterNot(_.id.toString == riskAnalysisId).prepended(riskAnalysisOperation(riskAnalysis))
       )
       updatedState = copy(items = items + (item.id.toString -> updatedItem))
     } yield updatedState

@@ -69,3 +69,8 @@ message CatalogItemRiskAnalysisAddedV1 {
   required string eServiceId = 1;
   required CatalogItemRiskAnalysisV1 catalogRiskAnalysisV1 = 2;
 }
+
+message CatalogItemRiskAnalysisUpdatedV1 {
+  required string eServiceId = 1;
+  required CatalogItemRiskAnalysisV1 catalogRiskAnalysisV1 = 2;
+}

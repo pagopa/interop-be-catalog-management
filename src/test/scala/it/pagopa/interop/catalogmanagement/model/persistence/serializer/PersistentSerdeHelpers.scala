@@ -315,6 +315,11 @@ trait PersistentSerdeHelpers extends ScalaCheckSuite with DiffxAssertions {
     (a, b)     <- catalogRiskAnalysisGen
   } yield (CatalogItemRiskAnalysisAdded(eServiceId, a), CatalogItemRiskAnalysisAddedV1(eServiceId, b))
 
+  def catalogItemRiskAnalysisUpdatedGen: Gen[(CatalogItemRiskAnalysisUpdated, CatalogItemRiskAnalysisUpdatedV1)] = for {
+    eServiceId <- stringGen
+    (a, b)     <- catalogRiskAnalysisGen
+  } yield (CatalogItemRiskAnalysisUpdated(eServiceId, a), CatalogItemRiskAnalysisUpdatedV1(eServiceId, b))
+
   def catalogItemDescriptorAddedGen: Gen[(CatalogItemDescriptorAdded, CatalogItemDescriptorAddedV1)] = for {
     eServiceId <- stringGen
     (a, b)     <- catalogDescriptorGen

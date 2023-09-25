@@ -69,6 +69,35 @@ trait SpecHelper extends SpecConfiguration with AnyWordSpecLike with MockFactory
     Await.result(Unmarshal(response).to[EServiceDescriptor], Duration.Inf)
   }
 
+  def createEServiceRiskAnalysis(eserviceId: String, riskanalysisId: UUID)(implicit
+    actorSystem: ActorSystem[_]
+  ): EServiceRiskAnalysis = {
+    (() => mockUUIDSupplier.get()).expects().returning(riskanalysisId).repeat(6)
+    (() => mockOffsetDateTimeSupplier.get()).expects().returning(OffsetDateTime.now()).once()
+    val seed = RiskAnalysisSeed(
+      name = "name of the new risk analysis",
+      riskAnalysisForm = RiskAnalysisFormSeed(
+        version = "3.0",
+        singleAnswers = Seq(
+          RiskAnalysisSingleAnswerSeed(key = "key1", value = None),
+          RiskAnalysisSingleAnswerSeed(key = "key2", value = Some("value"))
+        ),
+        multiAnswers = Seq(
+          RiskAnalysisMultiAnswerSeed(key = "key1", values = Seq("value1", "value2", "value3")),
+          RiskAnalysisMultiAnswerSeed(key = "key2", values = Seq("value4", "value5", "value6"))
+        )
+      )
+    )
+
+    val data = seed.toJson.compactPrint
+
+    val response = request(s"$serviceURL/eservices/$eserviceId/riskanalysis", HttpMethods.POST, Some(data))
+
+    response.status shouldBe StatusCodes.OK
+
+    Await.result(Unmarshal(response).to[EServiceRiskAnalysis], Duration.Inf)
+  }
+
   def createEService(uuid: String)(implicit actorSystem: ActorSystem[_]): EService = {
     (() => mockUUIDSupplier.get()).expects().returning(UUID.fromString(uuid)).once()
     (() => mockOffsetDateTimeSupplier.get()).expects().returning(OffsetDateTime.now()).once()

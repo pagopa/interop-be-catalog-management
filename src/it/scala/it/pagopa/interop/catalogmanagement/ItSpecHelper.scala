@@ -134,6 +134,22 @@ trait ItSpecHelper
     Await.result(Unmarshal(response).to[EServiceRiskAnalysis], Duration.Inf)
   }
 
+  def updateEServiceRiskAnalysis(
+    eServiceId: UUID,
+    riskAnalysisId: UUID,
+    seed: RiskAnalysisSeed
+  ): EServiceRiskAnalysis = {
+
+    val data = seed.toJson.compactPrint
+
+    val response =
+      request(s"$serviceURL/eservices/$eServiceId/riskAnalysis/$riskAnalysisId", HttpMethods.POST, Some(data))
+
+    response.status shouldBe StatusCodes.OK
+
+    Await.result(Unmarshal(response).to[EServiceRiskAnalysis], Duration.Inf)
+  }
+
   def createEServiceDescriptor(eServiceId: UUID, descriptorId: UUID): EServiceDescriptor = {
     (() => mockUUIDSupplier.get()).expects().returning(descriptorId).once()
 

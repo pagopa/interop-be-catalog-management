@@ -105,5 +105,8 @@ object JsonFormats {
   implicit val ciraFormat: RootJsonFormat[CatalogItemRiskAnalysisAdded]               = jsonFormat2(
     CatalogItemRiskAnalysisAdded.apply
   )
+  implicit val cirauFormat: RootJsonFormat[CatalogItemRiskAnalysisUpdated]            = jsonFormat2(
+    CatalogItemRiskAnalysisUpdated.apply
+  )
 
 }

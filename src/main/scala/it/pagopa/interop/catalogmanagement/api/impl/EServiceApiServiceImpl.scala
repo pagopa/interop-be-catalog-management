@@ -620,6 +620,47 @@ class EServiceApiServiceImpl(
     onComplete(result) { createdRiskAnalysisResponse[EServiceRiskAnalysis](operationLabel)(createRiskAnalysis200) }
   }
 
+  override def updateRiskAnalysis(eServiceId: String, riskAnalysisId: String, seed: RiskAnalysisSeed)(implicit
+    toEntityMarshallerEServiceRiskAnalysis: ToEntityMarshaller[EServiceRiskAnalysis],
+    toEntityMarshallerProblem: ToEntityMarshaller[Problem],
+    contexts: Seq[(String, String)]
+  ): Route = {
+    val operationLabel = s"Updating Risk Analysis $riskAnalysisId for EService $eServiceId"
+    logger.info(operationLabel)
+
+    val result: Future[EServiceRiskAnalysis] = for {
+      eService     <- retrieveCatalogItem(eServiceId)
+      riskAnalysis <- getRiskAnalysis(eService, riskAnalysisId).toFuture
+      updateRiskAnalysis = riskAnalysis.copy(riskAnalysisForm =
+        CatalogRiskAnalysisForm(
+          id = uuidSupplier.get(),
+          version = seed.riskAnalysisForm.version,
+          singleAnswers = seed.riskAnalysisForm.singleAnswers.map(answer =>
+            CatalogRiskAnalysisSingleAnswer(id = uuidSupplier.get(), key = answer.key, value = answer.value)
+          ),
+          multiAnswers = seed.riskAnalysisForm.multiAnswers.map(answer =>
+            CatalogRiskAnalysisMultiAnswer(id = uuidSupplier.get(), key = answer.key, values = answer.values)
+          )
+        )
+      )
+      _ <- commander(eServiceId).askWithStatus(ref =>
+        UpdateCatalogItemRiskAnalysis(eService.id.toString, updateRiskAnalysis, ref)
+      )
+    } yield updateRiskAnalysis.toApi
+
+    onComplete(result) {
+      updateCatalogRiskAnalysisResponse[EServiceRiskAnalysis](operationLabel)(updateRiskAnalysis200)
+    }
+  }
+
+  private def getRiskAnalysis(
+    eService: CatalogItem,
+    riskAnalysisId: String
+  ): Either[EServiceRiskAnalysisNotFound, CatalogRiskAnalysis] =
+    eService.riskAnalysis
+      .find(_.id.toString == riskAnalysisId)
+      .toRight(EServiceRiskAnalysisNotFound(eService.id.toString, riskAnalysisId))
+
   private def askWithResult[T](eServiceId: String, command: ActorRef[StatusReply[Option[T]]] => Command): Future[T] =
     for {
       maybeResult <- commander(eServiceId).askWithStatus(command)
