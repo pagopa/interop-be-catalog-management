@@ -112,10 +112,10 @@ object CatalogPersistentBehavior {
           .map { _ =>
             Effect
               .persist(CatalogItemRiskAnalysisAdded(eServiceId, catalogRiskAnalysis))
-              .thenRun((_: State) => replyTo ! success(Some(catalogRiskAnalysis)))
+              .thenRun((_: State) => replyTo ! StatusReply.Success(Done))
           }
           .getOrElse {
-            replyTo ! success(None)
+            replyTo ! StatusReply.error[Done](EServiceNotFound(eServiceId))
             Effect.none[CatalogItemRiskAnalysisAdded, State]
           }
 
