@@ -30,7 +30,7 @@ object EServiceCqrsProjection {
 
     case CatalogItemRiskAnalysisAdded(c, _) =>
       ActionWithBson(collection.updateOne(Filters.eq("data.id", c.id.toString), _), Updates.set("data", c.toDocument))
-   
+
     case CatalogItemDescriptorAdded(esId, descriptor) =>
       ActionWithBson(
         collection.updateOne(Filters.eq("data.id", esId), _),
