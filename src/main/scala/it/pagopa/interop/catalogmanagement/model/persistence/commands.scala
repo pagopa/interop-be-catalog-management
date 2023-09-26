@@ -7,7 +7,8 @@ import it.pagopa.interop.catalogmanagement.model.{
   CatalogDescriptor,
   CatalogDescriptorState,
   CatalogDocument,
-  CatalogItem
+  CatalogItem,
+  CatalogRiskAnalysis
 }
 
 sealed trait Command
@@ -72,8 +73,8 @@ final case class AddCatalogItemDescriptor(
 ) extends Command
 
 final case class AddCatalogItemRiskAnalysis(
-  catalogItem: CatalogItem,
-  riskAnalysisId: String,
+  eServiceId: String,
+  riskAnalysisId: CatalogRiskAnalysis,
   replyTo: ActorRef[StatusReply[Done]]
 ) extends Command
 

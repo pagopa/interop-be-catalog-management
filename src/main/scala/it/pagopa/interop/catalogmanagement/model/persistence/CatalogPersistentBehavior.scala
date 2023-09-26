@@ -105,17 +105,19 @@ object CatalogPersistentBehavior {
             Effect.none[CatalogItemDocumentDeleted, State]
           }
 
-      case AddCatalogItemRiskAnalysis(eService, riskAnalysisId, replyTo) =>
-        val catalogItem: Option[CatalogItem] = state.items.get(eService.id.toString)
-
+      case AddCatalogItemRiskAnalysis(eServiceId, riskAnalysis, replyTo) =>
+        val catalogItem: Option[CatalogItem] = state.items.get(eServiceId.toString)
         catalogItem
-          .map { _ =>
+          .map { eService =>
+            val updatedItem = eService
+              .copy(riskAnalysis = eService.riskAnalysis.filter(_.id.toString != riskAnalysis.id) :+ riskAnalysis)
+
             Effect
-              .persist(CatalogItemRiskAnalysisAdded(eService, riskAnalysisId))
+              .persist(CatalogItemRiskAnalysisAdded(updatedItem, riskAnalysis.id.toString))
               .thenRun((_: State) => replyTo ! StatusReply.Success(Done))
           }
           .getOrElse {
-            replyTo ! StatusReply.error[Done](EServiceNotFound(eService.id.toString))
+            replyTo ! StatusReply.error[Done](EServiceNotFound(eServiceId.toString))
             Effect.none[CatalogItemRiskAnalysisAdded, State]
           }
 

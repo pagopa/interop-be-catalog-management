@@ -611,11 +611,8 @@ class EServiceApiServiceImpl(
         ),
         createdAt = offsetDateTimeSupplier.get()
       )
-      updatedItem            = eService.copy(riskAnalysis =
-        eService.riskAnalysis.filter(_.id.toString != newCatalogRiskAnalysis.id) :+ newCatalogRiskAnalysis
-      )
       _ <- commander(eServiceId).askWithStatus(ref =>
-        AddCatalogItemRiskAnalysis(updatedItem, newCatalogRiskAnalysis.id.toString, ref)
+        AddCatalogItemRiskAnalysis(eService.id.toString, newCatalogRiskAnalysis, ref)
       )
     } yield ()
 
