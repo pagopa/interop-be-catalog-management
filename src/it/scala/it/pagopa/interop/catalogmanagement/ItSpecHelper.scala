@@ -295,7 +295,12 @@ trait ItSpecHelper
   def updateEService(eServiceId: UUID): EService = {
 
     val seed =
-      UpdateEServiceSeed(name = "New name", description = "New description", technology = EServiceTechnology.SOAP)
+      UpdateEServiceSeed(
+        name = "New name",
+        description = "New description",
+        technology = EServiceTechnology.SOAP,
+        mode = EServiceMode.DELIVER
+      )
 
     val data = seed.toJson.compactPrint
 

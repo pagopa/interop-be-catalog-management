@@ -472,6 +472,7 @@ class CatalogManagementServiceSpec
           |     "name": "TestName"
           |   , "description": "howdy!"
           |   , "technology": "SOAP"
+          |   , "mode": "DELIVER"
           |}""".stripMargin
       val response = Await.result(
         Http().singleRequest(
