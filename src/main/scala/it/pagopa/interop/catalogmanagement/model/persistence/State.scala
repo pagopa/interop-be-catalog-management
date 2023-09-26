@@ -1,7 +1,6 @@
 package it.pagopa.interop.catalogmanagement.model.persistence
 
 import it.pagopa.interop.catalogmanagement.model.{CatalogDescriptor, CatalogDocument, CatalogItem}
-import it.pagopa.interop.catalogmanagement.model.CatalogRiskAnalysis
 
 final case class State(items: Map[String, CatalogItem]) extends Persistable {
 
@@ -16,13 +15,13 @@ final case class State(items: Map[String, CatalogItem]) extends Persistable {
 
   def update(catalogItem: CatalogItem): State = copy(items = items + (catalogItem.id.toString -> catalogItem))
 
-  def addRiskAnalysis(eServiceId: String, catalogRiskAnalysis: CatalogRiskAnalysis): State =
-    items.get(eServiceId) match {
-      case Some(item) =>
-        val updatedItem = item.copy(riskAnalysis = catalogRiskAnalysis +: item.riskAnalysis)
-        copy(items = items + (item.id.toString -> updatedItem))
-      case None       => this
-    }
+  def addRiskAnalysis(catalogItem: CatalogItem): State = copy(items = items + (catalogItem.id.toString -> catalogItem))
+  // items.get(eServiceId) match {
+  //   case Some(item) =>
+  //     val updatedItem = item.copy(riskAnalysis = catalogRiskAnalysis +: item.riskAnalysis)
+  //     copy(items = items + (item.id.toString -> updatedItem))
+  //   case None       => this
+  // }
 
   def addDescriptor(eServiceId: String, catalogDescriptor: CatalogDescriptor): State = items.get(eServiceId) match {
     case Some(item) =>

@@ -28,11 +28,12 @@ object EServiceCqrsProjection {
     case CatalogItemAdded(c) =>
       ActionWithDocument(collection.insertOne, Document(s"{ data: ${c.toJson.compactPrint} }"))
 
-    case CatalogItemRiskAnalysisAdded(esId, riskAnalysis) =>
-      ActionWithBson(
-        collection.updateOne(Filters.eq("data.id", esId), _),
-        Updates.push(s"data.riskAnalysis", riskAnalysis.toDocument)
-      )
+    case CatalogItemRiskAnalysisAdded(c, _) =>
+      ActionWithBson(collection.updateOne(Filters.eq("data.id", c.id.toString), _), Updates.set("data", c.toDocument))
+    // ActionWithBson(
+    //   collection.updateOne(Filters.eq("data.id", esId), _),
+    //   Updates.push(s"data.riskAnalysis", riskAnalysis.toDocument)
+    // )
 
     case CatalogItemDescriptorAdded(esId, descriptor) =>
       ActionWithBson(

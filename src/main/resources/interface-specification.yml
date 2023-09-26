@@ -812,12 +812,8 @@ paths:
             type: string
             format: uuid
       responses:
-        "200":
+        "204":
           description: EService Risk Analysis created.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/EServiceRiskAnalysis'
         "400":
           description: Invalid input
           content:

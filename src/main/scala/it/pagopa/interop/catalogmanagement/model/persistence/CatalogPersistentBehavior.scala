@@ -105,17 +105,17 @@ object CatalogPersistentBehavior {
             Effect.none[CatalogItemDocumentDeleted, State]
           }
 
-      case AddCatalogItemRiskAnalysis(eServiceId, catalogRiskAnalysis, replyTo) =>
-        val catalogItem: Option[CatalogItem] = state.items.get(eServiceId)
+      case AddCatalogItemRiskAnalysis(eService, riskAnalysisId, replyTo) =>
+        val catalogItem: Option[CatalogItem] = state.items.get(eService.id.toString)
 
         catalogItem
           .map { _ =>
             Effect
-              .persist(CatalogItemRiskAnalysisAdded(eServiceId, catalogRiskAnalysis))
+              .persist(CatalogItemRiskAnalysisAdded(eService, riskAnalysisId))
               .thenRun((_: State) => replyTo ! StatusReply.Success(Done))
           }
           .getOrElse {
-            replyTo ! StatusReply.error[Done](EServiceNotFound(eServiceId))
+            replyTo ! StatusReply.error[Done](EServiceNotFound(eService.id.toString))
             Effect.none[CatalogItemRiskAnalysisAdded, State]
           }
 
@@ -265,9 +265,9 @@ object CatalogPersistentBehavior {
         state.addDescriptor(eServiceId, catalogDescriptor)
       case CatalogItemDescriptorUpdated(eServiceId, catalogDescriptor)                                    =>
         state.updateDescriptor(eServiceId, catalogDescriptor)
-      case MovedAttributesFromEserviceToDescriptors(catalogItem)         => state.update(catalogItem)
-      case CatalogItemRiskAnalysisAdded(eServiceId, catalogRiskAnalysis) =>
-        state.addRiskAnalysis(eServiceId, catalogRiskAnalysis)
+      case MovedAttributesFromEserviceToDescriptors(catalogItem) => state.update(catalogItem)
+      case CatalogItemRiskAnalysisAdded(catalogItem, _)          =>
+        state.addRiskAnalysis(catalogItem)
     }
 
   val TypeKey: EntityTypeKey[Command] = EntityTypeKey[Command]("interop-be-catalog-management-persistence")

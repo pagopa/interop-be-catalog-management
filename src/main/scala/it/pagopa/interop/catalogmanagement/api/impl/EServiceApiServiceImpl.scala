@@ -588,16 +588,15 @@ class EServiceApiServiceImpl(
   }
 
   override def createRiskAnalysis(eServiceId: String, seed: RiskAnalysisSeed)(implicit
-    toEntityMarshallerEServiceRiskAnalysis: ToEntityMarshaller[EServiceRiskAnalysis],
     toEntityMarshallerProblem: ToEntityMarshaller[Problem],
     contexts: Seq[(String, String)]
   ): Route = {
     val operationLabel = s"Creating Risk Analysis for EService $eServiceId"
     logger.info(operationLabel)
 
-    val result: Future[EServiceRiskAnalysis] = for {
-      current <- retrieveCatalogItem(eServiceId)
-      createdCatalogRiskAnalysis = CatalogRiskAnalysis(
+    val result: Future[Unit] = for {
+      eService <- retrieveCatalogItem(eServiceId)
+      newCatalogRiskAnalysis = CatalogRiskAnalysis(
         id = uuidSupplier.get(),
         name = seed.name,
         riskAnalysisForm = CatalogRiskAnalysisForm(
@@ -612,12 +611,15 @@ class EServiceApiServiceImpl(
         ),
         createdAt = offsetDateTimeSupplier.get()
       )
-      _ <- commander(eServiceId).askWithStatus(ref =>
-        AddCatalogItemRiskAnalysis(current.id.toString, createdCatalogRiskAnalysis, ref)
+      updatedItem            = eService.copy(riskAnalysis =
+        eService.riskAnalysis.filter(_.id.toString != newCatalogRiskAnalysis.id) :+ newCatalogRiskAnalysis
       )
-    } yield createdCatalogRiskAnalysis.toApi
+      _ <- commander(eServiceId).askWithStatus(ref =>
+        AddCatalogItemRiskAnalysis(updatedItem, newCatalogRiskAnalysis.id.toString, ref)
+      )
+    } yield ()
 
-    onComplete(result) { createdRiskAnalysisResponse[EServiceRiskAnalysis](operationLabel)(createRiskAnalysis200) }
+    onComplete(result) { createdRiskAnalysisResponse[Unit](operationLabel)(_ => createRiskAnalysis204) }
   }
 
   private def askWithResult[T](eServiceId: String, command: ActorRef[StatusReply[Option[T]]] => Command): Future[T] =
