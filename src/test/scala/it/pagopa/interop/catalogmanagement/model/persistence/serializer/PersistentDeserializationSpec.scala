@@ -27,6 +27,7 @@ class PersistentDeserializationSpec extends PersistentSerdeHelpers {
   deserCheck[MovedAttributesFromEserviceToDescriptors, MovedAttributesFromEserviceToDescriptorsV1](movedGen)
   deserCheck[CatalogItemRiskAnalysisAdded, CatalogItemRiskAnalysisAddedV1](catalogItemRiskAnalysisAddedGen)
   deserCheck[CatalogItemRiskAnalysisUpdated, CatalogItemRiskAnalysisUpdatedV1](catalogItemRiskAnalysisUpdatedGen)
+  deserCheck[CatalogItemRiskAnalysisDeleted, CatalogItemRiskAnalysisDeletedV1](catalogItemRiskAnalysisDeletedGen)
 
   def singleCatalogAttributeGen: Gen[(List[CatalogAttribute], CatalogAttributeV1)] =
     catalogAttributeValueGen.map { case (av, avv1) =>

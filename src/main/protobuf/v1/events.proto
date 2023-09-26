@@ -74,3 +74,8 @@ message CatalogItemRiskAnalysisUpdatedV1 {
   required CatalogItemV1 catalogItem = 1;
   required string catalogRiskAnalysisId = 2;
 }
+
+message CatalogItemRiskAnalysisDeletedV1 {
+  required CatalogItemV1 catalogItem = 1;
+  required string catalogRiskAnalysisId = 2;
+}

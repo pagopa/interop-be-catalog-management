@@ -20,6 +20,11 @@ final case class State(items: Map[String, CatalogItem]) extends Persistable {
   def updateRiskAnalysis(catalogItem: CatalogItem): State =
     copy(items = items + (catalogItem.id.toString -> catalogItem))
 
+  def deleteRiskAnalysis(catalogItem: CatalogItem, riskAnalysisId: String): State = {
+    val updated = catalogItem.copy(riskAnalysis = catalogItem.riskAnalysis.filter(_.id.toString != riskAnalysisId))
+    update(updated)
+  }
+
   def addDescriptor(eServiceId: String, catalogDescriptor: CatalogDescriptor): State = items.get(eServiceId) match {
     case Some(item) =>
       val updatedItem = item.copy(descriptors = catalogDescriptor +: item.descriptors)

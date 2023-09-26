@@ -28,6 +28,7 @@ class PersistentSerializationSpec extends PersistentSerdeHelpers {
   serdeCheck[MovedAttributesFromEserviceToDescriptors, MovedAttributesFromEserviceToDescriptorsV1](movedGen)
   serdeCheck[CatalogItemRiskAnalysisAdded, CatalogItemRiskAnalysisAddedV1](catalogItemRiskAnalysisAddedGen)
   serdeCheck[CatalogItemRiskAnalysisUpdated, CatalogItemRiskAnalysisUpdatedV1](catalogItemRiskAnalysisUpdatedGen)
+  serdeCheck[CatalogItemRiskAnalysisDeleted, CatalogItemRiskAnalysisDeletedV1](catalogItemRiskAnalysisDeletedGen)
 
   override def catalogAttributeGen: Gen[(List[CatalogAttribute], CatalogAttributeV1)] =
     Gen.nonEmptyListOf(catalogAttributeValueGen).map { list =>

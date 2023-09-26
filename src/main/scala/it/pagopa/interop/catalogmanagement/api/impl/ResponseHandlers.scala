@@ -108,6 +108,16 @@ object ResponseHandlers extends AkkaResponses {
       case Failure(ex)                               => internalServerError(ex, logMessage)
     }
 
+  def deleteRiskAnalysisResponse[T](logMessage: String)(
+    success: T => Route
+  )(result: Try[T])(implicit contexts: Seq[(String, String)], logger: LoggerTakingImplicit[ContextFieldsToLog]): Route =
+    result match {
+      case Success(s)                                => success(s)
+      case Failure(ex: EServiceNotFound)             => notFound(ex, logMessage)
+      case Failure(ex: EServiceRiskAnalysisNotFound) => notFound(ex, logMessage)
+      case Failure(ex)                               => internalServerError(ex, logMessage)
+    }
+
   def createDescriptorResponse[T](logMessage: String)(
     success: T => Route
   )(result: Try[T])(implicit contexts: Seq[(String, String)], logger: LoggerTakingImplicit[ContextFieldsToLog]): Route =

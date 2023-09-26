@@ -653,6 +653,21 @@ class EServiceApiServiceImpl(
     }
   }
 
+  override def deleteRiskAnalysis(eServiceId: String, riskAnalysisId: String)(implicit
+    toEntityMarshallerProblem: ToEntityMarshaller[Problem],
+    contexts: Seq[(String, String)]
+  ): akka.http.scaladsl.server.Route = {
+    val operationLabel = s"Deleting Risk Analysis $riskAnalysisId for EService $eServiceId"
+    logger.info(operationLabel)
+
+    val result: Future[Unit] = for {
+      _ <- retrieveCatalogItem(eServiceId)
+      _ <- commander(eServiceId).askWithStatus(ref => DeleteCatalogItemRiskAnalysis(eServiceId, riskAnalysisId, ref))
+    } yield ()
+
+    onComplete(result) { deleteRiskAnalysisResponse[Unit](operationLabel)(_ => deleteRiskAnalysis204) }
+  }
+
   private def getRiskAnalysis(
     eService: CatalogItem,
     riskAnalysisId: String

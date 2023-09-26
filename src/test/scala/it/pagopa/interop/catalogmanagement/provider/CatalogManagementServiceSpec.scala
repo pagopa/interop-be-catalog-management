@@ -218,6 +218,27 @@ class CatalogManagementServiceSpec
     }
   }
 
+  "Delete Risk Analysis" should {
+    "succeed" in {
+      val eServiceUuid   = UUID.randomUUID().toString()
+      val eService       = createEService(eServiceUuid)
+      val riskAnalysisId = UUID.randomUUID()
+      createEServiceRiskAnalysis(eServiceUuid, riskAnalysisId, OffsetDateTime.now())
+
+      val response = Await.result(
+        Http().singleRequest(
+          HttpRequest(
+            uri = s"$serviceURL/eservices/${eService.id.toString}/riskanalysis/${riskAnalysisId.toString}",
+            method = HttpMethods.DELETE,
+            headers = requestHeaders
+          )
+        ),
+        Duration.Inf
+      )
+      response.status shouldBe StatusCodes.NoContent
+    }
+  }
+
   "Update descriptor" should {
 
     "succeed" in {
