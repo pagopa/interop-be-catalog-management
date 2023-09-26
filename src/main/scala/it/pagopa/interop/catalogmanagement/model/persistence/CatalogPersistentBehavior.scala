@@ -105,17 +105,19 @@ object CatalogPersistentBehavior {
             Effect.none[CatalogItemDocumentDeleted, State]
           }
 
-      case AddCatalogItemRiskAnalysis(eServiceId, catalogRiskAnalysis, replyTo) =>
-        val catalogItem: Option[CatalogItem] = state.items.get(eServiceId)
-
+      case AddCatalogItemRiskAnalysis(eServiceId, riskAnalysis, replyTo) =>
+        val catalogItem: Option[CatalogItem] = state.items.get(eServiceId.toString)
         catalogItem
-          .map { _ =>
+          .map { eService =>
+            val updatedItem = eService
+              .copy(riskAnalysis = eService.riskAnalysis.filter(_.id.toString != riskAnalysis.id) :+ riskAnalysis)
+
             Effect
-              .persist(CatalogItemRiskAnalysisAdded(eServiceId, catalogRiskAnalysis))
+              .persist(CatalogItemRiskAnalysisAdded(updatedItem, riskAnalysis.id.toString))
               .thenRun((_: State) => replyTo ! StatusReply.Success(Done))
           }
           .getOrElse {
-            replyTo ! StatusReply.error[Done](EServiceNotFound(eServiceId))
+            replyTo ! StatusReply.error[Done](EServiceNotFound(eServiceId.toString))
             Effect.none[CatalogItemRiskAnalysisAdded, State]
           }
 
@@ -280,9 +282,9 @@ object CatalogPersistentBehavior {
         state.addDescriptor(eServiceId, catalogDescriptor)
       case CatalogItemDescriptorUpdated(eServiceId, catalogDescriptor)                                    =>
         state.updateDescriptor(eServiceId, catalogDescriptor)
-      case MovedAttributesFromEserviceToDescriptors(catalogItem)           => state.update(catalogItem)
-      case CatalogItemRiskAnalysisAdded(eServiceId, catalogRiskAnalysis)   =>
-        state.addRiskAnalysis(eServiceId, catalogRiskAnalysis)
+      case MovedAttributesFromEserviceToDescriptors(catalogItem)   => state.update(catalogItem)
+      case CatalogItemRiskAnalysisAdded(catalogItem, _)            =>
+        state.addRiskAnalysis(catalogItem)
       case CatalogItemRiskAnalysisUpdated(eServiceId, catalogRiskAnalysis) =>
         state.updateRiskAnalysis(eServiceId, catalogRiskAnalysis)
     }
