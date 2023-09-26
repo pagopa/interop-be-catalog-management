@@ -630,8 +630,9 @@ class EServiceApiServiceImpl(
     val result: Future[EServiceRiskAnalysis] = for {
       eService     <- retrieveCatalogItem(eServiceId)
       riskAnalysis <- getRiskAnalysis(eService, riskAnalysisId).toFuture
-      updateRiskAnalysis = riskAnalysis.copy(riskAnalysisForm =
-        CatalogRiskAnalysisForm(
+      updateRiskAnalysis = riskAnalysis.copy(
+        name = seed.name,
+        riskAnalysisForm = CatalogRiskAnalysisForm(
           id = uuidSupplier.get(),
           version = seed.riskAnalysisForm.version,
           singleAnswers = seed.riskAnalysisForm.singleAnswers.map(answer =>

@@ -69,11 +69,11 @@ trait SpecHelper extends SpecConfiguration with AnyWordSpecLike with MockFactory
     Await.result(Unmarshal(response).to[EServiceDescriptor], Duration.Inf)
   }
 
-  def createEServiceRiskAnalysis(eserviceId: String, riskanalysisId: UUID)(implicit
+  def createEServiceRiskAnalysis(eserviceId: String, riskanalysisId: UUID, now: OffsetDateTime)(implicit
     actorSystem: ActorSystem[_]
-  ): EServiceRiskAnalysis = {
+  ): Unit = {
     (() => mockUUIDSupplier.get()).expects().returning(riskanalysisId).repeat(6)
-    (() => mockOffsetDateTimeSupplier.get()).expects().returning(OffsetDateTime.now()).once()
+    (() => mockOffsetDateTimeSupplier.get()).expects().returning(now).once()
     val seed = RiskAnalysisSeed(
       name = "name of the new risk analysis",
       riskAnalysisForm = RiskAnalysisFormSeed(
@@ -89,9 +89,47 @@ trait SpecHelper extends SpecConfiguration with AnyWordSpecLike with MockFactory
       )
     )
 
-    val data = seed.toJson.compactPrint
+    val response = Await.result(
+      Http().singleRequest(
+        HttpRequest(
+          uri = s"$serviceURL/eservices/$eserviceId/riskanalysis",
+          method = HttpMethods.POST,
+          entity = HttpEntity(ContentType(MediaTypes.`application/json`), seed.toJson.compactPrint),
+          headers = requestHeaders
+        )
+      ),
+      Duration.Inf
+    )
 
-    val response = request(s"$serviceURL/eservices/$eserviceId/riskanalysis", HttpMethods.POST, Some(data))
+    response.status shouldBe StatusCodes.NoContent
+
+    ()
+  }
+
+  def updateEServiceRiskAnalysis(eserviceId: String, riskanalysisId: UUID)(implicit
+    actorSystem: ActorSystem[_]
+  ): EServiceRiskAnalysis = {
+    (() => mockUUIDSupplier.get()).expects().returning(riskanalysisId).repeat(5)
+    val seed = RiskAnalysisSeed(
+      name = "name of the updated risk analysis",
+      riskAnalysisForm = RiskAnalysisFormSeed(
+        version = "3.0U",
+        singleAnswers = Seq(
+          RiskAnalysisSingleAnswerSeed(key = "key1U", value = None),
+          RiskAnalysisSingleAnswerSeed(key = "key2U", value = Some("valueU"))
+        ),
+        multiAnswers = Seq(
+          RiskAnalysisMultiAnswerSeed(key = "key1U", values = Seq("value1U", "value2U", "value3U")),
+          RiskAnalysisMultiAnswerSeed(key = "key2U", values = Seq("value4U", "value5U", "value6U"))
+        )
+      )
+    )
+
+    val response = request(
+      s"$serviceURL/eservices/$eserviceId/riskanalysis/${riskanalysisId.toString}",
+      HttpMethods.POST,
+      Some(seed.toJson.compactPrint)
+    )
 
     response.status shouldBe StatusCodes.OK
 

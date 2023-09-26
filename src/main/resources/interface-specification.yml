@@ -842,7 +842,7 @@ paths:
         - bearerAuth: [ ]
       tags:
         - e_service
-      summary: Create Risk Analysis
+      summary: EService Risk Analysis updated
       operationId: updateRiskAnalysis
       parameters:
         - name: eServiceId
