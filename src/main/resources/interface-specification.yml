@@ -1322,6 +1322,7 @@ components:
         - name
         - description
         - technology
+        - mode
       properties:
         name:
           type: string
@@ -1329,6 +1330,8 @@ components:
           type: string
         technology:
           $ref: '#/components/schemas/EServiceTechnology'
+        mode:
+          $ref: '#/components/schemas/EServiceMode'    
     EServiceTechnology:
       type: string
       description: API Technology

@@ -153,7 +153,8 @@ object CatalogAdapters {
     def update(updateEServiceSeed: UpdateEServiceSeed): CatalogItem = p.copy(
       name = updateEServiceSeed.name,
       description = updateEServiceSeed.description,
-      technology = CatalogItemTechnology.fromApi(updateEServiceSeed.technology)
+      technology = CatalogItemTechnology.fromApi(updateEServiceSeed.technology),
+      mode = CatalogItemMode.fromApi(updateEServiceSeed.mode)
     )
 
     def currentVersion: Option[String] = p.descriptors.flatMap(_.version.toLongOption).maxOption.map(_.toString)
