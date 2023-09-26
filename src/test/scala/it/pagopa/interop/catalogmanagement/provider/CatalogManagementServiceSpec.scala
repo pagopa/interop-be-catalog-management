@@ -202,8 +202,7 @@ class CatalogManagementServiceSpec
         Duration.Inf
       )
 
-      response.status shouldBe StatusCodes.OK
-      Await.result(Unmarshal(response).to[EServiceRiskAnalysis], Duration.Inf)
+      response.status shouldBe StatusCodes.NoContent
     }
   }
 
