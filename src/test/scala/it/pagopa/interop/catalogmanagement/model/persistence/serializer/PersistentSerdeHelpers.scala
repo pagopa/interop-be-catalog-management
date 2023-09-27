@@ -241,7 +241,7 @@ trait PersistentSerdeHelpers extends ScalaCheckSuite with DiffxAssertions {
   )
 
   def catalogItemModeGen: Gen[(CatalogItemMode, CatalogItemModeV1)] =
-    Gen.oneOf((RECEIVE, CatalogItemModeV1.RECEIVE), (DELIVER, CatalogItemModeV1.DELIVER))
+    Gen.oneOf((Receive, CatalogItemModeV1.RECEIVE), (Deliver, CatalogItemModeV1.DELIVER))
 
   def catalogItemGen: Gen[(CatalogItem, CatalogItemV1)] = for {
     id                       <- Gen.uuid

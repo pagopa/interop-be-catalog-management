@@ -238,15 +238,15 @@ object CatalogAdapters {
 
   implicit class ModeObjectWrapper(private val p: CatalogItemMode.type) extends AnyVal {
     def fromApi(status: EServiceMode): CatalogItemMode = status match {
-      case EServiceMode.RECEIVE => RECEIVE
-      case EServiceMode.DELIVER => DELIVER
+      case EServiceMode.RECEIVE => Receive
+      case EServiceMode.DELIVER => Deliver
     }
   }
 
   implicit class CatalogItemModeObjectWrapper(private val p: CatalogItemMode) extends AnyVal {
     def toApi: EServiceMode = p match {
-      case RECEIVE => EServiceMode.RECEIVE
-      case DELIVER => EServiceMode.DELIVER
+      case Receive => EServiceMode.RECEIVE
+      case Deliver => EServiceMode.DELIVER
     }
   }
 

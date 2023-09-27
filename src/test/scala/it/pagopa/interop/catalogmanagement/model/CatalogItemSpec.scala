@@ -19,7 +19,7 @@ class CatalogItemSpec extends AnyWordSpecLike with Matchers {
     attributes = None,
     descriptors = descriptors,
     createdAt = OffsetDateTime.now(),
-    mode = DELIVER,
+    mode = Deliver,
     riskAnalysis = Seq.empty
   )
 

@@ -1,9 +1,9 @@
 package it.pagopa.interop.catalogmanagement.model
 
 sealed trait CatalogItemMode
-case object RECEIVE extends CatalogItemMode
-case object DELIVER extends CatalogItemMode
+case object Receive extends CatalogItemMode
+case object Deliver extends CatalogItemMode
 
 object CatalogItemMode {
-  val default = DELIVER
+  val default = Deliver
 }
