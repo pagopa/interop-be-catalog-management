@@ -373,20 +373,15 @@ package object v1 {
 
   implicit def catalogItemRiskAnalysisUpdatedV1PersistEventSerializer
     : PersistEventSerializer[CatalogItemRiskAnalysisUpdated, CatalogItemRiskAnalysisUpdatedV1] = event =>
-    for {
-      catalogItem <- convertCatalogItemsToV1(event.catalogItem)
-    } yield CatalogItemRiskAnalysisUpdatedV1(
+      convertCatalogItemsToV1(event.catalogItem).map(catalogItem => CatalogItemRiskAnalysisUpdatedV1(
       catalogItem = catalogItem,
       catalogRiskAnalysisId = event.catalogRiskAnalysisId
-    )
+    ))
 
   implicit def catalogItemRiskAnalysisUpdatedV1PersistEventDeserializer
     : PersistEventDeserializer[CatalogItemRiskAnalysisUpdatedV1, CatalogItemRiskAnalysisUpdated] = event =>
-    for {
-      catalogItem <- convertCatalogItemsFromV1(event.catalogItem)
-    } yield CatalogItemRiskAnalysisUpdated(
+    convertCatalogItemsFromV1(event.catalogItem).map(catalogItem => CatalogItemRiskAnalysisUpdated(
       catalogItem = catalogItem,
       catalogRiskAnalysisId = event.catalogRiskAnalysisId
-    )
-
+    ))
 }
