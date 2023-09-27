@@ -4,7 +4,8 @@ import it.pagopa.interop.catalogmanagement.model._
 import it.pagopa.interop.commons.utils.SprayCommonFormats._
 import spray.json.DefaultJsonProtocol._
 import spray.json._
-import it.pagopa.interop.catalogmanagement.model.{DELIVER, RECEIVE}
+import it.pagopa.interop.catalogmanagement.model.{Deliver, Receive}
+
 object JsonFormats {
 
   implicit val citFormat: RootJsonFormat[CatalogItemTechnology] =
@@ -58,14 +59,14 @@ object JsonFormats {
   implicit val modeFormat: RootJsonFormat[CatalogItemMode] =
     new RootJsonFormat[CatalogItemMode] {
       override def read(json: JsValue): CatalogItemMode = json match {
-        case JsString("RECEIVE") => RECEIVE
-        case JsString("DELIVER") => DELIVER
+        case JsString("RECEIVE") => Receive
+        case JsString("DELIVER") => Deliver
         case other               => deserializationError(s"Unable to deserialize json as a CatalogMode: $other")
       }
 
       override def write(obj: CatalogItemMode): JsValue = obj match {
-        case RECEIVE => JsString("RECEIVE")
-        case DELIVER => JsString("DELIVER")
+        case Receive => JsString("RECEIVE")
+        case Deliver => JsString("DELIVER")
       }
     }
 
