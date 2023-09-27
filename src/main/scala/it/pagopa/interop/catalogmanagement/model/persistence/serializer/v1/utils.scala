@@ -296,16 +296,16 @@ object utils {
 
   def convertItemModeFromV1(mode: CatalogItemModeV1): Either[Throwable, CatalogItemMode] =
     mode match {
-      case CatalogItemModeV1.RECEIVE => Right(RECEIVE)
-      case CatalogItemModeV1.DELIVER => Right(DELIVER)
+      case CatalogItemModeV1.RECEIVE => Right(Receive)
+      case CatalogItemModeV1.DELIVER => Right(Deliver)
       case UnrecognizedMode(value)   =>
         Left(new RuntimeException(s"Unable to deserialize catalog item mode value $value"))
     }
 
   def convertItemModeToV1(mode: CatalogItemMode): CatalogItemModeV1 =
     mode match {
-      case RECEIVE => CatalogItemModeV1.RECEIVE
-      case DELIVER => CatalogItemModeV1.DELIVER
+      case Receive => CatalogItemModeV1.RECEIVE
+      case Deliver => CatalogItemModeV1.DELIVER
     }
 
 }
