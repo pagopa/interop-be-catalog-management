@@ -36,6 +36,6 @@ object CatalogManagementErrors {
   case object ElementNotFoundAfterUpdate extends ComponentError("0010", s"Element cannot be found after update")
 
   final case class EServiceRiskAnalysisNotFound(eServiceId: String, riskAnalysisId: String)
-      extends ComponentError("0010", s"RiskAnalysis with id $riskAnalysisId of EService $eServiceId not found")
+      extends ComponentError("0011", s"RiskAnalysis with id $riskAnalysisId of EService $eServiceId not found")
 
 }

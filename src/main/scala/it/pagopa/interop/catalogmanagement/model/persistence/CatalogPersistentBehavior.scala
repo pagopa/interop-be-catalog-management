@@ -134,7 +134,7 @@ object CatalogPersistentBehavior {
               .thenRun((_: State) => replyTo ! StatusReply.Success(Done))
           }
           .getOrElse {
-            replyTo ! StatusReply.error[Done](EServiceRiskAnalysisNotFound(eServiceId, riskAnalysis.id.toString))
+            replyTo ! StatusReply.error[Done](EServiceNotFound(eServiceId))
             Effect.none[CatalogItemRiskAnalysisUpdated, State]
           }
 
