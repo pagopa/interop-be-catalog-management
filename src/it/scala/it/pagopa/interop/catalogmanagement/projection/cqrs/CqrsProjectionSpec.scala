@@ -4,7 +4,7 @@ import akka.actor.testkit.typed.scaladsl.ScalaTestWithActorTestKit
 import it.pagopa.interop.catalogmanagement.model._
 import it.pagopa.interop.catalogmanagement.model.persistence.JsonFormats._
 import it.pagopa.interop.catalogmanagement.utils.PersistentAdapters._
-import it.pagopa.interop.catalogmanagement.{ItSpecConfiguration, ItSpecData, ItSpecHelper}
+import it.pagopa.interop.catalogmanagement.{ItSpecConfiguration, ItSpecHelper}
 
 import java.util.UUID
 
@@ -39,6 +39,42 @@ class CqrsProjectionSpec extends ScalaTestWithActorTestKit(ItSpecConfiguration.c
       val persisted = findOne[CatalogItem](clonedEService.id.toString).futureValue
 
       expectedData shouldBe persisted
+    }
+
+    "succeed for event CatalogItemRiskAnalysisAdded" in {
+      val eServiceId     = UUID.randomUUID()
+      val riskAnalysisId = UUID.randomUUID()
+
+      val eService     = createEService(eServiceId)
+      val riskAnalysis = createEServiceRiskAnalysis(eServiceId, riskAnalysisId)
+
+      val expectedData = eService.copy(riskAnalysis = Seq(riskAnalysis)).toPersistent
+
+      val persisted = findOne[CatalogItem](eServiceId.toString).futureValue
+
+      compareCatalogItems(expectedData, persisted)
+    }
+
+    "succeed for event CatalogItemRiskAnalysisUpdate" in {
+      val eServiceId     = UUID.randomUUID()
+      val riskAnalysisId = UUID.randomUUID()
+
+      createEService(eServiceId)
+      createEServiceRiskAnalysis(eServiceId, riskAnalysisId)
+
+      val seed = RiskAnalysisSeed(
+        name = "newName",
+        riskAnalysisForm = RiskAnalysisFormSeed(version = "3.0", singleAnswers = Seq.empty, multiAnswers = Seq.empty)
+      )
+
+      updateEServiceRiskAnalysis(eServiceId, riskAnalysisId, seed)
+
+      val eServiceUpdated = findOne[CatalogItem](eServiceId.toString).futureValue
+
+      eServiceUpdated.riskAnalysis.size shouldBe 1
+      eServiceUpdated.riskAnalysis.map(_.id).head shouldEqual (riskAnalysisId)
+      eServiceUpdated.riskAnalysis.map(_.name).head shouldEqual ("newName")
+
     }
 
     "succeed for event CatalogItemDescriptorAdded" in {
@@ -139,7 +175,6 @@ class CqrsProjectionSpec extends ScalaTestWithActorTestKit(ItSpecConfiguration.c
             updatingDescriptor
               .copy(state = EServiceDescriptorState.PUBLISHED)
               .toPersistent
-              .copy(activatedAt = Some(ItSpecData.timestamp))
           )
         )
 

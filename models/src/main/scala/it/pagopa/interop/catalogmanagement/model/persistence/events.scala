@@ -31,6 +31,12 @@ final case class CatalogItemDocumentDeleted(eServiceId: String, descriptorId: St
 
 final case class CatalogItemDescriptorAdded(eServiceId: String, catalogDescriptor: CatalogDescriptor) extends Event
 
+final case class CatalogItemRiskAnalysisAdded(catalogItem: CatalogItem, catalogRiskAnalysisId: String) extends Event
+
+final case class CatalogItemRiskAnalysisUpdated(catalogItem: CatalogItem, catalogRiskAnalysisId: String) extends Event
+
+final case class CatalogItemRiskAnalysisDeleted(catalogItem: CatalogItem, catalogRiskAnalysisId: String) extends Event
+
 final case class CatalogItemDescriptorUpdated(eServiceId: String, catalogDescriptor: CatalogDescriptor) extends Event
 
 final case class MovedAttributesFromEserviceToDescriptors(catalogItem: CatalogItem) extends Event

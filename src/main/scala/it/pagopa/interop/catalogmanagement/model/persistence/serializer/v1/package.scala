@@ -54,8 +54,8 @@ package object v1 {
   implicit def catalogItemV1AddedV1PersistEventSerializer
     : PersistEventSerializer[CatalogItemAdded, CatalogItemV1AddedV1] = event =>
     for {
-      descriptors <- convertDescriptorsToV1(event.catalogItem.descriptors)
-      riskAnalysis = event.catalogItem.riskAnalysis.map(convertRiskAnalysisToV1)
+      descriptors  <- convertDescriptorsToV1(event.catalogItem.descriptors)
+      riskAnalysis <- convertRiskAnalysisToV1(event.catalogItem.riskAnalysis)
     } yield CatalogItemV1AddedV1
       .of(
         CatalogItemV1(
@@ -101,8 +101,8 @@ package object v1 {
   implicit def clonedCatalogItemV1AddedV1PersistEventSerializer
     : PersistEventSerializer[ClonedCatalogItemAdded, ClonedCatalogItemV1AddedV1] = event =>
     for {
-      descriptors <- convertDescriptorsToV1(event.catalogItem.descriptors)
-      riskAnalysis = event.catalogItem.riskAnalysis.map(convertRiskAnalysisToV1)
+      descriptors  <- convertDescriptorsToV1(event.catalogItem.descriptors)
+      riskAnalysis <- convertRiskAnalysisToV1(event.catalogItem.riskAnalysis)
     } yield ClonedCatalogItemV1AddedV1.of(
       CatalogItemV1(
         id = event.catalogItem.id.toString,
@@ -148,8 +148,8 @@ package object v1 {
   implicit def CatalogItemWithDescriptorsDeletedV1PersistEventSerializer
     : PersistEventSerializer[CatalogItemWithDescriptorsDeleted, CatalogItemWithDescriptorsDeletedV1] = event =>
     for {
-      descriptors <- convertDescriptorsToV1(event.catalogItem.descriptors)
-      riskAnalysis = event.catalogItem.riskAnalysis.map(convertRiskAnalysisToV1)
+      descriptors  <- convertDescriptorsToV1(event.catalogItem.descriptors)
+      riskAnalysis <- convertRiskAnalysisToV1(event.catalogItem.riskAnalysis)
     } yield CatalogItemWithDescriptorsDeletedV1
       .of(
         CatalogItemV1(
@@ -204,8 +204,8 @@ package object v1 {
   implicit def catalogItemV1UpdatedV1PersistEventSerializer
     : PersistEventSerializer[CatalogItemUpdated, CatalogItemV1UpdatedV1] = event =>
     for {
-      descriptors <- convertDescriptorsToV1(event.catalogItem.descriptors)
-      riskAnalysis = event.catalogItem.riskAnalysis.map(convertRiskAnalysisToV1)
+      descriptors  <- convertDescriptorsToV1(event.catalogItem.descriptors)
+      riskAnalysis <- convertRiskAnalysisToV1(event.catalogItem.riskAnalysis)
     } yield CatalogItemV1UpdatedV1
       .of(
         CatalogItemV1(
@@ -356,4 +356,45 @@ package object v1 {
     : PersistEventDeserializer[MovedAttributesFromEserviceToDescriptorsV1, MovedAttributesFromEserviceToDescriptors] =
     event => convertCatalogItemsFromV1(event.catalogItem).map(MovedAttributesFromEserviceToDescriptors)
 
+  implicit def catalogItemRiskAnalysisAddedV1PersistEventSerializer
+    : PersistEventSerializer[CatalogItemRiskAnalysisAdded, CatalogItemRiskAnalysisAddedV1] = event =>
+    convertCatalogItemsToV1(event.catalogItem).map(catalogItem =>
+      CatalogItemRiskAnalysisAddedV1(catalogItem = catalogItem, catalogRiskAnalysisId = event.catalogRiskAnalysisId)
+    )
+
+  implicit def catalogItemRiskAnalysisAddedV1PersistEventDeserializer
+    : PersistEventDeserializer[CatalogItemRiskAnalysisAddedV1, CatalogItemRiskAnalysisAdded] = event =>
+    convertCatalogItemsFromV1(event.catalogItem).map(catalogItem =>
+      CatalogItemRiskAnalysisAdded(catalogItem = catalogItem, catalogRiskAnalysisId = event.catalogRiskAnalysisId)
+    )
+
+  implicit def catalogItemRiskAnalysisUpdatedV1PersistEventSerializer
+    : PersistEventSerializer[CatalogItemRiskAnalysisUpdated, CatalogItemRiskAnalysisUpdatedV1] = event =>
+    convertCatalogItemsToV1(event.catalogItem).map(catalogItem =>
+      CatalogItemRiskAnalysisUpdatedV1(catalogItem = catalogItem, catalogRiskAnalysisId = event.catalogRiskAnalysisId)
+    )
+
+  implicit def catalogItemRiskAnalysisUpdatedV1PersistEventDeserializer
+    : PersistEventDeserializer[CatalogItemRiskAnalysisUpdatedV1, CatalogItemRiskAnalysisUpdated] = event =>
+    convertCatalogItemsFromV1(event.catalogItem).map(catalogItem =>
+      CatalogItemRiskAnalysisUpdated(catalogItem = catalogItem, catalogRiskAnalysisId = event.catalogRiskAnalysisId)
+    )
+
+  implicit def catalogItemRiskAnalysisDeletedV1PersistEventSerializer
+    : PersistEventSerializer[CatalogItemRiskAnalysisDeleted, CatalogItemRiskAnalysisDeletedV1] = event =>
+    for {
+      catalogItem <- convertCatalogItemsToV1(event.catalogItem)
+    } yield CatalogItemRiskAnalysisDeletedV1(
+      catalogItem = catalogItem,
+      catalogRiskAnalysisId = event.catalogRiskAnalysisId
+    )
+
+  implicit def catalogItemRiskAnalysisDeletedV1PersistEventDeserializer
+    : PersistEventDeserializer[CatalogItemRiskAnalysisDeletedV1, CatalogItemRiskAnalysisDeleted] = event =>
+    for {
+      catalogItem <- convertCatalogItemsFromV1(event.catalogItem)
+    } yield CatalogItemRiskAnalysisDeleted(
+      catalogItem = catalogItem,
+      catalogRiskAnalysisId = event.catalogRiskAnalysisId
+    )
 }
