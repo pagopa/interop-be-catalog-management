@@ -653,6 +653,20 @@ class EServiceApiServiceImpl(
     }
   }
 
+  override def deleteRiskAnalysis(eServiceId: String, riskAnalysisId: String)(implicit
+    toEntityMarshallerProblem: ToEntityMarshaller[Problem],
+    contexts: Seq[(String, String)]
+  ): Route = {
+    val operationLabel = s"Deleting Risk Analysis $riskAnalysisId for EService $eServiceId"
+    logger.info(operationLabel)
+
+    val result: Future[Unit] = commander(eServiceId)
+      .askWithStatus(ref => DeleteCatalogItemRiskAnalysis(eServiceId, riskAnalysisId, ref))
+      .map(_ => ())
+
+    onComplete(result) { deleteRiskAnalysisResponse[Unit](operationLabel)(_ => deleteRiskAnalysis204) }
+  }
+
   private def getRiskAnalysis(
     eService: CatalogItem,
     riskAnalysisId: String
