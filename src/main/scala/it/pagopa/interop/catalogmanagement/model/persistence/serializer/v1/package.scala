@@ -379,6 +379,7 @@ package object v1 {
     convertCatalogItemsFromV1(event.catalogItem).map(catalogItem =>
       CatalogItemRiskAnalysisUpdated(catalogItem = catalogItem, catalogRiskAnalysisId = event.catalogRiskAnalysisId)
     )
+
   implicit def catalogItemRiskAnalysisDeletedV1PersistEventSerializer
     : PersistEventSerializer[CatalogItemRiskAnalysisDeleted, CatalogItemRiskAnalysisDeletedV1] = event =>
     for {

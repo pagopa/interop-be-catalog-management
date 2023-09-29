@@ -144,8 +144,7 @@ object CatalogPersistentBehavior {
         catalogItem
           .map { eService =>
             val riskAnalysisToDelete: Option[CatalogRiskAnalysis] =
-              catalogItem
-                .flatMap(_.riskAnalysis.find(_.id.toString == riskAnalysisId))
+              eService.riskAnalysis.find(_.id.toString == riskAnalysisId)
 
             riskAnalysisToDelete
               .map { _ =>
