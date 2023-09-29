@@ -832,7 +832,96 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/RiskAnalysisSeed'  
+              $ref: '#/components/schemas/RiskAnalysisSeed'
+  /eservices/{eServiceId}/riskanalysis/{riskAnalysisId}:
+    parameters:
+      - $ref: '#/components/parameters/CorrelationIdHeader'
+      - $ref: '#/components/parameters/IpAddress'
+    post:
+      security:
+        - bearerAuth: [ ]
+      tags:
+        - e_service
+      summary: EService Risk Analysis updated
+      operationId: updateRiskAnalysis
+      parameters:
+        - name: eServiceId
+          in: path
+          description: the eService Id
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: riskAnalysisId
+          in: path
+          description: the risk analysisId Id
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Risk Analysis updated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EServiceRiskAnalysis'
+        "400":
+          description: Invalid input
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        "404":
+          description: Not found
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+      requestBody:
+        description: A payload containing the the risk analysis
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RiskAnalysisSeed'
+    delete:
+      security:
+        - bearerAuth: [ ]
+      tags:
+        - e_service
+      summary: EService Risk Analysis updated
+      operationId: deleteRiskAnalysis
+      parameters:
+        - name: eServiceId
+          in: path
+          description: the eService Id
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: riskAnalysisId
+          in: path
+          description: the risk analysisId Id
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "204":
+          description: Risk Analysis deleted.
+        "400":
+          description: Invalid input
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        "404":
+          description: Not found
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
 components:
   parameters:
     CorrelationIdHeader:
