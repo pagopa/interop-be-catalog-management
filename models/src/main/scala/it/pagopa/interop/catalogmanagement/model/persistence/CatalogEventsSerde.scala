@@ -22,6 +22,9 @@ object CatalogEventsSerde {
     case x: CatalogItemDescriptorAdded               => x.toJson
     case x: CatalogItemDescriptorUpdated             => x.toJson
     case x: MovedAttributesFromEserviceToDescriptors => x.toJson
+    case x: CatalogItemRiskAnalysisAdded             => x.toJson
+    case x: CatalogItemRiskAnalysisUpdated           => x.toJson
+    case x: CatalogItemRiskAnalysisDeleted           => x.toJson
   }
 
   val jsonToCatalog: PartialFunction[String, JsValue => ProjectableEvent] = {
@@ -36,6 +39,9 @@ object CatalogEventsSerde {
     case `catalogItemDescriptorAdded`              => _.convertTo[CatalogItemDescriptorAdded]
     case `catalogItemDescriptorUpdated`            => _.convertTo[CatalogItemDescriptorUpdated]
     case `moveAttributesFromEserviceToDescriptors` => _.convertTo[MovedAttributesFromEserviceToDescriptors]
+    case `catalogItemRiskAnalysisAdded`            => _.convertTo[CatalogItemRiskAnalysisAdded]
+    case `catalogItemRiskAnalysisUpdated`          => _.convertTo[CatalogItemRiskAnalysisUpdated]
+    case `catalogItemRiskAnalysisDeleted`          => _.convertTo[CatalogItemRiskAnalysisDeleted]
   }
 
   def getKind(e: Event): String = e match {
@@ -50,6 +56,9 @@ object CatalogEventsSerde {
     case _: CatalogItemDescriptorAdded               => catalogItemDescriptorAdded
     case _: CatalogItemDescriptorUpdated             => catalogItemDescriptorUpdated
     case _: MovedAttributesFromEserviceToDescriptors => moveAttributesFromEserviceToDescriptors
+    case _: CatalogItemRiskAnalysisAdded             => catalogItemRiskAnalysisAdded
+    case _: CatalogItemRiskAnalysisUpdated           => catalogItemRiskAnalysisUpdated
+    case _: CatalogItemRiskAnalysisDeleted           => catalogItemRiskAnalysisDeleted
   }
 
   private val catalogItemAdded                        = "catalog_item_added"
@@ -63,5 +72,7 @@ object CatalogEventsSerde {
   private val catalogItemDescriptorAdded              = "catalog_item_descriptor_added"
   private val catalogItemDescriptorUpdated            = "catalog_item_descriptor_updated"
   private val moveAttributesFromEserviceToDescriptors = "moved_attributes_from_eservice_to_descriptors"
-
+  private val catalogItemRiskAnalysisAdded            = "catalog_item_risk_analysis_added"
+  private val catalogItemRiskAnalysisUpdated          = "catalog_item_risk_analysis_updated"
+  private val catalogItemRiskAnalysisDeleted          = "catalog_item_risk_analysis_deleted"
 }

@@ -18,7 +18,9 @@ class CatalogItemSpec extends AnyWordSpecLike with Matchers {
     technology = Rest,
     attributes = None,
     descriptors = descriptors,
-    createdAt = OffsetDateTime.now()
+    createdAt = OffsetDateTime.now(),
+    mode = Deliver,
+    riskAnalysis = Seq.empty
   )
 
   private[this] def descriptorGen(

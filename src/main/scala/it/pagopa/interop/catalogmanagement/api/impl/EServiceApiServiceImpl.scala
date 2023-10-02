@@ -566,7 +566,9 @@ class EServiceApiServiceImpl(
       technology = serviceToClone.technology,
       attributes = None,
       descriptors = Seq(descriptor),
-      createdAt = offsetDateTimeSupplier.get()
+      createdAt = offsetDateTimeSupplier.get(),
+      riskAnalysis = serviceToClone.riskAnalysis,
+      mode = serviceToClone.mode
     )
   }
 
@@ -584,6 +586,94 @@ class EServiceApiServiceImpl(
 
     onComplete(result) { deleteEServiceResponse[Unit](operationLabel)(_ => deleteEService204) }
   }
+
+  override def createRiskAnalysis(eServiceId: String, seed: RiskAnalysisSeed)(implicit
+    toEntityMarshallerProblem: ToEntityMarshaller[Problem],
+    contexts: Seq[(String, String)]
+  ): Route = {
+    val operationLabel = s"Creating Risk Analysis for EService $eServiceId"
+    logger.info(operationLabel)
+
+    val result: Future[Unit] = for {
+      eService <- retrieveCatalogItem(eServiceId)
+      newCatalogRiskAnalysis = CatalogRiskAnalysis(
+        id = uuidSupplier.get(),
+        name = seed.name,
+        riskAnalysisForm = CatalogRiskAnalysisForm(
+          id = uuidSupplier.get(),
+          version = seed.riskAnalysisForm.version,
+          singleAnswers = seed.riskAnalysisForm.singleAnswers.map(answer =>
+            CatalogRiskAnalysisSingleAnswer(id = uuidSupplier.get(), key = answer.key, value = answer.value)
+          ),
+          multiAnswers = seed.riskAnalysisForm.multiAnswers.map(answer =>
+            CatalogRiskAnalysisMultiAnswer(id = uuidSupplier.get(), key = answer.key, values = answer.values)
+          )
+        ),
+        createdAt = offsetDateTimeSupplier.get()
+      )
+      _ <- commander(eServiceId).askWithStatus(ref =>
+        AddCatalogItemRiskAnalysis(eService.id.toString, newCatalogRiskAnalysis, ref)
+      )
+    } yield ()
+
+    onComplete(result) { createdRiskAnalysisResponse[Unit](operationLabel)(_ => createRiskAnalysis204) }
+  }
+
+  override def updateRiskAnalysis(eServiceId: String, riskAnalysisId: String, seed: RiskAnalysisSeed)(implicit
+    toEntityMarshallerEServiceRiskAnalysis: ToEntityMarshaller[EServiceRiskAnalysis],
+    toEntityMarshallerProblem: ToEntityMarshaller[Problem],
+    contexts: Seq[(String, String)]
+  ): Route = {
+    val operationLabel = s"Updating Risk Analysis $riskAnalysisId for EService $eServiceId"
+    logger.info(operationLabel)
+
+    val result: Future[EServiceRiskAnalysis] = for {
+      eService     <- retrieveCatalogItem(eServiceId)
+      riskAnalysis <- getRiskAnalysis(eService, riskAnalysisId).toFuture
+      updateRiskAnalysis = riskAnalysis.copy(
+        name = seed.name,
+        riskAnalysisForm = CatalogRiskAnalysisForm(
+          id = uuidSupplier.get(),
+          version = seed.riskAnalysisForm.version,
+          singleAnswers = seed.riskAnalysisForm.singleAnswers.map(answer =>
+            CatalogRiskAnalysisSingleAnswer(id = uuidSupplier.get(), key = answer.key, value = answer.value)
+          ),
+          multiAnswers = seed.riskAnalysisForm.multiAnswers.map(answer =>
+            CatalogRiskAnalysisMultiAnswer(id = uuidSupplier.get(), key = answer.key, values = answer.values)
+          )
+        )
+      )
+      _ <- commander(eServiceId).askWithStatus(ref =>
+        UpdateCatalogItemRiskAnalysis(eService.id.toString, updateRiskAnalysis, ref)
+      )
+    } yield updateRiskAnalysis.toApi
+
+    onComplete(result) {
+      updateCatalogRiskAnalysisResponse[EServiceRiskAnalysis](operationLabel)(updateRiskAnalysis200)
+    }
+  }
+
+  override def deleteRiskAnalysis(eServiceId: String, riskAnalysisId: String)(implicit
+    toEntityMarshallerProblem: ToEntityMarshaller[Problem],
+    contexts: Seq[(String, String)]
+  ): Route = {
+    val operationLabel = s"Deleting Risk Analysis $riskAnalysisId for EService $eServiceId"
+    logger.info(operationLabel)
+
+    val result: Future[Unit] = commander(eServiceId)
+      .askWithStatus(ref => DeleteCatalogItemRiskAnalysis(eServiceId, riskAnalysisId, ref))
+      .map(_ => ())
+
+    onComplete(result) { deleteRiskAnalysisResponse[Unit](operationLabel)(_ => deleteRiskAnalysis204) }
+  }
+
+  private def getRiskAnalysis(
+    eService: CatalogItem,
+    riskAnalysisId: String
+  ): Either[EServiceRiskAnalysisNotFound, CatalogRiskAnalysis] =
+    eService.riskAnalysis
+      .find(_.id.toString == riskAnalysisId)
+      .toRight(EServiceRiskAnalysisNotFound(eService.id.toString, riskAnalysisId))
 
   private def askWithResult[T](eServiceId: String, command: ActorRef[StatusReply[Option[T]]] => Command): Future[T] =
     for {
@@ -605,5 +695,4 @@ class EServiceApiServiceImpl(
       case _   => Future.failed(EServiceWithDescriptorsNotDeletable(catalogItem.id.toString))
     }
   }
-
 }

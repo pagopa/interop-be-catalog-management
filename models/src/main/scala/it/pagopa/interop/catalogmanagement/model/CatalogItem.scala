@@ -11,6 +11,8 @@ final case class CatalogItem(
   technology: CatalogItemTechnology,
   attributes: Option[CatalogAttributes],
   descriptors: Seq[CatalogDescriptor],
+  riskAnalysis: Seq[CatalogRiskAnalysis],
+  mode: CatalogItemMode,
   createdAt: OffsetDateTime
 )
 

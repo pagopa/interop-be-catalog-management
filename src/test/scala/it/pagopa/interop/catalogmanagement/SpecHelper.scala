@@ -69,6 +69,73 @@ trait SpecHelper extends SpecConfiguration with AnyWordSpecLike with MockFactory
     Await.result(Unmarshal(response).to[EServiceDescriptor], Duration.Inf)
   }
 
+  def createEServiceRiskAnalysis(eserviceId: String, riskanalysisId: UUID, now: OffsetDateTime)(implicit
+    actorSystem: ActorSystem[_]
+  ): Unit = {
+    (() => mockUUIDSupplier.get()).expects().returning(riskanalysisId).repeat(6)
+    (() => mockOffsetDateTimeSupplier.get()).expects().returning(now).once()
+    val seed = RiskAnalysisSeed(
+      name = "name of the new risk analysis",
+      riskAnalysisForm = RiskAnalysisFormSeed(
+        version = "3.0",
+        singleAnswers = Seq(
+          RiskAnalysisSingleAnswerSeed(key = "key1", value = None),
+          RiskAnalysisSingleAnswerSeed(key = "key2", value = Some("value"))
+        ),
+        multiAnswers = Seq(
+          RiskAnalysisMultiAnswerSeed(key = "key1", values = Seq("value1", "value2", "value3")),
+          RiskAnalysisMultiAnswerSeed(key = "key2", values = Seq("value4", "value5", "value6"))
+        )
+      )
+    )
+
+    val response = Await.result(
+      Http().singleRequest(
+        HttpRequest(
+          uri = s"$serviceURL/eservices/$eserviceId/riskanalysis",
+          method = HttpMethods.POST,
+          entity = HttpEntity(ContentType(MediaTypes.`application/json`), seed.toJson.compactPrint),
+          headers = requestHeaders
+        )
+      ),
+      Duration.Inf
+    )
+
+    response.status shouldBe StatusCodes.NoContent
+
+    ()
+  }
+
+  def updateEServiceRiskAnalysis(eserviceId: String, riskanalysisId: UUID)(implicit
+    actorSystem: ActorSystem[_]
+  ): EServiceRiskAnalysis = {
+    (() => mockUUIDSupplier.get()).expects().returning(riskanalysisId).repeat(5)
+    val seed = RiskAnalysisSeed(
+      name = "name of the updated risk analysis",
+      riskAnalysisForm = RiskAnalysisFormSeed(
+        version = "3.0U",
+        singleAnswers = Seq(
+          RiskAnalysisSingleAnswerSeed(key = "key1U", value = None),
+          RiskAnalysisSingleAnswerSeed(key = "key2U", value = Some("valueU"))
+        ),
+        multiAnswers = Seq(
+          RiskAnalysisMultiAnswerSeed(key = "key1U", values = Seq("value1U", "value2U", "value3U")),
+          RiskAnalysisMultiAnswerSeed(key = "key2U", values = Seq("value4U", "value5U", "value6U"))
+        )
+      )
+    )
+
+    val response = request(
+      s"$serviceURL/eservices/$eserviceId/riskanalysis/${riskanalysisId.toString}",
+      HttpMethods.POST,
+      Some(seed.toJson.compactPrint)
+    )
+
+    response.status shouldBe StatusCodes.OK
+
+    Await.result(Unmarshal(response).to[EServiceRiskAnalysis], Duration.Inf)
+  }
+
   def createEService(uuid: String)(implicit actorSystem: ActorSystem[_]): EService = {
     (() => mockUUIDSupplier.get()).expects().returning(UUID.fromString(uuid)).once()
     (() => mockOffsetDateTimeSupplier.get()).expects().returning(OffsetDateTime.now()).once()
@@ -76,7 +143,8 @@ trait SpecHelper extends SpecConfiguration with AnyWordSpecLike with MockFactory
       producerId = UUID.randomUUID(),
       name = "string",
       description = "string",
-      technology = EServiceTechnology.REST
+      technology = EServiceTechnology.REST,
+      mode = EServiceMode.DELIVER
     )
 
     val data = seed.toJson.compactPrint
