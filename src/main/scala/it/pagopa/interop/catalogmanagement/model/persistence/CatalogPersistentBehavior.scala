@@ -106,28 +106,27 @@ object CatalogPersistentBehavior {
           }
 
       case AddCatalogItemRiskAnalysis(eServiceId, riskAnalysis, replyTo) =>
-        val catalogItem: Option[CatalogItem] = state.items.get(eServiceId.toString)
+        val catalogItem: Option[CatalogItem] = state.items.get(eServiceId)
         catalogItem
           .map { eService =>
-            val updatedItem = eService
-              .copy(riskAnalysis = eService.riskAnalysis.filter(_.id.toString != riskAnalysis.id) :+ riskAnalysis)
+            val updatedItem = eService.copy(riskAnalysis = eService.riskAnalysis :+ riskAnalysis)
 
             Effect
               .persist(CatalogItemRiskAnalysisAdded(updatedItem, riskAnalysis.id.toString))
               .thenRun((_: State) => replyTo ! StatusReply.Success(Done))
           }
           .getOrElse {
-            replyTo ! StatusReply.error[Done](EServiceNotFound(eServiceId.toString))
+            replyTo ! StatusReply.error[Done](EServiceNotFound(eServiceId))
             Effect.none[CatalogItemRiskAnalysisAdded, State]
           }
 
       case UpdateCatalogItemRiskAnalysis(eServiceId, riskAnalysis, replyTo) =>
-        val catalogItem: Option[CatalogItem] = state.items.get(eServiceId.toString)
+        val catalogItem: Option[CatalogItem] = state.items.get(eServiceId)
 
         catalogItem
           .map { eService =>
             val updatedItem = eService
-              .copy(riskAnalysis = eService.riskAnalysis.filter(_.id.toString != riskAnalysis.id) :+ riskAnalysis)
+              .copy(riskAnalysis = eService.riskAnalysis.filter(_.id != riskAnalysis.id) :+ riskAnalysis)
 
             Effect
               .persist(CatalogItemRiskAnalysisUpdated(updatedItem, riskAnalysis.id.toString))
@@ -139,7 +138,7 @@ object CatalogPersistentBehavior {
           }
 
       case DeleteCatalogItemRiskAnalysis(eServiceId, riskAnalysisId, replyTo) =>
-        val catalogItem: Option[CatalogItem] = state.items.get(eServiceId.toString)
+        val catalogItem: Option[CatalogItem] = state.items.get(eServiceId)
 
         catalogItem
           .map { eService =>
