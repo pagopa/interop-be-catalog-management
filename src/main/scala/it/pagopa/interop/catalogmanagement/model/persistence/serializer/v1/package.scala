@@ -1,13 +1,14 @@
 package it.pagopa.interop.catalogmanagement.model.persistence.serializer
 
 import cats.syntax.all._
-import it.pagopa.interop.commons.utils.TypeConversions.{OffsetDateTimeOps, StringOps, LongOps}
 import it.pagopa.interop.catalogmanagement.model._
 import it.pagopa.interop.catalogmanagement.model.persistence._
 import it.pagopa.interop.catalogmanagement.model.persistence.serializer.v1.catalog_item._
 import it.pagopa.interop.catalogmanagement.model.persistence.serializer.v1.events._
 import it.pagopa.interop.catalogmanagement.model.persistence.serializer.v1.state._
 import it.pagopa.interop.catalogmanagement.model.persistence.serializer.v1.utils._
+import it.pagopa.interop.commons.utils.TypeConversions.{LongOps, OffsetDateTimeOps, StringOps}
+
 import java.time.{OffsetDateTime, ZoneOffset}
 
 package object v1 {

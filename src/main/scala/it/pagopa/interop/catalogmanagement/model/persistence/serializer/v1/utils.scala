@@ -20,14 +20,18 @@ object utils {
   def convertAttributeValueToV1(catalogAttribute: CatalogAttribute): CatalogAttributeValueV1 =
     CatalogAttributeValueV1(catalogAttribute.id.toString, catalogAttribute.explicitAttributeVerification)
 
-  def convertAttributeToV1(catalogAttribute: Seq[CatalogAttribute]): CatalogAttributeV1 =
-    CatalogAttributeV1(single = None, group = catalogAttribute.map(convertAttributeValueToV1))
+  def convertAttributeToV1(catalogAttribute: Seq[CatalogAttribute]): Seq[CatalogAttributeV1] =
+    catalogAttribute match {
+      case attrs if attrs.nonEmpty =>
+        Seq(CatalogAttributeV1(single = None, group = attrs.map(convertAttributeValueToV1)))
+      case _                       => Seq.empty
+    }
 
   def convertAttributesToV1(attributes: CatalogAttributes): CatalogAttributesV1 = {
     CatalogAttributesV1(
-      certified = attributes.certified.map(convertAttributeToV1),
-      declared = attributes.declared.map(convertAttributeToV1),
-      verified = attributes.verified.map(convertAttributeToV1)
+      certified = attributes.certified.flatMap(convertAttributeToV1),
+      declared = attributes.declared.flatMap(convertAttributeToV1),
+      verified = attributes.verified.flatMap(convertAttributeToV1)
     )
   }
 
@@ -35,15 +39,9 @@ object utils {
     val singleAttribute: Option[Either[Throwable, Seq[CatalogAttribute]]] = catalogAttributeV1.single.map(attr =>
       attr.id.toUUID.toEither.map(uuid => Seq(CatalogAttribute(uuid, attr.explicitAttributeVerification)))
     )
-    val groupAttribute: Option[Either[Throwable, Seq[CatalogAttribute]]]  =
-      Option
-        .unless(catalogAttributeV1.group.isEmpty)(catalogAttributeV1.group)
-        .map(attributes =>
-          attributes
-            .traverse(attr =>
-              attr.id.toUUID.toEither.map(id => CatalogAttribute(id, attr.explicitAttributeVerification))
-            )
-        )
+    val groupAttribute: Option[Either[Throwable, Seq[CatalogAttribute]]]  = catalogAttributeV1.group
+      .traverse(attr => attr.id.toUUID.toEither.map(id => CatalogAttribute(id, attr.explicitAttributeVerification)))
+      .some
 
     singleAttribute
       .orElse(groupAttribute)
@@ -132,7 +130,7 @@ object utils {
 
   def convertRiskAnalysisToV1(risk: CatalogRiskAnalysis): Either[Throwable, CatalogItemRiskAnalysisV1] = Right(
     CatalogItemRiskAnalysisV1(
-      id = risk.id.toString(),
+      id = risk.id.toString,
       name = risk.name,
       createdAt = risk.createdAt.toMillis,
       riskAnalysisForm = convertRiskAnalysisFormToV1(risk.riskAnalysisForm)
