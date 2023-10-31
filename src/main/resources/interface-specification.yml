@@ -25,7 +25,6 @@ paths:
   /eservices:
     parameters:
       - $ref: '#/components/parameters/CorrelationIdHeader'
-      - $ref: '#/components/parameters/IpAddress'
     post:
       security:
         - bearerAuth: [ ]
@@ -95,7 +94,6 @@ paths:
   /eservices/{eServiceId}:
     parameters:
       - $ref: '#/components/parameters/CorrelationIdHeader'
-      - $ref: '#/components/parameters/IpAddress'
     get:
       security:
         - bearerAuth: [ ]
@@ -201,7 +199,6 @@ paths:
   /eservices/{eServiceId}/descriptors:
     parameters:
       - $ref: '#/components/parameters/CorrelationIdHeader'
-      - $ref: '#/components/parameters/IpAddress'
     post:
       security:
         - bearerAuth: [ ]
@@ -245,7 +242,6 @@ paths:
   /eservices/{eServiceId}/descriptors/{descriptorId}/publish:
     parameters:
       - $ref: '#/components/parameters/CorrelationIdHeader'
-      - $ref: '#/components/parameters/IpAddress'
     post:
       security:
         - bearerAuth: [ ]
@@ -284,7 +280,6 @@ paths:
   /eservices/{eServiceId}/descriptors/{descriptorId}/draft:
     parameters:
       - $ref: '#/components/parameters/CorrelationIdHeader'
-      - $ref: '#/components/parameters/IpAddress'
     post:
       security:
         - bearerAuth: [ ]
@@ -323,7 +318,6 @@ paths:
   /eservices/{eServiceId}/descriptors/{descriptorId}/archive:
     parameters:
       - $ref: '#/components/parameters/CorrelationIdHeader'
-      - $ref: '#/components/parameters/IpAddress'
     post:
       security:
         - bearerAuth: [ ]
@@ -362,7 +356,6 @@ paths:
   /eservices/{eServiceId}/descriptors/{descriptorId}/deprecate:
     parameters:
       - $ref: '#/components/parameters/CorrelationIdHeader'
-      - $ref: '#/components/parameters/IpAddress'
     post:
       security:
         - bearerAuth: [ ]
@@ -401,7 +394,6 @@ paths:
   /eservices/{eServiceId}/descriptors/{descriptorId}/suspend:
     parameters:
       - $ref: '#/components/parameters/CorrelationIdHeader'
-      - $ref: '#/components/parameters/IpAddress'
     post:
       security:
         - bearerAuth: [ ]
@@ -440,7 +432,6 @@ paths:
   /eservices/{eServiceId}/descriptors/{descriptorId}/clone:
     parameters:
       - $ref: '#/components/parameters/CorrelationIdHeader'
-      - $ref: '#/components/parameters/IpAddress'
     post:
       security:
         - bearerAuth: [ ]
@@ -485,7 +476,6 @@ paths:
   /eservices/{eServiceId}/descriptors/{descriptorId}:
     parameters:
       - $ref: '#/components/parameters/CorrelationIdHeader'
-      - $ref: '#/components/parameters/IpAddress'
     put:
       security:
         - bearerAuth: [ ]
@@ -570,7 +560,6 @@ paths:
   /eservices/{eServiceId}/descriptors/{descriptorId}/documents:
     parameters:
       - $ref: '#/components/parameters/CorrelationIdHeader'
-      - $ref: '#/components/parameters/IpAddress'
     post:
       security:
         - bearerAuth: [ ]
@@ -622,7 +611,6 @@ paths:
   /eservices/{eServiceId}/descriptors/{descriptorId}/documents/{documentId}/update:
     parameters:
       - $ref: '#/components/parameters/CorrelationIdHeader'
-      - $ref: '#/components/parameters/IpAddress'
     post:
       security:
         - bearerAuth: [ ]
@@ -678,7 +666,6 @@ paths:
   /eservices/{eServiceId}/descriptors/{descriptorId}/documents/{documentId}:
     parameters:
       - $ref: '#/components/parameters/CorrelationIdHeader'
-      - $ref: '#/components/parameters/IpAddress'
     get:
       security:
         - bearerAuth: [ ]
@@ -768,7 +755,6 @@ paths:
   /eservice/{eServiceId}/moveAttributesToDescriptors:
     parameters:
       - $ref: '#/components/parameters/CorrelationIdHeader'
-      - $ref: '#/components/parameters/IpAddress'
     post:
       security:
         - bearerAuth: [ ]
@@ -795,7 +781,6 @@ paths:
   /eservices/{eServiceId}/riskanalysis:
     parameters:
       - $ref: '#/components/parameters/CorrelationIdHeader'
-      - $ref: '#/components/parameters/IpAddress'
     post:
       security:
         - bearerAuth: [ ]
@@ -836,7 +821,6 @@ paths:
   /eservices/{eServiceId}/riskanalysis/{riskAnalysisId}:
     parameters:
       - $ref: '#/components/parameters/CorrelationIdHeader'
-      - $ref: '#/components/parameters/IpAddress'
     post:
       security:
         - bearerAuth: [ ]
@@ -928,11 +912,6 @@ components:
       in: header
       name: X-Correlation-Id
       required: true
-      schema:
-        type: string
-    IpAddress:
-      in: header
-      name: X-Forwarded-For
       schema:
         type: string
   schemas:
