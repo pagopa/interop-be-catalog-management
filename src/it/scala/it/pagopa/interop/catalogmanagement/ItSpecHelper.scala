@@ -255,7 +255,7 @@ trait ItSpecHelper
   }
 
   def updateDescriptorDocument(eServiceId: UUID, descriptorId: UUID, documentId: UUID): EServiceDoc = {
-    val seed = UpdateEServiceDescriptorDocumentSeed(prettyName = "new prettyName")
+    val seed = UpdateEServiceDescriptorDocumentSeed(prettyName = "new prettyName", checksum = Some("fakeChecksum"))
 
     val data = seed.toJson.prettyPrint
 

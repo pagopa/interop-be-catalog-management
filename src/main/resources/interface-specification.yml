@@ -1262,6 +1262,8 @@ components:
       properties:
         prettyName:
           type: string
+        checksum:
+          type: string
     CreateEServiceDescriptorDocumentSeed:
       required:
         - documentId
