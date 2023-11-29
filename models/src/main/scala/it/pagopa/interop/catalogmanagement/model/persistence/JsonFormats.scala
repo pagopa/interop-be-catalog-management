@@ -59,14 +59,14 @@ object JsonFormats {
   implicit val modeFormat: RootJsonFormat[CatalogItemMode] =
     new RootJsonFormat[CatalogItemMode] {
       override def read(json: JsValue): CatalogItemMode = json match {
-        case JsString("RECEIVE") => Receive
-        case JsString("DELIVER") => Deliver
+        case JsString("Receive") => Receive
+        case JsString("Deliver") => Deliver
         case other               => deserializationError(s"Unable to deserialize json as a CatalogMode: $other")
       }
 
       override def write(obj: CatalogItemMode): JsValue = obj match {
-        case Receive => JsString("RECEIVE")
-        case Deliver => JsString("DELIVER")
+        case Receive => JsString("Receive")
+        case Deliver => JsString("Deliver")
       }
     }
 
