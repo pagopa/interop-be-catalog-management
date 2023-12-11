@@ -473,7 +473,10 @@ class EServiceApiServiceImpl(
       eService   <- retrieveCatalogItem(eServiceId)
       descriptor <- getDescriptor(eService, descriptorId).toFuture
       document   <- extractDocument(eService, descriptorId, documentId).toFuture
-      updatedDocument = document.copy(prettyName = updateEServiceDescriptorDocumentSeed.prettyName)
+      updatedDocument = document.copy(
+        prettyName = updateEServiceDescriptorDocumentSeed.prettyName,
+        checksum = updateEServiceDescriptorDocumentSeed.checksum.getOrElse(document.checksum)
+      )
       result <- askWithResult(
         eServiceId,
         ref =>
