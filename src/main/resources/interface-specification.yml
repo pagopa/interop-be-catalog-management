@@ -1262,6 +1262,8 @@ components:
       properties:
         prettyName:
           type: string
+        checksum: # Temporarily required for feature PIN-4267, to be removed  
+          type: string
     CreateEServiceDescriptorDocumentSeed:
       required:
         - documentId
