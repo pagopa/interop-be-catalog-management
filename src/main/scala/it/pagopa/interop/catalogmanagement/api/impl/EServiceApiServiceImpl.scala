@@ -23,6 +23,7 @@ import it.pagopa.interop.commons.utils.TypeConversions.{EitherOps, OptionOps}
 import it.pagopa.interop.commons.utils.errors.ComponentError
 import it.pagopa.interop.commons.utils.service.{OffsetDateTimeSupplier, UUIDSupplier}
 
+import java.time.format.DateTimeFormatter
 import scala.concurrent.duration.Duration
 import scala.concurrent.{Await, ExecutionContext, Future}
 import akka.Done
@@ -538,6 +539,7 @@ class EServiceApiServiceImpl(
     clonedInterface: Option[CatalogDocument],
     clonedDocuments: Seq[CatalogDocument]
   ): Future[CatalogItem] = {
+    val now = offsetDateTimeSupplier.get()
 
     for {
       version <- VersionGenerator.next(None).toFuture
@@ -553,7 +555,7 @@ class EServiceApiServiceImpl(
         dailyCallsPerConsumer = descriptorToClone.dailyCallsPerConsumer,
         dailyCallsTotal = descriptorToClone.dailyCallsTotal,
         agreementApprovalPolicy = descriptorToClone.agreementApprovalPolicy,
-        createdAt = offsetDateTimeSupplier.get(),
+        createdAt = now,
         serverUrls = descriptorToClone.serverUrls,
         publishedAt = None,
         suspendedAt = None,
@@ -564,12 +566,12 @@ class EServiceApiServiceImpl(
     } yield CatalogItem(
       id = uuidSupplier.get(),
       producerId = serviceToClone.producerId,
-      name = s"${serviceToClone.name} - clone",
+      name = s"${serviceToClone.name} - clone - ${now.format(DateTimeFormatter.ofPattern("dd/MM/yy HH:mm:ss"))}",
       description = serviceToClone.description,
       technology = serviceToClone.technology,
       attributes = None,
       descriptors = Seq(descriptor),
-      createdAt = offsetDateTimeSupplier.get(),
+      createdAt = now,
       riskAnalysis = serviceToClone.riskAnalysis,
       mode = serviceToClone.mode
     )
